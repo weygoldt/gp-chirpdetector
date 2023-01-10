@@ -34,7 +34,23 @@ The "master" branch should always contain a working/correct version of your proj
 
 - Create/change into branches
 ```shell
-git checkout -b <new branch>
-git checkout <existing branch>
+# list all branches (highlight active branch)
+git banch -a           
+# switch into existing          
+git checkout <existing branch>   
+# switch into new branch
+git checkout master
+git checkout -b <new branch>     
 ```
 
+- remerging with master branch
+```shell
+git checkout master
+git pull origin master
+git checkout <branch>
+git rebase master
+```
+This resets you branch to the fork-point, executes all commits of the current master before adding the commits of you 
+branch. You may have to resolve potential conflicts. Afterwards commit the corrected version and push it to your branch.
+
+Push changes into master-branch.
