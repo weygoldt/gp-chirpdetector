@@ -43,7 +43,9 @@ git checkout master
 git checkout -b <new branch>     
 ```
 
-- remerging with master branch
+
+- Re-merging with master branch
+1) get current version of master and implement it into branch
 ```shell
 git checkout master
 git pull origin master
@@ -53,4 +55,10 @@ git rebase master
 This resets you branch to the fork-point, executes all commits of the current master before adding the commits of you 
 branch. You may have to resolve potential conflicts. Afterwards commit the corrected version and push it to your branch.
 
-Push changes into master-branch.
+2) Update master branch master
+- correct way: Create
+```shell
+git checkout master
+git merge <branch>
+git push origin master
+```
