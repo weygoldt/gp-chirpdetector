@@ -3,7 +3,9 @@
 
 # Own stuff
 data
-# Mac Stuff 
+env
+
+# Mac Stuff
 *.DS_Store
 
 ### Python ###
