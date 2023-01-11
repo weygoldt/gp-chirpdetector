@@ -3,9 +3,12 @@ import os
 import numpy as np
 from IPython import embed
 import matplotlib.pyplot as plt
+from scipy.stats import iqr
+from scipy.signal import find_peaks
+from scipy.ndimage import gaussian_filter1d
 from thunderfish.dataloader import DataLoader
 from thunderfish.powerspectrum import spectrogram, decibel
-from scipy.ndimage import gaussian_filter1d
+
 
 from modules.filters import bandpass_filter, envelope, highpass_filter
 
@@ -32,7 +35,7 @@ def instantaneos_frequency(
     true_zero = lower_time + lower_ratio * time_delta
 
     # create new time array
-    inst_freq_time = true_zero[:-1] + 0.5 * np.diff(true_zero)
+    inst_freq_time = true_zero[1:] + 0.5 * np.diff(true_zero)
 
     # compute frequency
     inst_freq = gaussian_filter1d(1 / np.diff(true_zero), 5)
@@ -139,7 +142,7 @@ def main(datapath: str) -> None:
         # track_id = ids
 
         # frequency where second filter filters
-        search_freq = 50
+        search_freq = -50
 
         # get indices for time array in time window
         window_index = np.arange(len(idx))[
@@ -157,7 +160,7 @@ def main(datapath: str) -> None:
         axs[2].plot(np.arange(len(baseline)) / data.samplerate, baseline)
 
         # plot instatneous frequency
-        # broad_baseline = bandpass_filter(data_oi[:, electrode], data.samplerate, lowf=np.mean(
+        #broad_baseline = bandpass_filter(data_oi[:, electrode], data.samplerate, lowf=np.mean(
         #     freq_temp)-5, highf=np.mean(freq_temp)+200)
 
         baseline_freq_time, baseline_freq = instantaneos_frequency(
@@ -198,13 +201,34 @@ def main(datapath: str) -> None:
         inst_freq_filtered = bandpass_filter(
             baseline_freq, data.samplerate, lowf=15, highf=8000
         )
-        axs[6].plot(baseline_freq_time, np.abs(inst_freq_filtered))
+
 
         # plot filtered and rectified envelope
         axs[4].plot(np.arange(len(baseline)) /
                     data.samplerate, baseline_envelope)
+
         axs[5].plot(np.arange(len(baseline)) /
                     data.samplerate, search_envelope)
+
+        axs[6].plot(baseline_freq_time, np.abs(inst_freq_filtered))
+
+        # detect peaks baseline_enelope
+        prominence = iqr(baseline_envelope) 
+        baseline_peaks, _ = find_peaks(baseline_envelope, prominence=prominence)
+        axs[4].scatter((np.arange(len(baseline)) /
+                    data.samplerate)[baseline_peaks], baseline_envelope[baseline_peaks], c="red")
+
+
+        # detect peaks search_envelope
+        search_peaks, _ = find_peaks(search_envelope, height=0.0001)
+        axs[5].scatter((np.arange(len(baseline)) /
+                    data.samplerate)[search_peaks], search_envelope[search_peaks], c="red")
+
+        # detect peaks inst_freq_filtered
+        inst_freq_peaks, _ = find_peaks(np.abs(inst_freq_filtered), height=2)
+        axs[6].scatter(baseline_freq_time[inst_freq_peaks], np.abs(inst_freq_filtered)[inst_freq_peaks], c="red")
+
+        # 
 
         axs[0].set_title("Spectrogram")
         axs[1].set_title("Fitered baseline instanenous frequency")
