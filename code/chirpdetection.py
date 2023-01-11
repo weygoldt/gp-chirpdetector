@@ -116,7 +116,11 @@ def main(datapath: str) -> None:
 
         # initialize plot
         fig, axs = plt.subplots(
-            7, 1, figsize=(20 / 2.54, 12 / 2.54), constrained_layout=True, sharex=True
+            7,
+            1,
+            figsize=(20 / 2.54, 12 / 2.54),
+            constrained_layout=True,
+            sharex=True,
         )
 
         # plot spectrogram
@@ -160,7 +164,7 @@ def main(datapath: str) -> None:
         axs[2].plot(np.arange(len(baseline)) / data.samplerate, baseline)
 
         # plot instatneous frequency
-        #broad_baseline = bandpass_filter(data_oi[:, electrode], data.samplerate, lowf=np.mean(
+        # broad_baseline = bandpass_filter(data_oi[:, electrode], data.samplerate, lowf=np.mean(
         #     freq_temp)-5, highf=np.mean(freq_temp)+200)
 
         baseline_freq_time, baseline_freq = instantaneos_frequency(
@@ -175,11 +179,15 @@ def main(datapath: str) -> None:
         cutoff = 25
         baseline_envelope = envelope(baseline, data.samplerate, cutoff)
         axs[2].plot(
-            np.arange(len(baseline)) / data.samplerate, baseline_envelope, c="orange"
+            np.arange(len(baseline)) / data.samplerate,
+            baseline_envelope,
+            c="orange",
         )
         search_envelope = envelope(search, data.samplerate, cutoff)
         axs[3].plot(
-            np.arange(len(baseline)) / data.samplerate, search_envelope, c="orange"
+            np.arange(len(baseline)) / data.samplerate,
+            search_envelope,
+            c="orange",
         )
 
         # highpass filter envelopes
@@ -192,7 +200,8 @@ def main(datapath: str) -> None:
 
         # envelopes of filtered envelope of filtered baseline
         baseline_envelope = envelope(
-            np.abs(baseline_envelope), data.samplerate, cutoff)
+            np.abs(baseline_envelope), data.samplerate, cutoff
+        )
 
         # search_envelope = bandpass_filter(
         # search_envelope, data.samplerate, lowf=lowf, highf=highf)
@@ -202,33 +211,41 @@ def main(datapath: str) -> None:
             baseline_freq, data.samplerate, lowf=15, highf=8000
         )
 
-
         # plot filtered and rectified envelope
-        axs[4].plot(np.arange(len(baseline)) /
-                    data.samplerate, baseline_envelope)
+        axs[4].plot(
+            np.arange(len(baseline)) / data.samplerate, baseline_envelope
+        )
 
-        axs[5].plot(np.arange(len(baseline)) /
-                    data.samplerate, search_envelope)
+        axs[5].plot(np.arange(len(baseline)) / data.samplerate, search_envelope)
 
         axs[6].plot(baseline_freq_time, np.abs(inst_freq_filtered))
 
         # detect peaks baseline_enelope
-        prominence = iqr(baseline_envelope) 
+        prominence = iqr(baseline_envelope)
         baseline_peaks, _ = find_peaks(baseline_envelope, prominence=prominence)
-        axs[4].scatter((np.arange(len(baseline)) /
-                    data.samplerate)[baseline_peaks], baseline_envelope[baseline_peaks], c="red")
-
+        axs[4].scatter(
+            (np.arange(len(baseline)) / data.samplerate)[baseline_peaks],
+            baseline_envelope[baseline_peaks],
+            c="red",
+        )
 
         # detect peaks search_envelope
         search_peaks, _ = find_peaks(search_envelope, height=0.0001)
-        axs[5].scatter((np.arange(len(baseline)) /
-                    data.samplerate)[search_peaks], search_envelope[search_peaks], c="red")
+        axs[5].scatter(
+            (np.arange(len(baseline)) / data.samplerate)[search_peaks],
+            search_envelope[search_peaks],
+            c="red",
+        )
 
         # detect peaks inst_freq_filtered
         inst_freq_peaks, _ = find_peaks(np.abs(inst_freq_filtered), height=2)
-        axs[6].scatter(baseline_freq_time[inst_freq_peaks], np.abs(inst_freq_filtered)[inst_freq_peaks], c="red")
+        axs[6].scatter(
+            baseline_freq_time[inst_freq_peaks],
+            np.abs(inst_freq_filtered)[inst_freq_peaks],
+            c="red",
+        )
 
-        # 
+        #
 
         axs[0].set_title("Spectrogram")
         axs[1].set_title("Fitered baseline instanenous frequency")
