@@ -121,7 +121,7 @@ def double_bandpass(
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Apply a bandpass filter to the baseline of a signal and a second bandpass
-    filter above or below the baseline.
+    filter above or below the baseline, as specified by the search frequency.
 
     Parameters
     ----------
@@ -171,8 +171,13 @@ def main(datapath: str) -> None:
     ident = np.load(datapath + "ident_v.npy", allow_pickle=True)
 
     # set time window # <------------------------ Iterate through windows here
-    window_duration = 60 * data.samplerate
-    window_overlap = 0.3
+    window_duration = 60 * 5    # 5 minutes window
+    window_overlap = 30         # 30 seconds overlap
+    window_starts = np.arange(
+        time[0], time[-1], window_duration)
+
+    embed()
+    exit()
 
     t0 = 3 * 60 * 60 + 6 * 60 + 43.5
     dt = 60
@@ -187,6 +192,14 @@ def main(datapath: str) -> None:
 
         # <------------------------------------------ Find best electrodes here
         # <------------------------------------------ Iterate through electrodes
+        # get indices for time array in time window
+        window_index = np.arange(len(idx))[
+            (ident == track_id) & (time[idx] >= t0) & (time[idx] <= (t0 + dt))
+        ]
+
+        # filter baseline and above
+        freq_temp = freq[window_index]
+        time_temp = time[idx[window_index]]
 
         electrode = 10
 
@@ -224,14 +237,7 @@ def main(datapath: str) -> None:
         # frequency where second filter filters
         search_freq = -50
 
-        # get indices for time array in time window
-        window_index = np.arange(len(idx))[
-            (ident == track_id) & (time[idx] >= t0) & (time[idx] <= (t0 + dt))
-        ]
-
         # filter baseline and above
-        freq_temp = freq[window_index]
-        time_temp = time[idx[window_index]]
         baseline, search = double_bandpass(
             data_oi[:, electrode], data.samplerate, freq_temp, search_freq
         )
