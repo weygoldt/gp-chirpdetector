@@ -171,10 +171,11 @@ def main(datapath: str) -> None:
     ident = np.load(datapath + "ident_v.npy", allow_pickle=True)
 
     # set time window # <------------------------ Iterate through windows here
-    window_duration = 60 * 5    # 5 minutes window
-    window_overlap = 30         # 30 seconds overlap
+    window_duration = 60 * 5 * data.samplerate    # 5 minutes window
+    window_overlap = 30 * data.samplerate         # 30 seconds overlap
+    raw_time = np.arange(data.shape[0])
     window_starts = np.arange(
-        time[0], time[-1], window_duration)
+        raw_time[0], raw_time[-1], window_duration - window_overlap / 2)
 
     embed()
     exit()

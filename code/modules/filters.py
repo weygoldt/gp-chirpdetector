@@ -17,13 +17,14 @@ def bandpass_filter(
     rate : float
         The sampling rate
     lowf : float
-        The low frequency cutoff
+        The low cutoff frequency
     highf : float
-        The high frequency cutoff
+        The high cutoff frequency
 
     Returns
     -------
-    np.ndarray : The filtered data
+    np.ndarray
+        The filtered data
     """
     sos = butter(2, (lowf, highf), "bandpass", fs=rate, output="sos")
     fdata = sosfiltfilt(sos, data)
