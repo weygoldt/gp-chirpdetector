@@ -217,8 +217,6 @@ def main(datapath: str) -> None:
         # iterate through all fish
         for i, track_id in enumerate(np.unique(ident[~np.isnan(ident)])[:2]):
 
-            # <------------------------------------------ Find best electrodes here
-            # <------------------------------------------ Iterate through electrodes
             # get indices for time array in time window
             window_index = np.arange(len(idx))[
                 (ident == track_id) & (time[idx] >= t0) & (
@@ -239,6 +237,8 @@ def main(datapath: str) -> None:
             # get best electrode
             electrode = np.argsort(np.nanmean(powers_temp, axis=0))[-1]
             # electrode = best_electrodes[0]
+
+            # <------------------------------------------ Iterate through electrodes
 
             # plot spectrogram
             plot_spectrogram(axs[0, i], data_oi[:, electrode], data.samplerate)
