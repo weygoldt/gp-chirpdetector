@@ -195,6 +195,7 @@ def main(datapath: str) -> None:
         raise ValueError("Window overlap must be even.")
 
     raw_time = np.arange(data.shape[0]) / data.samplerate
+    # good chirp times for data: 2022-06-02-10_00
     t0 = (3 * 60 * 60 + 6 * 60 + 43.5) * data.samplerate
     dt = 60 * data.samplerate
 
@@ -211,9 +212,9 @@ def main(datapath: str) -> None:
         stop_index = start_index + window_duration
 
         # t0 = 3 * 60 * 60 + 6 * 60 + 43.5
-#     dt = 60
-#     start_index = t0 * data.samplerate
-#     stop_index = (t0 + dt) * data.samplerate
+        # dt = 60
+        # start_index = t0 * data.samplerate
+        # stop_index = (t0 + dt) * data.samplerate
 
         fig, axs = plt.subplots(
             7,
