@@ -76,7 +76,7 @@ def instantaneos_frequency(
     upper_time = np.abs(time_signal[period_index])
     lower_time = np.abs(time_signal[period_index - 1])
 
-    # create ratios
+    # create ratio
     lower_ratio = lower_bound / (lower_bound + upper_bound)
 
     # appy to time delta
