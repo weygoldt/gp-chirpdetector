@@ -69,7 +69,7 @@ def instantaneos_frequency(
     upper_time = np.abs(time_signal[period_index])
     lower_time = np.abs(time_signal[period_index - 1])
 
-    # create ratios
+    # create ratio
     lower_ratio = lower_bound / (lower_bound + upper_bound)
 
     # appy to time delta
@@ -177,8 +177,6 @@ def main(datapath: str) -> None:
     window_starts = np.arange(
         raw_time[0], raw_time[-1], window_duration - window_overlap / 2)
 
-    embed()
-    exit()
 
     t0 = 3 * 60 * 60 + 6 * 60 + 43.5
     dt = 60
@@ -305,6 +303,7 @@ def main(datapath: str) -> None:
         axs[6].plot(baseline_freq_time, np.abs(inst_freq_filtered))
 
         # detect peaks baseline_enelope
+        embed()
         prominence = iqr(baseline_envelope)
         baseline_peaks, _ = find_peaks(
             baseline_envelope, prominence=prominence)
