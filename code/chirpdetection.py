@@ -29,8 +29,8 @@ class LoadData:
     def __init__(self, datapath: str) -> None:
 
         # load raw data
-        file = os.path.join(datapath, "traces-grid1.raw")
-        self.data = DataLoader(file, 60.0, 0, channel=-1)
+        self.file = os.path.join(datapath, "traces-grid1.raw")
+        self.data = DataLoader(self.file, 60.0, 0, channel=-1)
         self.samplerate = self.data.samplerate
 
         # load wavetracker files
@@ -39,6 +39,12 @@ class LoadData:
         self.idx = np.load(datapath + "idx_v.npy", allow_pickle=True)
         self.ident = np.load(datapath + "ident_v.npy", allow_pickle=True)
         self.ids = np.unique(self.ident[~np.isnan(self.ident)])
+
+    def __repr__(self) -> str:
+        return f"LoadData({self.file})"
+
+    def __str__(self) -> str:
+        return f"LoadData({self.file})"
 
 
 def instantaneos_frequency(
@@ -62,7 +68,8 @@ def instantaneos_frequency(
     # calculate instantaneos frequency with zero crossings
     roll_signal = np.roll(signal, shift=1)
     time_signal = np.arange(len(signal)) / samplerate
-    period_index = np.arange(len(signal))[(roll_signal < 0) & (signal >= 0)]
+    period_index = np.arange(len(signal))[(
+        roll_signal < 0) & (signal >= 0)][1:-1]
 
     upper_bound = np.abs(signal[period_index])
     lower_bound = np.abs(signal[period_index - 1])
@@ -77,7 +84,7 @@ def instantaneos_frequency(
     true_zero = lower_time + lower_ratio * time_delta
 
     # create new time array
-    inst_freq_time = true_zero[1:] + 0.5 * np.diff(true_zero)
+    inst_freq_time = true_zero[:-1] + 0.5 * np.diff(true_zero)
 
     # compute frequency
     inst_freq = gaussian_filter1d(1 / np.diff(true_zero), 5)
@@ -167,176 +174,204 @@ def main(datapath: str) -> None:
     # load wavetracker files
     time = np.load(datapath + "times.npy", allow_pickle=True)
     freq = np.load(datapath + "fund_v.npy", allow_pickle=True)
+    powers = np.load(datapath + "sign_v.npy", allow_pickle=True)
     idx = np.load(datapath + "idx_v.npy", allow_pickle=True)
     ident = np.load(datapath + "ident_v.npy", allow_pickle=True)
 
     # set time window # <------------------------ Iterate through windows here
-    window_duration = 60 * 5 * data.samplerate    # 5 minutes window
-    window_overlap = 30 * data.samplerate         # 30 seconds overlap
+    window_duration = 5 * data.samplerate          # 5 seconds window
+    window_overlap = 0.5 * data.samplerate         # 30 seconds overlap
     raw_time = np.arange(data.shape[0])
+    t0 = (3 * 60 * 60 + 6 * 60 + 43.5) * data.samplerate
+    dt = 60 * data.samplerate
+
     window_starts = np.arange(
-        raw_time[0], raw_time[-1], window_duration - window_overlap / 2)
+        t0, t0 + dt, window_duration - window_overlap, dtype=int)
 
-    embed()
-    exit()
+    for start_index in window_starts:
 
-    t0 = 3 * 60 * 60 + 6 * 60 + 43.5
-    dt = 60
-    start_index = t0 * data.samplerate
-    stop_index = (t0 + dt) * data.samplerate
+        # make t0 and dt
+        t0 = start_index / data.samplerate
+        dt = window_duration / data.samplerate
 
-    # load region of interest of raw data file
-    data_oi = data[start_index:stop_index, :]
+        # set index window
+        stop_index = start_index + window_duration
 
-    # iterate through all fish
-    for track_id in np.unique(ident[~np.isnan(ident)])[:2]:
+        # t0 = 3 * 60 * 60 + 6 * 60 + 43.5
+#     dt = 60
+#     start_index = t0 * data.samplerate
+#     stop_index = (t0 + dt) * data.samplerate
 
-        # <------------------------------------------ Find best electrodes here
-        # <------------------------------------------ Iterate through electrodes
-        # get indices for time array in time window
-        window_index = np.arange(len(idx))[
-            (ident == track_id) & (time[idx] >= t0) & (time[idx] <= (t0 + dt))
-        ]
+        # load region of interest of raw data file
+        data_oi = data[start_index:stop_index, :]
 
-        # filter baseline and above
-        freq_temp = freq[window_index]
-        time_temp = time[idx[window_index]]
-
-        electrode = 10
-
-        # initialize plot
         fig, axs = plt.subplots(
             7,
-            1,
+            2,
             figsize=(20 / 2.54, 12 / 2.54),
             constrained_layout=True,
             sharex=True,
+            sharey='row',
         )
 
-        # plot spectrogram
-        plot_spectrogram(axs[0], data_oi[:, electrode], data.samplerate)
+        # iterate through all fish
+        for i, track_id in enumerate(np.unique(ident[~np.isnan(ident)])[:2]):
 
-        # plot wavetracker tracks to spectrogram
-        # for track_id in np.unique(ident):  # <---------- Find freq gaps later
-        # here
+            # <------------------------------------------ Find best electrodes here
+            # <------------------------------------------ Iterate through electrodes
+            # get indices for time array in time window
+            window_index = np.arange(len(idx))[
+                (ident == track_id) & (time[idx] >= t0) & (
+                    time[idx] <= (t0 + dt))
+            ]
 
-        #     # get indices for time array in time window
-        #     window_index = np.arange(len(idx))[
-        #         (ident == track_id) &
-        #         (time[idx] >= t0) &
-        #         (time[idx] <= (t0 + dt))
-        #     ]
+            # get tracked frequencies and their times
+            freq_temp = freq[window_index]
+            powers_temp = powers[window_index, :]
+            # time_temp = time[idx[window_index]]
+            track_samplerate = np.mean(1 / np.diff(time))
+            expected_duration = ((t0 + dt) - t0) * track_samplerate
 
-        #     freq_temp = freq[window_index]
-        #     time_temp = time[idx[window_index]]
+            # check if tracked data available in this window
+            if len(freq_temp) < expected_duration * 0.9:
+                continue
 
-        #     axs[0].plot(time_temp-t0, freq_temp, lw=2)
-        #     axs[0].set_ylim(500, 1000)
+            # get best electrode
+            electrode = np.argsort(np.nanmean(powers_temp, axis=0))[-1]
+            # electrode = best_electrodes[0]
 
-        # track_id = ids
+            # plot spectrogram
+            plot_spectrogram(axs[0, i], data_oi[:, electrode], data.samplerate)
 
-        # frequency where second filter filters
-        search_freq = -50
+            # plot wavetracker tracks to spectrogram
+            # for track_id in np.unique(ident):  # <---------- Find freq gaps later
+            # here
 
-        # filter baseline and above
-        baseline, search = double_bandpass(
-            data_oi[:, electrode], data.samplerate, freq_temp, search_freq
-        )
+            #     # get indices for time array in time window
+            #     window_index = np.arange(len(idx))[
+            #         (ident == track_id) &
+            #         (time[idx] >= t0) &
+            #         (time[idx] <= (t0 + dt))
+            #     ]
 
-        # plot waveform of filtered signal
-        axs[2].plot(np.arange(len(baseline)) / data.samplerate, baseline)
+            #     freq_temp = freq[window_index]
+            #     time_temp = time[idx[window_index]]
 
-        # plot instatneous frequency
-        # broad_baseline = bandpass_filter(data_oi[:, electrode], data.samplerate, lowf=np.mean(
-        #     freq_temp)-5, highf=np.mean(freq_temp)+200)
+            #     axs[0].plot(time_temp-t0, freq_temp, lw=2)
+            #     axs[0].set_ylim(500, 1000)
 
-        baseline_freq_time, baseline_freq = instantaneos_frequency(
-            baseline, data.samplerate
-        )
-        axs[1].plot(baseline_freq_time, baseline_freq)
+            # track_id = ids
 
-        # plot waveform of filtered search signal
-        axs[3].plot(np.arange(len(baseline)) / data.samplerate, search)
+            # frequency where second filter filters
+            search_freq = -50
 
-        # compute envelopes
-        cutoff = 25
-        baseline_envelope = envelope(baseline, data.samplerate, cutoff)
-        axs[2].plot(
-            np.arange(len(baseline)) / data.samplerate,
-            baseline_envelope,
-            c="orange",
-        )
-        search_envelope = envelope(search, data.samplerate, cutoff)
-        axs[3].plot(
-            np.arange(len(baseline)) / data.samplerate,
-            search_envelope,
-            c="orange",
-        )
+            # filter baseline and above
+            baseline, search = double_bandpass(
+                data_oi[:, electrode], data.samplerate, freq_temp, search_freq
+            )
 
-        # highpass filter envelopes
-        cutoff = 5
-        baseline_envelope = highpass_filter(
-            baseline_envelope, data.samplerate, cutoff=cutoff
-        )
-        # search_envelope = highpass_filter(
-        #     search_envelope, data.samplerate, cutoff=cutoff)
+            # plot waveform of filtered signal
+            axs[2, i].plot(np.arange(len(baseline)) /
+                           data.samplerate, baseline, c="k")
 
-        # envelopes of filtered envelope of filtered baseline
-        baseline_envelope = envelope(
-            np.abs(baseline_envelope), data.samplerate, cutoff
-        )
+            # plot instatneous frequency
+            broad_baseline = bandpass_filter(data_oi[:, electrode], data.samplerate, lowf=np.mean(
+                freq_temp)-5, highf=np.mean(freq_temp)+100)
 
-        # search_envelope = bandpass_filter(
-        # search_envelope, data.samplerate, lowf=lowf, highf=highf)
+            baseline_freq_time, baseline_freq = instantaneos_frequency(
+                baseline, data.samplerate
+            )
+            axs[1, i].plot(baseline_freq_time, baseline_freq -
+                           np.median(baseline_freq), marker=".")
 
-        # bandpass filter the instantaneous
-        inst_freq_filtered = bandpass_filter(
-            baseline_freq, data.samplerate, lowf=15, highf=8000
-        )
+            # plot waveform of filtered search signal
+            axs[3, i].plot(np.arange(len(baseline)) / data.samplerate, search)
 
-        # plot filtered and rectified envelope
-        axs[4].plot(
-            np.arange(len(baseline)) / data.samplerate, baseline_envelope
-        )
+            # compute envelopes
+            cutoff = 25
+            baseline_envelope = envelope(baseline, data.samplerate, cutoff)
+            axs[2, i].plot(
+                np.arange(len(baseline)) / data.samplerate,
+                baseline_envelope,
+                c="orange",
+            )
+            axs[2, i].plot(
+                np.arange(len(baseline)) / data.samplerate,
+                broad_baseline,
+                c="green",
+            )
+            search_envelope = envelope(search, data.samplerate, cutoff)
+            axs[3, i].plot(
+                np.arange(len(baseline)) / data.samplerate,
+                search_envelope,
+                c="orange",
+            )
 
-        axs[5].plot(np.arange(len(baseline)) /
-                    data.samplerate, search_envelope)
+            # highpass filter envelopes
+            cutoff = 5
+            baseline_envelope = highpass_filter(
+                baseline_envelope, data.samplerate, cutoff=cutoff
+            )
+            # search_envelope = highpass_filter(
+            #     search_envelope, data.samplerate, cutoff=cutoff)
 
-        axs[6].plot(baseline_freq_time, np.abs(inst_freq_filtered))
+            # envelopes of filtered envelope of filtered baseline
+            baseline_envelope = envelope(
+                np.abs(baseline_envelope), data.samplerate, cutoff
+            )
 
-        # detect peaks baseline_enelope
-        prominence = iqr(baseline_envelope)
-        baseline_peaks, _ = find_peaks(
-            baseline_envelope, prominence=prominence)
-        axs[4].scatter(
-            (np.arange(len(baseline)) / data.samplerate)[baseline_peaks],
-            baseline_envelope[baseline_peaks],
-            c="red",
-        )
+            # search_envelope = bandpass_filter(
+            # search_envelope, data.samplerate, lowf=lowf, highf=highf)
 
-        # detect peaks search_envelope
-        search_peaks, _ = find_peaks(search_envelope, height=0.0001)
-        axs[5].scatter(
-            (np.arange(len(baseline)) / data.samplerate)[search_peaks],
-            search_envelope[search_peaks],
-            c="red",
-        )
+            # bandpass filter the instantaneous
+            inst_freq_filtered = bandpass_filter(
+                baseline_freq, data.samplerate, lowf=15, highf=8000
+            )
 
-        # detect peaks inst_freq_filtered
-        inst_freq_peaks, _ = find_peaks(np.abs(inst_freq_filtered), height=2)
-        axs[6].scatter(
-            baseline_freq_time[inst_freq_peaks],
-            np.abs(inst_freq_filtered)[inst_freq_peaks],
-            c="red",
-        )
+            # plot filtered and rectified envelope
+            axs[4, i].plot(
+                np.arange(len(baseline)) / data.samplerate, baseline_envelope
+            )
 
-        axs[0].set_title("Spectrogram")
-        axs[1].set_title("Fitered baseline instanenous frequency")
-        axs[2].set_title("Fitered baseline")
-        axs[3].set_title("Fitered above")
-        axs[4].set_title("Filtered envelope of baseline envelope")
-        axs[5].set_title("Search envelope")
-        axs[6].set_title("Filtered absolute instantaneous frequency")
+            axs[5, i].plot(np.arange(len(baseline)) /
+                           data.samplerate, search_envelope)
+
+            axs[6, i].plot(baseline_freq_time, np.abs(inst_freq_filtered))
+
+            # detect peaks baseline_enelope
+            prominence = iqr(baseline_envelope)
+            baseline_peaks, _ = find_peaks(
+                baseline_envelope, prominence=prominence)
+            axs[4, i].scatter(
+                (np.arange(len(baseline)) / data.samplerate)[baseline_peaks],
+                baseline_envelope[baseline_peaks],
+                c="red",
+            )
+
+            # detect peaks search_envelope
+            search_peaks, _ = find_peaks(search_envelope, height=0.0001)
+            axs[5, i].scatter(
+                (np.arange(len(baseline)) / data.samplerate)[search_peaks],
+                search_envelope[search_peaks],
+                c="red",
+            )
+
+            # detect peaks inst_freq_filtered
+            inst_freq_peaks, _ = find_peaks(
+                np.abs(inst_freq_filtered), height=2)
+            axs[6, i].scatter(
+                baseline_freq_time[inst_freq_peaks],
+                np.abs(inst_freq_filtered)[inst_freq_peaks],
+                c="red",
+            )
+
+            axs[0, i].set_title("Spectrogram")
+            axs[1, i].set_title("Fitered baseline instanenous frequency")
+            axs[2, i].set_title("Fitered baseline")
+            axs[3, i].set_title("Fitered above")
+            axs[4, i].set_title("Filtered envelope of baseline envelope")
+            axs[5, i].set_title("Search envelope")
+            axs[6, i].set_title("Filtered absolute instantaneous frequency")
 
         plt.show()
 
