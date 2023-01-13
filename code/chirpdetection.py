@@ -51,7 +51,7 @@ def instantaneos_frequency(
     signal: np.ndarray, samplerate: int
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Compute the instantaneous frequency of a signal.
+   Compute the instantaneous frequency of a signal.
 
     Parameters
     ----------
@@ -92,7 +92,7 @@ def instantaneos_frequency(
     return inst_freq_time, inst_freq
 
 
-def plot_spectrogram(axis, signal: np.ndarray, samplerate: float) -> None:
+def plot_spectrogram(axis, signal: np.ndarray, samplerate: float, t0: float) -> None:
     """
     Plot a spectrogram of a signal.
 
@@ -104,7 +104,8 @@ def plot_spectrogram(axis, signal: np.ndarray, samplerate: float) -> None:
         Signal to plot the spectrogram from.
     samplerate : float
         Samplerate of the signal.
-
+    t0 : float
+        Start time of the signal.
     """
     # compute spectrogram
     spec_power, spec_freqs, spec_times = spectrogram(
@@ -115,7 +116,7 @@ def plot_spectrogram(axis, signal: np.ndarray, samplerate: float) -> None:
     )
 
     axis.pcolormesh(
-        spec_times,
+        spec_times + t0,
         spec_freqs,
         decibel(spec_power),
     )
@@ -320,6 +321,8 @@ def main(datapath: str) -> None:
                 baseline_freq, data.samplerate, lowf=15, highf=8000
             )
 
+            # CUT OFF OVERLAP -------------------------------------------------
+
             # cut off first and last 0.5 * overlap at start and end
             valid = np.arange(
                 int(0.5 * window_overlap), len(baseline_envelope) -
@@ -329,48 +332,46 @@ def main(datapath: str) -> None:
             search_envelope = search_envelope[valid]
 
             # get inst freq valid snippet
-            valid_t0 = int(0.5 * window_overlap)
-            valid_t1 = len(baseline_envelope) - int(0.5 * window_overlap)
+            valid_t0 = int(0.5 * window_overlap) / data.samplerate
+            valid_t1 = baseline_freq_time[-1] - \
+                (int(0.5 * window_overlap) / data.samplerate)
+
             inst_freq_filtered = inst_freq_filtered[(baseline_freq_time >= valid_t0) & (
                 baseline_freq_time <= valid_t1)]
-            baseline_freq_time = baseline_freq_time[(baseline_freq_time >= valid_t0) & (
+
+            baseline_freq = baseline_freq[(baseline_freq_time >= valid_t0) & (
                 baseline_freq_time <= valid_t1)]
+
+            baseline_freq_time = baseline_freq_time[(baseline_freq_time >= valid_t0) & (
+                baseline_freq_time <= valid_t1)] + t0
 
             # overwrite raw time to valid region
             time_oi = time_oi[valid]
+            baseline = baseline[valid]
+            broad_baseline = broad_baseline[valid]
+            search = search[valid]
+
+            # PEAK DETECTION --------------------------------------------------
 
             # detect peaks baseline_enelope
             prominence = np.percentile(baseline_envelope, 90)
             baseline_peaks, _ = find_peaks(
                 np.abs(baseline_envelope), prominence=prominence)
-            axs[4, i].scatter(
-                (time_oi)[baseline_peaks],
-                baseline_envelope[baseline_peaks],
-                c="red",
-            )
 
             # detect peaks search_envelope
             prominence = np.percentile(search_envelope, 75)
             search_peaks, _ = find_peaks(
                 search_envelope, prominence=prominence)
-            axs[5, i].scatter(
-                (time_oi)[search_peaks],
-                search_envelope[search_peaks],
-                c="red",
-            )
 
             # detect peaks inst_freq_filtered
             prominence = 2
             inst_freq_peaks, _ = find_peaks(
                 np.abs(inst_freq_filtered), prominence=prominence)
-            axs[6, i].scatter(
-                baseline_freq_time[inst_freq_peaks],
-                np.abs(inst_freq_filtered)[inst_freq_peaks],
-                c="red",
-            )
+
+            # PLOT ------------------------------------------------------------
 
             # plot spectrogram
-            plot_spectrogram(axs[0, i], data_oi[:, electrode], data.samplerate)
+            plot_spectrogram(axs[0, i], data_oi[:, electrode], data.samplerate, t0)
 
             # plot baseline instantaneos frequency
             axs[1, i].plot(baseline_freq_time, baseline_freq -
@@ -378,9 +379,6 @@ def main(datapath: str) -> None:
 
             # plot waveform of filtered signal
             axs[2, i].plot(time_oi, baseline, c="k")
-
-            # plot waveform of filtered search signal
-            axs[3, i].plot(time_oi, search)
 
             # plot narrow filtered baseline
             axs[2, i].plot(
@@ -396,6 +394,9 @@ def main(datapath: str) -> None:
                 c="green",
             )
 
+            # plot waveform of filtered search signal
+            axs[3, i].plot(time_oi, search)
+
             # plot envelope of search signal
             axs[3, i].plot(
                 time_oi,
@@ -404,15 +405,29 @@ def main(datapath: str) -> None:
             )
 
             # plot filtered and rectified envelope
-            axs[4, i].plot(
-                time_oi, baseline_envelope
+            axs[4, i].plot(time_oi, baseline_envelope)
+            axs[4, i].scatter(
+                (time_oi)[baseline_peaks],
+                baseline_envelope[baseline_peaks],
+                c="red",
             )
 
             # plot envelope of search signal
             axs[5, i].plot(time_oi, search_envelope)
+            axs[5, i].scatter(
+                (time_oi)[search_peaks],
+                search_envelope[search_peaks],
+                c="red",
+            )
 
             # plot filtered instantaneous frequency
             axs[6, i].plot(baseline_freq_time, np.abs(inst_freq_filtered))
+            axs[6, i].scatter(
+                baseline_freq_time[inst_freq_peaks],
+                np.abs(inst_freq_filtered)[inst_freq_peaks],
+                c="red",
+            )
+
             axs[0, i].set_title("Spectrogram")
             axs[1, i].set_title("Fitered baseline instanenous frequency")
             axs[2, i].set_title("Fitered baseline")
