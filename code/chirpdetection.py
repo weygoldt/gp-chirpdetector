@@ -151,6 +151,7 @@ def main(datapath: str) -> None:
     # set time window # <------------------------ Iterate through windows here
     window_duration = config.window * data.samplerate
     window_overlap = config.overlap * data.samplerate
+    window_edge = config.edge * data.samplerate
 
     # check if window duration is even
     if window_duration % 2 == 0:
@@ -171,7 +172,11 @@ def main(datapath: str) -> None:
     dt = 60 * data.samplerate
 
     window_starts = np.arange(
-        t0, t0 + dt, window_duration - window_overlap, dtype=int)
+        t0,
+        t0 + dt,
+        window_duration - (window_overlap + 2 * window_edge),
+        dtype=int
+    )
 
     for start_index in window_starts:
 
@@ -312,16 +317,16 @@ def main(datapath: str) -> None:
 
                 # cut off first and last 0.5 * overlap at start and end
                 valid = np.arange(
-                    int(window_overlap / 2), len(baseline_envelope) -
-                    int(window_overlap / 2)
+                    int(window_edge), len(baseline_envelope) -
+                    int(window_edge)
                 )
                 baseline_envelope = baseline_envelope[valid]
                 search_envelope = search_envelope[valid]
 
                 # get inst freq valid snippet
-                valid_t0 = int(window_overlap / 2) / data.samplerate
+                valid_t0 = int(window_edge) / data.samplerate
                 valid_t1 = baseline_freq_time[-1] - \
-                    (int(window_overlap / 2) / data.samplerate)
+                    (int(window_edge) / data.samplerate)
 
                 inst_freq_filtered = inst_freq_filtered[(baseline_freq_time >= valid_t0) & (
                     baseline_freq_time <= valid_t1)]
