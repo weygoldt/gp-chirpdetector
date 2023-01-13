@@ -12,7 +12,6 @@ class Behavior:
         csv_file = str(sorted(Path(datapath).glob('**/*.csv'))[0])
         self.dataframe = read_csv(csv_file, delimiter=',')
 
-        embed()
 
 
 def main(datapath:str):
