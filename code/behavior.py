@@ -1,20 +1,15 @@
 from pathlib import Path
-import os 
-import numpy as np
-from IPython import embed
-
 from pandas import read_csv
 
 
-
 class Behavior:
-    def __init__(self, datapath: str):
+    def __init__(self, datapath: str) -> None:
         csv_file = str(sorted(Path(datapath).glob('**/*.csv'))[0])
         self.dataframe = read_csv(csv_file, delimiter=',')
 
 
-
-def main(datapath:str):
+def main(datapath: str):
+    # behabvior is pandas dataframe with all the data
     behavior = Behavior(datapath)
 
 
