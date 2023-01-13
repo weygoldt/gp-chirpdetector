@@ -1,7 +1,7 @@
 # Duration and overlap of the analysis window in seconds
 window: 5
 overlap: 1
-edges: 0.25
+edge: 0.25
 
 # Number of electrodes to go over
 electrodes: 3
