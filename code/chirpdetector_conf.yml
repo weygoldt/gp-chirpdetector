@@ -1,0 +1,32 @@
+# Duration and overlap of the analysis window in seconds
+window: 5
+overlap: 0.5
+
+# Number of electrodes to go over
+electrodes: 3
+
+# Boundary for search frequency in Hz
+search_boundary: 100
+
+# Cutoff frequency for envelope estimation by lowpass filter
+envelope_cutoff: 25
+
+# Cutoff frequency for envelope highpass filter
+envelope_highpass_cutoff: 5
+
+# Cutoff frequency for envelope of envelope
+envelope_envelope_cutoff: 5
+
+# Instantaneous frequency bandpass filter cutoff frequencies
+instantaneous_lowf: 15
+instantaneous_highf: 8000
+
+# Baseline envelope peak detection parameters
+baseline_prominence_percentile: 90
+
+# Search envelope peak detection parameters
+search_prominence_percentile: 75
+
+# Instantaneous frequency peak detection parameters
+instantaneous_prominence_percentile: 90
+
