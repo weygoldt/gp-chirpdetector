@@ -428,7 +428,7 @@ def main(datapath: str) -> None:
                 c="red",
             )
 
-            axs[6,i ].set_xlabel("Time [s]")
+            axs[6, i].set_xlabel("Time [s]")
             axs[0, i].set_title("Spectrogram")
             axs[1, i].set_title("Fitered baseline instanenous frequency")
             axs[2, i].set_title("Fitered baseline")
