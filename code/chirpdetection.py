@@ -10,7 +10,7 @@ from thunderfish.dataloader import DataLoader
 from thunderfish.powerspectrum import spectrogram, decibel
 
 from modules.filters import bandpass_filter, envelope, highpass_filter
-from modules.filehandling import ConfLoader
+from modules.filehandling import ConfLoader, LoadData
 
 
 def instantaneos_frequency(
@@ -136,22 +136,24 @@ def main(datapath: str) -> None:
 
     # load raw file
     file = os.path.join(datapath, "traces-grid1.raw")
-    data = DataLoader(file, 60.0, 0, channel=-1)
+    # data = DataLoader(file, 60.0, 0, channel=-1)
+
+    data = LoadData(datapath)
 
     # load wavetracker files
-    time = np.load(datapath + "times.npy", allow_pickle=True)
-    freq = np.load(datapath + "fund_v.npy", allow_pickle=True)
-    powers = np.load(datapath + "sign_v.npy", allow_pickle=True)
-    idx = np.load(datapath + "idx_v.npy", allow_pickle=True)
-    ident = np.load(datapath + "ident_v.npy", allow_pickle=True)
+    # time = np.load(datapath + "times.npy", allow_pickle=True)
+    # freq = np.load(datapath + "fund_v.npy", allow_pickle=True)
+    # powers = np.load(datapath + "sign_v.npy", allow_pickle=True)
+    # idx = np.load(datapath + "idx_v.npy", allow_pickle=True)
+    # ident = np.load(datapath + "ident_v.npy", allow_pickle=True)
 
     # load config file
     config = ConfLoader("chirpdetector_conf.yml")
 
     # set time window # <------------------------ Iterate through windows here
-    window_duration = config.window * data.samplerate
-    window_overlap = config.overlap * data.samplerate
-    window_edge = config.edge * data.samplerate
+    window_duration = config.window * data.raw_rate
+    window_overlap = config.overlap * data.raw_rate
+    window_edge = config.edge * data.raw_rate
 
     # check if window duration is even
     if window_duration % 2 == 0:
@@ -165,11 +167,11 @@ def main(datapath: str) -> None:
     else:
         raise ValueError("Window overlap must be even.")
 
-    raw_time = np.arange(data.shape[0]) / data.samplerate
+    raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    t0 = (3 * 60 * 60 + 6 * 60 + 43.5) * data.samplerate
-    dt = 60 * data.samplerate
+    t0 = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    dt = 60 * data.raw_rate
 
     window_starts = np.arange(
         t0,
@@ -182,31 +184,31 @@ def main(datapath: str) -> None:
     for start_index in window_starts[:nwindows]:
 
         # make t0 and dt
-        t0 = start_index / data.samplerate
-        dt = window_duration / data.samplerate
+        t0 = start_index / data.raw_rate
+        dt = window_duration / data.raw_rate
 
         # set index window
         stop_index = start_index + window_duration
 
         # t0 = 3 * 60 * 60 + 6 * 60 + 43.5
         # dt = 60
-        # start_index = t0 * data.samplerate
-        # stop_index = (t0 + dt) * data.samplerate
+        # start_index = t0 * data.raw_rate
+        # stop_index = (t0 + dt) * data.raw_rate
 
         # iterate through all fish
-        for i, track_id in enumerate(np.unique(ident[~np.isnan(ident)])[:2]):
+        for i, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])[:2]):
 
             # get indices for time array in time window
-            window_index = np.arange(len(idx))[
-                (ident == track_id) & (time[idx] >= t0) & (
-                    time[idx] <= (t0 + dt))
+            window_index = np.arange(len(data.idx))[
+                (data.ident == track_id) & (data.time[data.idx] >= t0) & (
+                    data.time[data.idx] <= (t0 + dt))
             ]
 
             # get tracked frequencies and their times
-            freq_temp = freq[window_index]
-            powers_temp = powers[window_index, :]
+            freq_temp = data.freq[window_index]
+            powers_temp = data.powers[window_index, :]
             # time_temp = time[idx[window_index]]
-            track_samplerate = np.mean(1 / np.diff(time))
+            track_samplerate = np.mean(1 / np.diff(data.time))
             expected_duration = ((t0 + dt) - t0) * track_samplerate
 
             # check if tracked data available in this window
@@ -229,7 +231,7 @@ def main(datapath: str) -> None:
             for i, electrode in enumerate(best_electrodes):
 
                 # load region of interest of raw data file
-                data_oi = data[start_index:stop_index, :]
+                data_oi = data.raw[start_index:stop_index, :]
                 time_oi = raw_time[start_index:stop_index]
 
                 # plot wavetracker tracks to spectrogram
@@ -256,56 +258,56 @@ def main(datapath: str) -> None:
 
                 # filter baseline and above
                 baseline, search = double_bandpass(
-                    data_oi[:, electrode], data.samplerate, freq_temp, search_freq
+                    data_oi[:, electrode], data.raw_rate, freq_temp, search_freq
                 )
 
                 # compute instantaneous frequency on broad signal
                 broad_baseline = bandpass_filter(
                     data_oi[:, electrode],
-                    data.samplerate,
+                    data.raw_rate,
                     lowf=np.mean(freq_temp)-5,
                     highf=np.mean(freq_temp)+100
                 )
 
                 # compute instantaneous frequency on narrow signal
                 baseline_freq_time, baseline_freq = instantaneos_frequency(
-                    baseline, data.samplerate
+                    baseline, data.raw_rate
                 )
 
                 # compute envelopes
                 baseline_envelope = envelope(
-                    baseline, data.samplerate, config.envelope_cutoff)
+                    baseline, data.raw_rate, config.envelope_cutoff)
                 search_envelope = envelope(
-                    search, data.samplerate, config.envelope_cutoff)
+                    search, data.raw_rate, config.envelope_cutoff)
 
                 # highpass filter envelopes
                 baseline_envelope = highpass_filter(
                     baseline_envelope,
-                    data.samplerate,
+                    data.raw_rate,
                     config.envelope_highpass_cutoff
                 )
 
                 baseline_envelope = np.abs(baseline_envelope)
                 # search_envelope = highpass_filter(
                 #     search_envelope,
-                #     data.samplerate,
+                #     data.raw_rate,
                 #     config.envelope_highpass_cutoff
                 # )
 
                 # envelopes of filtered envelope of filtered baseline
                 baseline_envelope = envelope(
                     np.abs(baseline_envelope),
-                    data.samplerate,
+                    data.raw_rate,
                     config.envelope_envelope_cutoff
                 )
 
 #             search_envelope = bandpass_filter(
-#                 search_envelope, data.samplerate, lowf=lowf, highf=highf)
+#                 search_envelope, data.raw_rate, lowf=lowf, highf=highf)
 
                 # bandpass filter the instantaneous
                 inst_freq_filtered = bandpass_filter(
                     baseline_freq,
-                    data.samplerate,
+                    data.raw_rate,
                     lowf=config.instantaneous_lowf,
                     highf=config.instantaneous_highf
                 )
@@ -325,9 +327,9 @@ def main(datapath: str) -> None:
                 search_envelope = search_envelope[valid]
 
                 # get inst freq valid snippet
-                valid_t0 = int(window_edge) / data.samplerate
+                valid_t0 = int(window_edge) / data.raw_rate
                 valid_t1 = baseline_freq_time[-1] - \
-                    (int(window_edge) / data.samplerate)
+                    (int(window_edge) / data.raw_rate)
 
                 inst_freq_filtered = inst_freq_filtered[(baseline_freq_time >= valid_t0) & (
                     baseline_freq_time <= valid_t1)]
@@ -368,7 +370,7 @@ def main(datapath: str) -> None:
 
                 # plot spectrogram
                 plot_spectrogram(
-                    axs[0, i], data_oi[:, electrode], data.samplerate, t0)
+                    axs[0, i], data_oi[:, electrode], data.raw_rate, t0)
 
                 # plot baseline instantaneos frequency
                 axs[1, i].plot(baseline_freq_time, baseline_freq -

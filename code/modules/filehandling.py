@@ -37,12 +37,13 @@ class LoadData:
 
         # load raw data
         self.file = os.path.join(datapath, "traces-grid1.raw")
-        self.data = DataLoader(self.file, 60.0, 0, channel=-1)
-        self.samplerate = self.data.samplerate
+        self.raw = DataLoader(self.file, 60.0, 0, channel=-1)
+        self.raw_rate = self.raw.samplerate
 
         # load wavetracker files
         self.time = np.load(datapath + "times.npy", allow_pickle=True)
         self.freq = np.load(datapath + "fund_v.npy", allow_pickle=True)
+        self.powers = np.load(datapath + "sign_v.npy", allow_pickle=True)
         self.idx = np.load(datapath + "idx_v.npy", allow_pickle=True)
         self.ident = np.load(datapath + "ident_v.npy", allow_pickle=True)
         self.ids = np.unique(self.ident[~np.isnan(self.ident)])
