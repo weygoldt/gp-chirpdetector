@@ -1,0 +1,83 @@
+\documentclass[25pt, a0paper, landscape, margin=0mm, innermargin=20mm,
+blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default values for poster format options.
+
+\input{packages}
+\input{style}
+
+\begin{document}
+
+\renewcommand{\baselinestretch}{1}
+\title{\parbox{1900pt}{A dark template to make colorful figures pop}}
+\author{Sina Prause, Alexander Wendt, Patrick Weygoldt}
+\institute{Supervised by Till Raab \& Jan Benda}
+\usetitlestyle[]{sampletitle}
+\maketitle
+\renewcommand{\baselinestretch}{1.4}
+
+\begin{columns}
+\column{0.3}
+\myblock[TranspBlock]{Introduction}{
+    \lipsum[1][1-5]
+    \begin{tikzfigure}[]
+        \label{griddrawing}
+        \includegraphics[width=\linewidth]{example-image-a}
+    \end{tikzfigure}
+}
+
+\myblock[TranspBlock]{Methods}{
+    \begin{tikzfigure}[]
+        \label{detector}
+        \includegraphics[width=\linewidth]{example-image-b}
+    \end{tikzfigure}
+}
+
+\column{0.4}
+\myblock[TranspBlock]{Results}{
+    \lipsum[3][1-5]
+    \begin{tikzfigure}[]
+        \label{modulations}
+        \includegraphics[width=\linewidth]{example-image-c}
+    \end{tikzfigure}
+}
+
+\myblock[TranspBlock]{More Stuff}{
+    \lipsum[3][1-9]
+}
+
+\column{0.3}
+\myblock[TranspBlock]{More Results}{
+    \begin{tikzfigure}[]
+        \label{results}
+        \includegraphics[width=\linewidth]{example-image-a}
+    \end{tikzfigure}
+
+    \begin{multicols}{2}
+    \lipsum[5][1-8]
+    \end{multicols}
+    \vspace{-1cm}
+}
+
+\myblock[TranspBlock]{Conclusion}{
+    \begin{itemize}
+        \setlength\itemsep{0.5em}
+        \item \lipsum[1][1]
+        \item \lipsum[1][1]
+        \item \lipsum[1][1]
+    \end{itemize}
+    \vspace{0.2cm}
+    }
+\end{columns}
+
+\node[
+    above right,
+    text=white,
+    outer sep=45pt,
+    minimum width=\paperwidth,
+    align=center,
+    draw,
+    fill=boxes,
+    color=boxes,
+] at (-0.51\paperwidth,-43.5) {
+    \textcolor{text}{\normalsize Contact: name.surname@student.uni-tuebingen.de}};
+
+\end{document}
