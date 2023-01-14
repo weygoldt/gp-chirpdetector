@@ -18,17 +18,17 @@ def PlotStyle() -> None:
         black = "#111116"
         white = "#e0e4f7"
         gray = "#6c6e7d"
-        pink = "#f5c2e7"
-        purple = "#cba6f7"
-        red = "#f38ba8"
-        maroon = "#eba0ac"
-        orange = "#fab387"
-        yellow = "#f9e2af"
-        green = "#a6e3a1"
-        teal = "#94e2d5"
-        sky = "#89dceb"
-        sapphire = "#74c7ec"
         blue = "#89b4fa"
+        sapphire = "#74c7ec"
+        sky = "#89dceb"
+        teal = "#94e2d5"
+        green = "#a6e3a1"
+        yellow = "#f9e2af"
+        orange = "#fab387"
+        maroon = "#eba0ac"
+        red = "#f38ba8"
+        purple = "#cba6f7"
+        pink = "#f5c2e7"
         lavender = "#b4befe"
 
         @classmethod
@@ -218,7 +218,7 @@ def PlotStyle() -> None:
     plt.rcParams["image.cmap"] = 'cmo.haline'
     # plt.rcParams["axes.xmargin"] = 0.1
     # plt.rcParams["axes.ymargin"] = 0.15
-    plt.rcParams["axes.titlelocation"] = "center"
+    plt.rcParams["axes.titlelocation"] = "left"
     plt.rcParams["axes.titlesize"] = BIGGER_SIZE
     # plt.rcParams["axes.titlepad"] = -10
     plt.rcParams["legend.frameon"] = False
@@ -244,8 +244,8 @@ def PlotStyle() -> None:
     plt.rcParams["text.color"] = white
     plt.rcParams["axes.facecolor"] = black  # axes background color
     plt.rcParams["axes.edgecolor"] = gray  # axes edge color
-    plt.rcParams["axes.grid"] = True    # display grid or not
-    plt.rcParams["axes.grid.axis"] = "y"  # which axis the grid is applied to
+    # plt.rcParams["axes.grid"] = True    # display grid or not
+    # plt.rcParams["axes.grid.axis"] = "y"  # which axis the grid is applied to
     plt.rcParams["axes.labelcolor"] = white
     plt.rcParams["axes.axisbelow"] = True    # draw axis gridlines and ticks:
     plt.rcParams["axes.spines.left"] = True  # display axis spines
@@ -254,18 +254,18 @@ def PlotStyle() -> None:
     plt.rcParams["axes.spines.right"] = False
     plt.rcParams["axes.prop_cycle"] = cycler(
         'color', [
-            '#f5c2e7',
-            '#cba6f7',
-            '#f38ba8',
-            '#eba0ac',
-            '#fab387',
-            '#f9e2af',
-            '#a6e3a1',
-            '#94e2d5',
-            '#89dceb',
-            '#74c7ec',
-            '#89b4fa',
             '#b4befe',
+            '#89b4fa',
+            '#74c7ec',
+            '#89dceb',
+            '#94e2d5',
+            '#a6e3a1',
+            '#f9e2af',
+            '#fab387',
+            '#eba0ac',
+            '#f38ba8',
+            '#cba6f7',
+            '#f5c2e7',
         ])
     plt.rcParams["xtick.color"] = gray  # color of the ticks
     plt.rcParams["ytick.color"] = gray  # color of the ticks

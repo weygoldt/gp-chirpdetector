@@ -11,6 +11,9 @@ from thunderfish.powerspectrum import spectrogram, decibel
 
 from modules.filters import bandpass_filter, envelope, highpass_filter
 from modules.filehandling import ConfLoader, LoadData
+from modules.plotstyle import PlotStyle
+
+ps = PlotStyle()
 
 
 def instantaneos_frequency(
@@ -275,19 +278,19 @@ def main(datapath: str) -> None:
                 )
 
                 # compute envelopes
-                baseline_envelope = envelope(
+                baseline_envelope_unfiltered = envelope(
                     baseline, data.raw_rate, config.envelope_cutoff)
                 search_envelope = envelope(
                     search, data.raw_rate, config.envelope_cutoff)
 
                 # highpass filter envelopes
                 baseline_envelope = highpass_filter(
-                    baseline_envelope,
+                    baseline_envelope_unfiltered,
                     data.raw_rate,
                     config.envelope_highpass_cutoff
                 )
 
-                baseline_envelope = np.abs(baseline_envelope)
+                # baseline_envelope = np.abs(baseline_envelope)
                 # search_envelope = highpass_filter(
                 #     search_envelope,
                 #     data.raw_rate,
@@ -323,6 +326,7 @@ def main(datapath: str) -> None:
                     int(window_edge), len(baseline_envelope) -
                     int(window_edge)
                 )
+                baseline_envelope_unfiltered = baseline_envelope_unfiltered[valid]
                 baseline_envelope = baseline_envelope[valid]
                 search_envelope = search_envelope[valid]
 
@@ -374,23 +378,22 @@ def main(datapath: str) -> None:
 
                 # plot baseline instantaneos frequency
                 axs[1, i].plot(baseline_freq_time, baseline_freq -
-                               np.median(baseline_freq), marker=".")
+                               np.median(baseline_freq))
 
                 # plot waveform of filtered signal
-                axs[2, i].plot(time_oi, baseline, c="k")
-
-                # plot narrow filtered baseline
-                axs[2, i].plot(
-                    time_oi,
-                    baseline_envelope,
-                    c="orange",
-                )
+                axs[2, i].plot(time_oi, baseline, c=ps.green)
 
                 # plot broad filtered baseline
                 axs[2, i].plot(
                     time_oi,
                     broad_baseline,
-                    c="green",
+                )
+
+                # plot narrow filtered baseline envelope
+                axs[2, i].plot(
+                    time_oi,
+                    baseline_envelope_unfiltered,
+                    c=ps.red
                 )
 
                 # plot waveform of filtered search signal
@@ -400,7 +403,7 @@ def main(datapath: str) -> None:
                 axs[3, i].plot(
                     time_oi,
                     search_envelope,
-                    c="orange",
+                    c=ps.red
                 )
 
                 # plot filtered and rectified envelope
@@ -408,7 +411,7 @@ def main(datapath: str) -> None:
                 axs[4, i].scatter(
                     (time_oi)[baseline_peaks],
                     baseline_envelope[baseline_peaks],
-                    c="red",
+                    c=ps.red,
                 )
 
                 # plot envelope of search signal
@@ -416,7 +419,7 @@ def main(datapath: str) -> None:
                 axs[5, i].scatter(
                     (time_oi)[search_peaks],
                     search_envelope[search_peaks],
-                    c="red",
+                    c=ps.red,
                 )
 
                 # plot filtered instantaneous frequency
@@ -424,7 +427,7 @@ def main(datapath: str) -> None:
                 axs[6, i].scatter(
                     baseline_freq_time[inst_freq_peaks],
                     np.abs(inst_freq_filtered)[inst_freq_peaks],
-                    c="red",
+                    c=ps.red,
                 )
 
                 axs[6, i].set_xlabel("Time [s]")
