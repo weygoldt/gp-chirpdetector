@@ -177,8 +177,9 @@ def main(datapath: str) -> None:
         window_duration - (window_overlap + 2 * window_edge),
         dtype=int
     )
-
-    for start_index in window_starts:
+    # ask how many windows should be calulated
+    nwindows = int(input("How many windows should be calculated (integer number)? "))
+    for start_index in window_starts[:nwindows]:
 
         # make t0 and dt
         t0 = start_index / data.samplerate
