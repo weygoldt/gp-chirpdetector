@@ -287,7 +287,7 @@ def main(datapath: str) -> None:
                     # if the last value is -1, the array ends with true, so a gap
                     if nonzeros[-1] == 1:
                         stops = np.append(
-                            search_window_indices[search_window_gaps == -1], len(search_window))
+                            search_window_indices[search_window_gaps == -1], len(search_window) - 1)
 
                 # else it starts with false, so no gap
                 if nonzeros[0] == 1:
@@ -299,10 +299,20 @@ def main(datapath: str) -> None:
                         stops = np.append(
                             search_window_indices[search_window_gaps == -1], len(search_window))
 
-                embed()
+                # get the frequency ranges of the gaps
+                search_windows = [search_window[x:y]
+                                  for x, y in zip(starts, stops)]
+                search_windows_lens = [len(x) for x in search_windows]
+                longest_search_window = search_windows[np.argmax(
+                    search_windows_lens)]
 
-            search_freq = 50
-            # <------------------------------------------ Iterate through electrodes
+                search_freq = (
+                    longest_search_window[1] - longest_search_window[0]) / 2
+
+            else:
+                search_freq = config.default_search_freq
+
+            print(f"Search frequency: {search_freq}")
 
             for i, electrode in enumerate(best_electrodes):
 
