@@ -20,7 +20,7 @@ def instantaneos_frequency(
     signal: np.ndarray, samplerate: int
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-   Compute the instantaneous frequency of a signal.
+    Compute the instantaneous frequency of a signal.
 
     Parameters
     ----------
@@ -185,6 +185,7 @@ def main(datapath: str) -> None:
     # ask how many windows should be calulated
     nwindows = int(
         input("How many windows should be calculated (integer number)? "))
+
     for start_index in window_starts[:nwindows]:
 
         # make t0 and dt
@@ -209,14 +210,23 @@ def main(datapath: str) -> None:
             ]
             median_freq.append(np.median(data.freq[window_index]))
             track_ids.append(track_id)
-        median_freq= np.asarray(median_freq)
-        track_ids= np.asarray(track_ids)
+        median_freq = np.asarray(median_freq)
+        track_ids = np.asarray(track_ids)
+
         # iterate through all fish
-        for i, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])[:2]):
+        for i, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])):
+
+            print(f"Track ID: {track_id}")
+
+            window_index = np.arange(len(data.idx))[
+                (data.ident == track_id) & (data.time[data.idx] >= t0) & (
+                    data.time[data.idx] <= (t0 + dt))
+            ]
 
             # get tracked frequencies and their times
             freq_temp = data.freq[window_index]
             powers_temp = data.powers[window_index, :]
+
             # time_temp = time[idx[window_index]]
             track_samplerate = np.mean(1 / np.diff(data.time))
             expected_duration = ((t0 + dt) - t0) * track_samplerate
@@ -238,22 +248,75 @@ def main(datapath: str) -> None:
                 powers_temp, axis=0))[-config.electrodes:]
 
             # frequency where second filter filters
-            search_window = np.arange(np.median(freq_temp)+config.search_df_lower, np.median(freq_temp)+config.search_df_upper, config.search_res)
-            check_track_ids = track_ids[(median_freq>search_window[0]) & (median_freq<search_window[-1])]
+            search_window = np.arange(np.median(freq_temp)+config.search_df_lower, np.median(
+                freq_temp)+config.search_df_upper, config.search_res)
+
+            # search window in boolean
+            search_window_bool = np.ones(len(search_window), dtype=bool)
+
+            # get tracks that fall into search window
+            check_track_ids = track_ids[(median_freq > search_window[0]) & (
+                median_freq < search_window[-1])]
+
+            # iterate through theses tracks
             if check_track_ids.size != 0:
+
                 for j, check_track_id in enumerate(check_track_ids):
-                    q1, q2 = np.percentile(data.freq[data.ident==check_track_id], config.search_freq_percentiles)
 
+                    q1, q2 = np.percentile(
+                        data.freq[data.ident == check_track_id], config.search_freq_percentiles)
 
+                    search_window_bool[(search_window > q1) & (
+                        search_window < q2)] = False
 
+                # find gaps in search window
+                search_window_indices = np.arange(len(search_window))
+
+                # get search window gaps
+                search_window_gaps = np.diff(search_window_bool, append=np.nan)
+                nonzeros = search_window_gaps[np.nonzero(
+                    search_window_gaps)[0]]
+                nonzeros = nonzeros[~np.isnan(nonzeros)]
+
+                # if the first value is -1, the array starst with true, so a gap
+                if nonzeros[0] == -1:
+                    stops = search_window_indices[search_window_gaps == -1]
+                    starts = np.append(
+                        0, search_window_indices[search_window_gaps == 1])
+
+                    # if the last value is -1, the array ends with true, so a gap
+                    if nonzeros[-1] == 1:
+                        stops = np.append(
+                            search_window_indices[search_window_gaps == -1], len(search_window))
+
+                # else it starts with false, so no gap
+                if nonzeros[0] == 1:
+                    stops = search_window_indices[search_window_gaps == -1]
+                    starts = search_window_indices[search_window_gaps == 1]
+
+                    # if the last value is -1, the array ends with true, so a gap
+                    if nonzeros[-1] == 1:
+                        stops = np.append(
+                            search_window_indices[search_window_gaps == -1], len(search_window))
+
+                embed()
+#                 search_window_gaps = search_window_indices[np.diff(
+#                     search_window_indices, append=np.nan) != 1]
+
+#                 startstop = [[x, y] for x, y in zip(
+#                     search_window_gaps, search_window_gaps[1:])]
+
+#                 search_windows = [search_window[startstop[i][0]:startstop[i][1]] for i in range(len(startstop))]
+
+                embed()
             search_freq = 50
             # <------------------------------------------ Iterate through electrodes
 
             for i, electrode in enumerate(best_electrodes):
 
                 # load region of interest of raw data file
-                data_oi=data.raw[start_index:stop_index, :]
-                time_oi=raw_time[start_index:stop_index]
+                data_oi = data.raw[start_index:stop_index, :]
+                time_oi = raw_time[start_index:stop_index]
 
                 # plot wavetracker tracks to spectrogram
                 # for track_id in np.unique(ident):  # <---------- Find freq gaps later
@@ -275,7 +338,7 @@ def main(datapath: str) -> None:
                 # track_id = ids
 
                 # filter baseline and above
-                baseline, search=double_bandpass(
+                baseline, search = double_bandpass(
                     data_oi[:, electrode], data.raw_rate, freq_temp, search_freq
                 )
 
@@ -345,7 +408,7 @@ def main(datapath: str) -> None:
                 baseline_envelope = baseline_envelope[valid]
                 search_envelope = search_envelope[valid]
 
-                # get inst freq valid snippet
+               # get inst freq valid snippet
                 valid_t0 = int(window_edge) / data.raw_rate
                 valid_t1 = baseline_freq_time[-1] - \
                     (int(window_edge) / data.raw_rate)
