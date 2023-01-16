@@ -300,15 +300,7 @@ def main(datapath: str) -> None:
                             search_window_indices[search_window_gaps == -1], len(search_window))
 
                 embed()
-#                 search_window_gaps = search_window_indices[np.diff(
-#                     search_window_indices, append=np.nan) != 1]
 
-#                 startstop = [[x, y] for x, y in zip(
-#                     search_window_gaps, search_window_gaps[1:])]
-
-#                 search_windows = [search_window[startstop[i][0]:startstop[i][1]] for i in range(len(startstop))]
-
-                embed()
             search_freq = 50
             # <------------------------------------------ Iterate through electrodes
 
