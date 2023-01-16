@@ -143,6 +143,13 @@ def main(datapath: str) -> None:
 
     data = LoadData(datapath)
 
+    # ititialize data collection
+    baseline_ts = []
+    search_ts = []
+    freq_ts = []
+    fish_ids = []
+    electrodes = []
+
     # load wavetracker files
     # time = np.load(datapath + "times.npy", allow_pickle=True)
     # freq = np.load(datapath + "fund_v.npy", allow_pickle=True)
@@ -456,6 +463,14 @@ def main(datapath: str) -> None:
                 inst_freq_peaks, _ = find_peaks(
                     np.abs(inst_freq_filtered), prominence=prominence)
 
+                # SAVE DATA ----------------------------------------------------
+
+                baseline_ts.append(time_oi[baseline_peaks].tolist())
+                search_ts.append(time_oi[search_peaks].tolist())
+                freq_ts.append(baseline_freq_time[inst_freq_peaks].tolist())
+                fish_ids.append(track_id)
+                electrodes.append(electrode)
+                embed()
                 # PLOT ------------------------------------------------------------
 
                 # plot spectrogram
