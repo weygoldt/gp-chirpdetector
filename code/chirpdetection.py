@@ -138,7 +138,6 @@ def double_bandpass(
 def main(datapath: str) -> None:
 
     # load raw file
-    file = os.path.join(datapath, "traces-grid1.raw")
     data = LoadData(datapath)
 
     # ititialize data collection
@@ -223,11 +222,10 @@ def main(datapath: str) -> None:
 
             print(f"Track ID: {track_id}")
 
-
             # get index of track data in this time window
             window_index = np.arange(len(data.idx))[
                 (data.ident == track_id) & (data.time[data.idx] >= t0) & (
-                  data.time[data.idx] <= (t0 + dt))
+                    data.time[data.idx] <= (t0 + dt))
             ]
 
             # get tracked frequencies and their times
@@ -257,8 +255,9 @@ def main(datapath: str) -> None:
                 powers_temp, axis=0))[-config.electrodes:]
 
             # frequency where second filter filters
-            search_window = np.arange(np.median(freq_temp)+config.search_df_lower, np.median(
-                freq_temp)+config.search_df_upper, config.search_res)
+            search_window = np.arange(
+                np.median(freq_temp)+config.search_df_lower, np.median(
+                    freq_temp)+config.search_df_upper, config.search_res)
 
             # search window in boolean
             search_window_bool = np.ones(len(search_window), dtype=bool)
@@ -273,7 +272,9 @@ def main(datapath: str) -> None:
                 for j, check_track_id in enumerate(check_track_ids):
 
                     q1, q2 = np.percentile(
-                        data.freq[data.ident == check_track_id], config.search_freq_percentiles)
+                        data.freq[data.ident == check_track_id],
+                        config.search_freq_percentiles
+                    )
 
                     search_window_bool[(search_window > q1) & (
                         search_window < q2)] = False
@@ -296,7 +297,9 @@ def main(datapath: str) -> None:
                     # if the last value is -1, the array ends with true, so a gap
                     if nonzeros[-1] == 1:
                         stops = np.append(
-                            search_window_indices[search_window_gaps == -1], len(search_window) - 1)
+                            search_window_indices[search_window_gaps == -1],
+                            len(search_window) - 1
+                        )
 
                 # else it starts with false, so no gap
                 if nonzeros[0] == 1:
@@ -306,7 +309,9 @@ def main(datapath: str) -> None:
                     # if the last value is -1, the array ends with true, so a gap
                     if nonzeros[-1] == 1:
                         stops = np.append(
-                            search_window_indices[search_window_gaps == -1], len(search_window))
+                            search_window_indices[search_window_gaps == -1],
+                            len(search_window)
+                        )
 
                 # get the frequency ranges of the gaps
                 search_windows = [search_window[x:y]
@@ -339,7 +344,10 @@ def main(datapath: str) -> None:
 
                 # filter baseline and above
                 baseline, search = double_bandpass(
-                    data_oi[:, electrode], data.raw_rate, freq_temp, search_freq
+                    data_oi[:, electrode],
+                    data.raw_rate,
+                    freq_temp,
+                    search_freq
                 )
 
                 # compute instantaneous frequency on broad signal
@@ -399,14 +407,20 @@ def main(datapath: str) -> None:
                 valid_t1 = baseline_freq_time[-1] - \
                     (int(window_edge) / data.raw_rate)
 
-                inst_freq_filtered = inst_freq_filtered[(baseline_freq_time >= valid_t0) & (
-                    baseline_freq_time <= valid_t1)]
+                inst_freq_filtered = inst_freq_filtered[
+                    (baseline_freq_time >= valid_t0) & (
+                        baseline_freq_time <= valid_t1)
+                ]
 
-                baseline_freq = baseline_freq[(baseline_freq_time >= valid_t0) & (
-                    baseline_freq_time <= valid_t1)]
+                baseline_freq = baseline_freq[
+                    (baseline_freq_time >= valid_t0) & (
+                        baseline_freq_time <= valid_t1)
+                ]
 
-                baseline_freq_time = baseline_freq_time[(baseline_freq_time >= valid_t0) & (
-                    baseline_freq_time <= valid_t1)] + t0
+                baseline_freq_time = baseline_freq_time[
+                    (baseline_freq_time >= valid_t0) & (
+                        baseline_freq_time <= valid_t1)
+                ] + t0
 
                 # overwrite raw time to valid region
                 time_oi = time_oi[valid]
@@ -436,18 +450,23 @@ def main(datapath: str) -> None:
 
                 # detect peaks inst_freq_filtered
                 prominence = np.percentile(
-                    inst_freq_filtered, config.instantaneous_prominence_percentile)
+                    inst_freq_filtered,
+                    config.instantaneous_prominence_percentile
+                )
                 inst_freq_peaks, _ = find_peaks(
-                    np.abs(inst_freq_filtered), prominence=prominence)
+                    np.abs(inst_freq_filtered),
+                    prominence=prominence
+                )
 
-                # SAVE DATA ----------------------------------------------------
+                # SAVE DATA ---------------------------------------------------
 
                 baseline_ts_subsub.append(time_oi[baseline_peaks].tolist())
                 search_ts_subsub.append(time_oi[search_peaks].tolist())
-                freq_ts_subsub.append(baseline_freq_time[inst_freq_peaks].tolist())
+                freq_ts_subsub.append(
+                    baseline_freq_time[inst_freq_peaks].tolist())
                 electrodes_subsub.append(electrode)
 
-                # PLOT ------------------------------------------------------------
+                # PLOT --------------------------------------------------------
 
                 # plot spectrogram
                 plot_spectrogram(
@@ -531,9 +550,9 @@ def main(datapath: str) -> None:
         fish_ids.append(fish_ids_sub)
         electrodes.append(electrodes_sub)
 
+    # reorder this mess of nested lists to make it understandable
+    num_snippets = len(window_starts)
     embed()
-
-
 
 
 if __name__ == "__main__":
