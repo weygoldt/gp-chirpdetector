@@ -3,7 +3,6 @@ import os
 import numpy as np
 from IPython import embed
 import matplotlib.pyplot as plt
-from scipy.stats import iqr
 from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d
 from thunderfish.dataloader import DataLoader

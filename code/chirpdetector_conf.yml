@@ -13,7 +13,7 @@ search_boundary: 100
 envelope_cutoff: 25
 
 # Cutoff frequency for envelope highpass filter
-envelope_highpass_cutoff: 4
+envelope_highpass_cutoff: 3
 
 # Cutoff frequency for envelope of envelope
 envelope_envelope_cutoff: 5
