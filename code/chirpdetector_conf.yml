@@ -13,7 +13,7 @@ search_boundary: 100
 envelope_cutoff: 25
 
 # Cutoff frequency for envelope highpass filter
-envelope_highpass_cutoff: 5
+envelope_highpass_cutoff: 3
 
 # Cutoff frequency for envelope of envelope
 envelope_envelope_cutoff: 5
@@ -30,4 +30,13 @@ search_prominence_percentile: 75
 
 # Instantaneous frequency peak detection parameters
 instantaneous_prominence_percentile: 90
+
+# search freq parameter
+search_df_lower: 25
+search_df_upper: 100
+search_res: 1
+search_freq_percentiles:
+  - 5
+  - 95
+default_search_freq: 50
 
