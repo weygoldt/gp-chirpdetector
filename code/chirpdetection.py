@@ -7,6 +7,7 @@ from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d
 from thunderfish.dataloader import DataLoader
 from thunderfish.powerspectrum import spectrogram, decibel
+from sklearn.preprocessing import normalize
 
 from modules.filters import bandpass_filter, envelope, highpass_filter
 from modules.filehandling import ConfLoader, LoadData
@@ -182,7 +183,8 @@ def main(datapath: str) -> None:
         dtype=int
     )
     # ask how many windows should be calulated
-    nwindows = int(input("How many windows should be calculated (integer number)? "))
+    nwindows = int(
+        input("How many windows should be calculated (integer number)? "))
     for start_index in window_starts[:nwindows]:
 
         # make t0 and dt
@@ -349,7 +351,13 @@ def main(datapath: str) -> None:
                 broad_baseline = broad_baseline[valid]
                 search = search[valid]
 
-                # PEAK DETECTION --------------------------------------------------
+                # NORMALIZE ----------------------------------------------------
+
+                baseline_envelope = normalize([baseline_envelope])[0]
+                search_envelope = normalize([search_envelope])[0]
+                inst_freq_filtered = normalize([inst_freq_filtered])[0]
+
+                # PEAK DETECTION -----------------------------------------------
 
                 # detect peaks baseline_enelope
                 prominence = np.percentile(
