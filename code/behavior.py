@@ -37,6 +37,32 @@ class Behavior:
             new_key = new_key.lower()  
             setattr(self, new_key, np.array(self.dataframe[key]))
 
+"""
+1 - chasing onset
+2 - chasing offset
+3 - physical contact event
+
+temporal encpding needs to be corrected ... not exactly 25FPS.
+
+### correspinding python code ###
+
+    factor = 1.034141
+    LED_on_time_BORIS = np.load(os.path.join(folder_path, 'LED_on_time.npy'), allow_pickle=True)
+    last_LED_t_BORIS = LED_on_time_BORIS[-1]
+    real_time_range = times[-1] - times[0]
+    shift = last_LED_t_BORIS - real_time_range * factor
+
+    data = pd.read_csv(os.path.join(folder_path, file[1:-7] + '.csv'))
+    boris_times = data['Start (s)']
+    data_times = []
+
+    for Cevent_t in boris_times:
+        Cevent_boris_times = (Cevent_t - shift) / factor
+        data_times.append(Cevent_boris_times)
+
+    data_times = np.array(data_times)
+    behavior = data['Behavior']
+"""
 
 def main(datapath: str):
     # behabvior is pandas dataframe with all the data
