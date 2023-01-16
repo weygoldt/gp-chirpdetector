@@ -199,14 +199,20 @@ def main(datapath: str) -> None:
         # start_index = t0 * data.raw_rate
         # stop_index = (t0 + dt) * data.raw_rate
 
-        # iterate through all fish
-        for i, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])[:2]):
-
-            # get indices for time array in time window
+        # calucate frequencies in wndow
+        median_freq = []
+        track_ids = []
+        for i, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])):
             window_index = np.arange(len(data.idx))[
                 (data.ident == track_id) & (data.time[data.idx] >= t0) & (
                     data.time[data.idx] <= (t0 + dt))
             ]
+            median_freq.append(np.median(data.freq[window_index]))
+            track_ids.append(track_id)
+        median_freq= np.asarray(median_freq)
+        track_ids= np.asarray(track_ids)
+        # iterate through all fish
+        for i, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])[:2]):
 
             # get tracked frequencies and their times
             freq_temp = data.freq[window_index]
@@ -230,13 +236,24 @@ def main(datapath: str) -> None:
             # get best electrode
             best_electrodes = np.argsort(np.nanmean(
                 powers_temp, axis=0))[-config.electrodes:]
+
+            # frequency where second filter filters
+            search_window = np.arange(np.median(freq_temp)+config.search_df_lower, np.median(freq_temp)+config.search_df_upper, config.search_res)
+            check_track_ids = track_ids[(median_freq>search_window[0]) & (median_freq<search_window[-1])]
+            if check_track_ids.size != 0:
+                for j, check_track_id in enumerate(check_track_ids):
+                    q1, q2 = np.percentile(data.freq[data.ident==check_track_id], config.search_freq_percentiles)
+
+
+
+            search_freq = 50
             # <------------------------------------------ Iterate through electrodes
 
             for i, electrode in enumerate(best_electrodes):
 
                 # load region of interest of raw data file
-                data_oi = data.raw[start_index:stop_index, :]
-                time_oi = raw_time[start_index:stop_index]
+                data_oi=data.raw[start_index:stop_index, :]
+                time_oi=raw_time[start_index:stop_index]
 
                 # plot wavetracker tracks to spectrogram
                 # for track_id in np.unique(ident):  # <---------- Find freq gaps later
@@ -257,11 +274,8 @@ def main(datapath: str) -> None:
 
                 # track_id = ids
 
-                # frequency where second filter filters
-                search_freq = 50
-
                 # filter baseline and above
-                baseline, search = double_bandpass(
+                baseline, search=double_bandpass(
                     data_oi[:, electrode], data.raw_rate, freq_temp, search_freq
                 )
 
