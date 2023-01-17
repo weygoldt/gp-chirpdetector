@@ -1,4 +1,4 @@
-from pathlib import Path
+import os 
 
 import numpy as np
 from IPython import embed
@@ -25,20 +25,27 @@ class Behavior:
     total_length:          
     """
 
-    def __init__(self, datapath: str) -> None:
-        csv_file = str(sorted(Path(datapath).glob('**/*.csv'))[0])
-        self.dataframe = read_csv(csv_file, delimiter=',')
-        for key in self.dataframe:
+    def __init__(self, folder_path: str) -> None:
+        self.file = os.path.join(datapath, "traces-grid1.raw")
+        
+        LED_on_time_BORIS = np.load(os.path.join(folder_path, 'LED_on_time.npy'), allow_pickle=True)
+        self.time = np.load(datapath + "times.npy", allow_pickle=True)
+        self.dataframe = read_csv(os.path.join(folder_path,  self.file[1:-7] + '.csv'))
+        for k, key in enumerate(self.dataframe.keys()):
+            key = key.lower() 
             if ' ' in key:
                 key = key.replace(' ', '_')
                 if '(' in key:
                     key = key.replace('(', '')
                     key = key.replace(')', '')
-            key = key.lower()  
-            setattr(self, key, np.array(self.dataframe[key]))
-        
-        embed()
-        
+            setattr(self, key, np.array(self.dataframe[self.dataframe.keys()[k]]))
+        last_LED_t_BORIS = LED_on_time_BORIS[-1]
+        real_time_range = self.time[-1] - self.time[0]
+        factor = 1.034141
+        self.shift = last_LED_t_BORIS - real_time_range * factor
+        self.start_s = (self.start_s - self.shift) / factor
+        self.stop_s = (self.stop_s - self.shift) / factor
+  
 
 
 """
