@@ -4,7 +4,7 @@ overlap: 1
 edge: 0.25
 
 # Number of electrodes to go over
-electrodes: 3
+number_electrodes: 3
 
 # Boundary for search frequency in Hz
 search_boundary: 100

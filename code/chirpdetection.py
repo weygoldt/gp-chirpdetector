@@ -140,13 +140,6 @@ def main(datapath: str) -> None:
     # load raw file
     data = LoadData(datapath)
 
-    # ititialize data collection
-    baseline_ts = []
-    search_ts = []
-    freq_ts = []
-    fish_ids = []
-    electrodes = []
-
     # load config file
     config = ConfLoader("chirpdetector_conf.yml")
 
@@ -186,7 +179,25 @@ def main(datapath: str) -> None:
     nwindows = int(
         input("How many windows should be calculated (integer number)? "))
 
-    for start_index in window_starts[:nwindows]:
+    # ititialize lists to store data
+    window_index = np.arange(nwindows)
+    electrode_index = np.arange(config.number_electrodes)
+    track_index = np.arange(len(data.ids))
+
+    baseline_ts = [[[
+        [] for el in range(config.number_electrodes)]
+        for tr in range(len(data.ids))]
+        for wi in range(nwindows)]
+    search_ts = [[[
+        [] for el in range(config.number_electrodes)]
+        for tr in range(len(data.ids))]
+        for wi in range(nwindows)]
+    freq_ts = [[[
+        [] for el in range(config.number_electrodes)]
+        for tr in range(len(data.ids))]
+        for wi in range(nwindows)]
+
+    for st, start_index in enumerate(window_starts[: nwindows]):
 
         # make t0 and dt
         t0 = start_index / data.raw_rate
@@ -210,15 +221,8 @@ def main(datapath: str) -> None:
         median_freq = np.asarray(median_freq)
         track_ids = np.asarray(track_ids)
 
-        # make empty lists for data collection
-        baseline_ts_sub = []
-        search_ts_sub = []
-        freq_ts_sub = []
-        electrodes_sub = []
-        fish_ids_sub = []
-
         # iterate through all fish
-        for i, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])):
+        for tr, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])):
 
             print(f"Track ID: {track_id}")
 
@@ -243,7 +247,7 @@ def main(datapath: str) -> None:
 
             fig, axs = plt.subplots(
                 7,
-                config.electrodes,
+                config.number_electrodes,
                 figsize=(20 / 2.54, 12 / 2.54),
                 constrained_layout=True,
                 sharex=True,
@@ -266,7 +270,7 @@ def main(datapath: str) -> None:
             check_track_ids = track_ids[(median_freq > search_window[0]) & (
                 median_freq < search_window[-1])]
 
-            # iterate through theses tracks
+           # iterate through theses tracks
             if check_track_ids.size != 0:
 
                 for j, check_track_id in enumerate(check_track_ids):
@@ -328,15 +332,8 @@ def main(datapath: str) -> None:
 
             print(f"Search frequency: {search_freq}")
 
-            # ititialize sublists to collect electrodes for this fish in this
-            # time window
-            baseline_ts_subsub = []
-            search_ts_subsub = []
-            freq_ts_subsub = []
-            electrodes_subsub = []
-
             # iterate through electrodes
-            for i, electrode in enumerate(best_electrodes):
+            for el, electrode in enumerate(best_electrodes):
 
                 # load region of interest of raw data file
                 data_oi = data.raw[start_index:stop_index, :]
@@ -460,11 +457,9 @@ def main(datapath: str) -> None:
 
                 # SAVE DATA ---------------------------------------------------
 
-                baseline_ts_subsub.append(time_oi[baseline_peaks].tolist())
-                search_ts_subsub.append(time_oi[search_peaks].tolist())
-                freq_ts_subsub.append(
-                    baseline_freq_time[inst_freq_peaks].tolist())
-                electrodes_subsub.append(electrode)
+                baseline_ts[st][tr][el] = baseline_envelope[baseline_peaks]
+                search_ts[st][tr][el] = search_envelope[search_peaks]
+                freq_ts[st][tr][el] = inst_freq_filtered[inst_freq_peaks]
 
                 # PLOT --------------------------------------------------------
 
@@ -538,20 +533,6 @@ def main(datapath: str) -> None:
 
             plt.show()
 
-            baseline_ts_sub.append(baseline_ts_subsub)
-            search_ts_sub.append(search_ts_subsub)
-            freq_ts_sub.append(freq_ts_subsub)
-            electrodes_sub.append(electrodes_subsub)
-            fish_ids_sub.append(track_id)
-
-        baseline_ts.append(baseline_ts_sub)
-        search_ts.append(search_ts_sub)
-        freq_ts.append(freq_ts_sub)
-        fish_ids.append(fish_ids_sub)
-        electrodes.append(electrodes_sub)
-
-    # reorder this mess of nested lists to make it understandable
-    num_snippets = len(window_starts)
     embed()
 
 
