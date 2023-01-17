@@ -30,12 +30,16 @@ class Behavior:
         self.dataframe = read_csv(csv_file, delimiter=',')
         for key in self.dataframe:
             if ' ' in key:
-                new_key = key.replace(' ', '_')
-                if '(' in new_key:
-                    new_key = new_key.replace('(', '')
-                    new_key = new_key.replace(')', '')
-            new_key = new_key.lower()  
-            setattr(self, new_key, np.array(self.dataframe[key]))
+                key = key.replace(' ', '_')
+                if '(' in key:
+                    key = key.replace('(', '')
+                    key = key.replace(')', '')
+            key = key.lower()  
+            setattr(self, key, np.array(self.dataframe[key]))
+        
+        embed()
+        
+
 
 """
 1 - chasing onset
