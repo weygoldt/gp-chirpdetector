@@ -180,9 +180,8 @@ def main(datapath: str) -> None:
         input("How many windows should be calculated (integer number)? "))
 
     # ititialize lists to store data
-    window_index = np.arange(nwindows)
-    electrode_index = np.arange(config.number_electrodes)
-    track_index = np.arange(len(data.ids))
+    chirps = []
+    fish_ids = []
 
     baseline_ts = [[[
         [] for el in range(config.number_electrodes)]
@@ -455,11 +454,48 @@ def main(datapath: str) -> None:
                     prominence=prominence
                 )
 
-                # SAVE DATA ---------------------------------------------------
+                # DETECT CHIRPS IN SEARCH WINDOW -------------------------------
 
-                baseline_ts[st][tr][el] = time_oi[baseline_peaks]
-                search_ts[st][tr][el] =   time_oi[search_peaks]
-                freq_ts[st][tr][el] = baseline_freq_time[inst_freq_peaks]
+                baseline_ts = time_oi[baseline_peaks]
+                search_ts = time_oi[search_peaks]
+                freq_ts = baseline_freq_time[inst_freq_peaks]
+
+                # check if one list is empty
+                if len(baseline_ts) == 0 or len(search_ts) == 0 or len(freq_ts) == 0:
+                    continue
+
+                # get index for each feature
+                baseline_idx = np.zeros_like(baseline_ts)
+                search_idx = np.ones_like(search_ts)
+                freq_idx = np.ones_like(freq_ts) * 2
+
+                timestamps_features = np.hstack(
+                    [baseline_idx, search_idx, freq_idx])
+                timestamps = np.hstack([baseline_ts, search_ts, freq_ts])
+
+                # sort timestamps
+                timestamps_idx = np.arange(len(timestamps))
+                timestamps_features = timestamps_features[np.argsort(timestamps)]
+                timestamps = timestamps[np.argsort(timestamps)]
+
+                # # get chirps
+                # diff = np.empty(timestamps.shape)
+                # diff[0] = np.inf  # always retain the 1st element
+                # diff[1:] = np.diff(timestamps)
+                # mask = diff < config.chirp_window_threshold
+                # shared_peak_indices = timestamp_idx[mask]
+
+                current_chirps = []
+                for tt in timestamps:
+                    cm = timestamps_idx[(timestamps >= tt) & (
+                        timestamps <= tt + config.chirp_window_threshold)]
+                    if all([0, 1, 2]) in timestamps_features[cm]:
+                        chirps.append(np.mean(timestamps[cm]))
+                        current_chirps.append(np.mean(timestamps[cm]))
+                        fish_ids.append(track_id)
+
+
+                # # SAVE DATA ---------------------------------------------------
 
                 # PLOT --------------------------------------------------------
 
@@ -467,9 +503,12 @@ def main(datapath: str) -> None:
                 plot_spectrogram(
                     axs[0, el], data_oi[:, electrode], data.raw_rate, t0)
 
+                for ct in current_chirps:
+                    axs[0, el].axvline(ct, color='r', lw=1)
+
                 # plot baseline instantaneos frequency
                 axs[1, el].plot(baseline_freq_time, baseline_freq -
-                               np.median(baseline_freq))
+                                np.median(baseline_freq))
 
                 # plot waveform of filtered signal
                 axs[2, el].plot(time_oi, baseline, c=ps.green)
@@ -532,8 +571,6 @@ def main(datapath: str) -> None:
                     "Filtered absolute instantaneous frequency")
 
             plt.show()
-
-    embed()
 
 
 if __name__ == "__main__":
