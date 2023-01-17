@@ -551,13 +551,16 @@ def main(datapath: str) -> None:
 
 
                 current_chirps = []
-
-                for tt in timestamps:
+                bool_timestamps = np.ones_like(timestamps, dtype=bool)
+                for bo, tt in enumerate(timestamps):
+                    if bool_timestamps[bo] == False:
+                        continue
                     cm = timestamps_idx[(timestamps >= tt) & (
                         timestamps <= tt + config.chirp_window_threshold)]
                     if set([0, 1, 2]).issubset(timestamps_features[cm]):
                         current_chirps.append(np.mean(timestamps[cm]))
                         electrodes_of_chirps.append(el)
+                    bool_timestamps[cm] = False
               
 
                 # for checking if there are chirps on multiple electrodes
@@ -593,22 +596,31 @@ def main(datapath: str) -> None:
             sort_chirps_electrodes = chirps_electrodes[np.argsort(chirps_electrodes)]
             sort_electrodes = electrodes_of_chirps[np.argsort(chirps_electrodes)]
             bool_vector = np.ones(len(sort_chirps_electrodes), dtype=bool)
+            # make index vector 
+            index_vector = np.arange(len(sort_chirps_electrodes))
 
             the_real_chirps = []
-            embed()
-            for seoc in sort_chirps_electrodes:
-                
-                cm = sort_electrodes[[(sort_chirps_electrodes >= seoc) & (
-                        sort_chirps_electrodes <= seoc + config.chirp_window_threshold)][bool_vector]]
-                
-                if set([0,1]).issubset(sort_electrodes[cm]):
-                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                elif set([0,2]).issubset(sort_electrodes[cm]):
-                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                elif set([1,2]).issubset(sort_electrodes[cm]):
-                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+            for chirp_index, seoc in enumerate(sort_chirps_electrodes):
+                if bool_vector[chirp_index] == False:
+                    continue
+                else:
+                    cm = index_vector[(sort_chirps_electrodes >= seoc) & (
+                            sort_chirps_electrodes <= seoc + config.chirp_window_threshold)]
+                    
+                    if set([0,1]).issubset(sort_electrodes[cm]):
+                        the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                    elif set([1,0]).issubset(sort_electrodes[cm]):
+                        the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                    elif set([0,2]).issubset(sort_electrodes[cm]):
+                        the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                    elif set([1,2]).issubset(sort_electrodes[cm]):
+                        the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
 
-                bool_vector[sort_electrodes[cm]] = False
+                    bool_vector[cm] = False
+            for ct in the_real_chirps:
+                axs[0, el].axvline(ct, color='b', lw=1)
+            embed()
+            plt.show()
 
 
                 
