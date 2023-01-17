@@ -58,7 +58,7 @@ def instantaneos_frequency(
     # compute frequency
     inst_freq = gaussian_filter1d(1 / np.diff(true_zero), 5)
 
-    return inst_freq_time, inst_freq
+    return inst_freq_time, inst_freq, true_zero
 
 
 def plot_spectrogram(axis, signal: np.ndarray, samplerate: float, t0: float) -> None:
@@ -353,7 +353,7 @@ def main(datapath: str) -> None:
                 )
 
                 # compute instantaneous frequency on narrow signal
-                baseline_freq_time, baseline_freq = instantaneos_frequency(
+                baseline_freq_time, baseline_freq, true_zero = instantaneos_frequency(
                     baseline, data.raw_rate
                 )
 
@@ -423,7 +423,7 @@ def main(datapath: str) -> None:
 
                 baseline_freq_time = baseline_freq_time[(baseline_freq_time >= valid_t0) & (
                     baseline_freq_time <= valid_t1)] + t0
-
+                true_zero = true_zero + t0
                 # overwrite raw time to valid region
                 time_oi = time_oi[valid]
                 baseline = baseline[valid]
@@ -468,6 +468,8 @@ def main(datapath: str) -> None:
 
                 # plot waveform of filtered signal
                 axs[2, i].plot(time_oi, baseline, c=ps.green)
+                axs[2, i].scatter(
+                    true_zero, np.zeros_like(true_zero), c=ps.red)
 
                 # plot broad filtered baseline
                 axs[2, i].plot(
