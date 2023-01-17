@@ -317,6 +317,9 @@ def main(datapath: str) -> None:
                 search_freq = config.default_search_freq
 
             print(f"Search frequency: {search_freq}")
+            #----------- chrips on the two best electrodes-----------
+            chirps_electrodes = [] 
+            
 
             # iterate through electrodes
             for el, electrode in enumerate(best_electrodes):
@@ -550,7 +553,7 @@ def main(datapath: str) -> None:
                     cm = timestamps_idx[(timestamps >= tt) & (
                         timestamps <= tt + config.chirp_window_threshold)]
                     if set([0, 1, 2]).issubset(timestamps_features[cm]):
-                        chirps.append(np.mean(timestamps[cm]))
+                        chirps_electrodes.append(np.mean(timestamps[cm]))
                         current_chirps.append(np.mean(timestamps[cm]))
                         fish_ids.append(track_id)
 
