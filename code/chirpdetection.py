@@ -209,12 +209,12 @@ def main(datapath: str) -> None:
         # calucate median of fish frequencies in window
         median_freq = []
         track_ids = []
-        for i, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])):
-            window_index = np.arange(len(data.idx))[
+        for el, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])):
+            window_idx = np.arange(len(data.idx))[
                 (data.ident == track_id) & (data.time[data.idx] >= t0) & (
                     data.time[data.idx] <= (t0 + dt))
             ]
-            median_freq.append(np.median(data.freq[window_index]))
+            median_freq.append(np.median(data.freq[window_idx]))
             track_ids.append(track_id)
 
         # convert to numpy array
@@ -227,14 +227,14 @@ def main(datapath: str) -> None:
             print(f"Track ID: {track_id}")
 
             # get index of track data in this time window
-            window_index = np.arange(len(data.idx))[
+            window_idx = np.arange(len(data.idx))[
                 (data.ident == track_id) & (data.time[data.idx] >= t0) & (
                     data.time[data.idx] <= (t0 + dt))
             ]
 
             # get tracked frequencies and their times
-            freq_temp = data.freq[window_index]
-            powers_temp = data.powers[window_index, :]
+            freq_temp = data.freq[window_idx]
+            powers_temp = data.powers[window_idx, :]
 
             # approximate sampling rate to compute expected durations if there
             # is data available for this time window for this fish id
@@ -256,7 +256,7 @@ def main(datapath: str) -> None:
 
             # get best electrode
             best_electrodes = np.argsort(np.nanmean(
-                powers_temp, axis=0))[-config.electrodes:]
+                powers_temp, axis=0))[-config.number_electrodes:]
 
             # frequency where second filter filters
             search_window = np.arange(
@@ -457,78 +457,78 @@ def main(datapath: str) -> None:
 
                 # SAVE DATA ---------------------------------------------------
 
-                baseline_ts[st][tr][el] = baseline_envelope[baseline_peaks]
-                search_ts[st][tr][el] = search_envelope[search_peaks]
-                freq_ts[st][tr][el] = inst_freq_filtered[inst_freq_peaks]
+                baseline_ts[st][tr][el] = time_oi[baseline_peaks]
+                search_ts[st][tr][el] =   time_oi[search_peaks]
+                freq_ts[st][tr][el] = baseline_freq_time[inst_freq_peaks]
 
                 # PLOT --------------------------------------------------------
 
                 # plot spectrogram
                 plot_spectrogram(
-                    axs[0, i], data_oi[:, electrode], data.raw_rate, t0)
+                    axs[0, el], data_oi[:, electrode], data.raw_rate, t0)
 
                 # plot baseline instantaneos frequency
-                axs[1, i].plot(baseline_freq_time, baseline_freq -
+                axs[1, el].plot(baseline_freq_time, baseline_freq -
                                np.median(baseline_freq))
 
                 # plot waveform of filtered signal
-                axs[2, i].plot(time_oi, baseline, c=ps.green)
+                axs[2, el].plot(time_oi, baseline, c=ps.green)
 
                 # plot broad filtered baseline
-                axs[2, i].plot(
+                axs[2, el].plot(
                     time_oi,
                     broad_baseline,
                 )
 
                 # plot narrow filtered baseline envelope
-                axs[2, i].plot(
+                axs[2, el].plot(
                     time_oi,
                     baseline_envelope_unfiltered,
                     c=ps.red
                 )
 
                 # plot waveform of filtered search signal
-                axs[3, i].plot(time_oi, search)
+                axs[3, el].plot(time_oi, search)
 
                 # plot envelope of search signal
-                axs[3, i].plot(
+                axs[3, el].plot(
                     time_oi,
                     search_envelope,
                     c=ps.red
                 )
 
                 # plot filtered and rectified envelope
-                axs[4, i].plot(time_oi, baseline_envelope)
-                axs[4, i].scatter(
+                axs[4, el].plot(time_oi, baseline_envelope)
+                axs[4, el].scatter(
                     (time_oi)[baseline_peaks],
                     baseline_envelope[baseline_peaks],
                     c=ps.red,
                 )
 
                 # plot envelope of search signal
-                axs[5, i].plot(time_oi, search_envelope)
-                axs[5, i].scatter(
+                axs[5, el].plot(time_oi, search_envelope)
+                axs[5, el].scatter(
                     (time_oi)[search_peaks],
                     search_envelope[search_peaks],
                     c=ps.red,
                 )
 
                 # plot filtered instantaneous frequency
-                axs[6, i].plot(baseline_freq_time, np.abs(inst_freq_filtered))
-                axs[6, i].scatter(
+                axs[6, el].plot(baseline_freq_time, np.abs(inst_freq_filtered))
+                axs[6, el].scatter(
                     baseline_freq_time[inst_freq_peaks],
                     np.abs(inst_freq_filtered)[inst_freq_peaks],
                     c=ps.red,
                 )
 
-                axs[6, i].set_xlabel("Time [s]")
-                axs[0, i].set_title("Spectrogram")
-                axs[1, i].set_title("Fitered baseline instanenous frequency")
-                axs[2, i].set_title("Fitered baseline")
-                axs[3, i].set_title("Fitered above")
-                axs[4, i].set_title("Filtered envelope of baseline envelope")
-                axs[5, i].set_title("Search envelope")
-                axs[6, i].set_title(
+                axs[6, el].set_xlabel("Time [s]")
+                axs[0, el].set_title("Spectrogram")
+                axs[1, el].set_title("Fitered baseline instanenous frequency")
+                axs[2, el].set_title("Fitered baseline")
+                axs[3, el].set_title("Fitered above")
+                axs[4, el].set_title("Filtered envelope of baseline envelope")
+                axs[5, el].set_title("Search envelope")
+                axs[6, el].set_title(
                     "Filtered absolute instantaneous frequency")
 
             plt.show()
