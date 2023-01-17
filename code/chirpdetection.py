@@ -318,9 +318,9 @@ def main(datapath: str) -> None:
 
             print(f"Search frequency: {search_freq}")
             #----------- chrips on the two best electrodes-----------
-            chirps_electrodes = [] 
+            chirps_electrodes = []
+            electrodes_of_chirps = [] 
             
-
             # iterate through electrodes
             for el, electrode in enumerate(best_electrodes):
                 print(el)
@@ -515,7 +515,7 @@ def main(datapath: str) -> None:
                 axs[5, el].set_title("Search envelope")
                 axs[6, el].set_title(
                     "Filtered absolute instantaneous frequency")
-                print(el)
+
                 # DETECT CHIRPS IN SEARCH WINDOW -------------------------------
 
                 baseline_ts = time_oi[baseline_peaks]
@@ -541,6 +541,7 @@ def main(datapath: str) -> None:
                     timestamps)]
                 timestamps = timestamps[np.argsort(timestamps)]
 
+
                 # # get chirps
                 # diff = np.empty(timestamps.shape)
                 # diff[0] = np.inf  # always retain the 1st element
@@ -548,15 +549,21 @@ def main(datapath: str) -> None:
                 # mask = diff < config.chirp_window_threshold
                 # shared_peak_indices = timestamp_idx[mask]
 
+
                 current_chirps = []
+
                 for tt in timestamps:
                     cm = timestamps_idx[(timestamps >= tt) & (
                         timestamps <= tt + config.chirp_window_threshold)]
                     if set([0, 1, 2]).issubset(timestamps_features[cm]):
-                        chirps_electrodes.append(np.mean(timestamps[cm]))
                         current_chirps.append(np.mean(timestamps[cm]))
-                        fish_ids.append(track_id)
+                        electrodes_of_chirps.append(el)
+              
 
+                # for checking if there are chirps on multiple electrodes
+                chirps_electrodes.append(current_chirps)
+                
+             
                 for ct in current_chirps:
                     axs[0, el].axvline(ct, color='r', lw=1)
 
@@ -576,9 +583,36 @@ def main(datapath: str) -> None:
                     np.ones_like((time_oi)[baseline_peaks]) * 600,
                     c=ps.red,
                 )
+            # make one array    
+            chirps_electrodes = np.concatenate(chirps_electrodes)
+
+            # make shure they are numpy arrays
+            chirps_electrodes = np.asarray(chirps_electrodes)
+            electrodes_of_chirps = np.asarray(electrodes_of_chirps)
+            # sort them
+            sort_chirps_electrodes = chirps_electrodes[np.argsort(chirps_electrodes)]
+            sort_electrodes = electrodes_of_chirps[np.argsort(chirps_electrodes)]
+            bool_vector = np.ones(len(sort_chirps_electrodes), dtype=bool)
+
+            the_real_chirps = []
+            embed()
+            for seoc in sort_chirps_electrodes:
+                
+                cm = sort_electrodes[[(sort_chirps_electrodes >= seoc) & (
+                        sort_chirps_electrodes <= seoc + config.chirp_window_threshold)][bool_vector]]
+                
+                if set([0,1]).issubset(sort_electrodes[cm]):
+                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                elif set([0,2]).issubset(sort_electrodes[cm]):
+                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                elif set([1,2]).issubset(sort_electrodes[cm]):
+                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+
+                bool_vector[sort_electrodes[cm]] = False
 
 
-            plt.show()
+                
+   
 
 
 if __name__ == "__main__":
