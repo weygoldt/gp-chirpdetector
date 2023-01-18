@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Union
+from typing import List
 
 
 def purge_duplicates(timestamps: List[float], threshold: float = 0.5) -> List[float]:
@@ -22,9 +22,12 @@ def purge_duplicates(timestamps: List[float], threshold: float = 0.5) -> List[fl
     """
     # Initialize an empty list to store the groups of timestamps that are closer to the previous or consecutive timestamp than the threshold
     groups = []
+
     # initialize the first group with the first timestamp
     group = [timestamps[0]]
+
     for i in range(1, len(timestamps)):
+
         # check the difference between current timestamp and previous timestamp is less than the threshold
         if timestamps[i] - timestamps[i-1] < threshold:
             # add the current timestamp to the current group
@@ -33,15 +36,19 @@ def purge_duplicates(timestamps: List[float], threshold: float = 0.5) -> List[fl
             # if the difference is greater than the threshold
             # append the current group to the groups list
             groups.append(group)
+
             # start a new group with the current timestamp
             group = [timestamps[i]]
+
     # after iterating through all the timestamps, add the last group to the groups list
     groups.append(group)
 
     # get the mean of each group and only include the ones that have more than 1 timestamp
     means = [np.mean(group) for group in groups if len(group) > 1]
+
     # get the timestamps that are outliers, i.e. the ones that are alone in a group
     outliers = [ts for group in groups for ts in group if len(group) == 1]
+
     # return the outliers and means in a single list
     return outliers + means
 
@@ -67,20 +74,16 @@ def group_timestamps(sublists: List[List[float]], n: int, threshold: float) -> L
         a list of the mean of each group.
 
     """
+    # Flatten the sublists and sort the timestamps
     timestamps = [
         timestamp for sublist in sublists if sublist for timestamp in sublist]
     timestamps.sort()
 
     groups = []
-    # Create a variable to store the current group of timestamps
-    current_group = []
-    # Create a set to store the timestamps that occur in at least n of the sublists
-    common_timestamps = set.intersection(*[set(lst) for lst in sublists])
-    # convert the set to a list
-    common_timestamps = list(common_timestamps)
-    # Iterate through the timestamps
-    for i in range(1, len(timestamps)):
+    current_group = [timestamps[0]]
 
+    # Group timestamps that are less than threshold milliseconds apart
+    for i in range(1, len(timestamps)):
         if timestamps[i] - timestamps[i-1] < threshold:
             current_group.append(timestamps[i])
         else:
@@ -89,11 +92,13 @@ def group_timestamps(sublists: List[List[float]], n: int, threshold: float) -> L
 
     groups.append(current_group)
 
+    # Retain only groups that contain at least n timestamps
     final_groups = []
     for group in groups:
         if len(group) >= n:
             final_groups.append(group)
 
+    # Calculate the mean of each group
     means = [np.mean(group) for group in final_groups]
 
     return means
