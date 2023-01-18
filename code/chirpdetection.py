@@ -637,15 +637,19 @@ def main(datapath: str) -> None:
                 """
                 bool_vector[cm] = False
             chirps.append(the_real_chirps)
+            fish_ids.append(track_id)
+            
 
             for ct in the_real_chirps:
                 axs[0, el].axvline(ct, color='b', lw=1)
-
+            
+    plt.close()
     embed()
     fig, ax = plt.subplots()
     t0 = (3 * 60 * 60 + 6 * 60 + 43.5)
     data_oi = data.raw[window_starts[0]:window_starts[-1]+ int(dt*data.raw_rate), 10]
     plot_spectrogram(ax, data_oi, data.raw_rate, t0)
+    chirps = np.concatenate(chirps)
     for ch in chirps:
         ax. axvline(ch, color='b', lw=1)
 
