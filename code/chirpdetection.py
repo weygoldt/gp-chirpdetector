@@ -1,4 +1,4 @@
-import os
+import itertools
 
 import numpy as np
 from IPython import embed
@@ -598,25 +598,31 @@ def main(datapath: str) -> None:
             bool_vector = np.ones(len(sort_chirps_electrodes), dtype=bool)
             # make index vector 
             index_vector = np.arange(len(sort_chirps_electrodes))
+            # make it more than only two electrodes for the search after chirps 
+            combinations_best_elctrodes = list(itertools.combinations(range(3), 2))
 
             the_real_chirps = []
             for chirp_index, seoc in enumerate(sort_chirps_electrodes):
                 if bool_vector[chirp_index] == False:
                     continue
-                else:
-                    cm = index_vector[(sort_chirps_electrodes >= seoc) & (
-                            sort_chirps_electrodes <= seoc + config.chirp_window_threshold)]
-                    
-                    if set([0,1]).issubset(sort_electrodes[cm]):
+                cm = index_vector[(sort_chirps_electrodes >= seoc) & (
+                        sort_chirps_electrodes <= seoc + config.chirp_window_threshold)]
+                
+                for combination in combinations_best_elctrodes:
+                    if set(combination).issubset(sort_electrodes[cm]):
                         the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                    elif set([1,0]).issubset(sort_electrodes[cm]):
-                        the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                    elif set([0,2]).issubset(sort_electrodes[cm]):
-                        the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                    elif set([1,2]).issubset(sort_electrodes[cm]):
-                        the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                """
+                if set([0,1]).issubset(sort_electrodes[cm]):
+                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                elif set([1,0]).issubset(sort_electrodes[cm]):
+                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                elif set([0,2]).issubset(sort_electrodes[cm]):
+                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                elif set([1,2]).issubset(sort_electrodes[cm]):
+                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+                """
 
-                    bool_vector[cm] = False
+                bool_vector[cm] = False
             for ct in the_real_chirps:
                 axs[0, el].axvline(ct, color='b', lw=1)
             embed()
