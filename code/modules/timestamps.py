@@ -72,9 +72,6 @@ def group_timestamps(sublists: List[List[float]], n: int, threshold: float) -> L
     timestamps.sort()
 
     groups = []
-<<<<<<< HEAD
-    current_group = [timestamps[0]]
-=======
     # Create a variable to store the current group of timestamps
     current_group = []
     # Create a set to store the timestamps that occur in at least n of the sublists
@@ -82,29 +79,8 @@ def group_timestamps(sublists: List[List[float]], n: int, threshold: float) -> L
     # convert the set to a list
     common_timestamps = list(common_timestamps)
     # Iterate through the timestamps
-    for i in range(len(common_timestamps)):
-        # If the current timestamp is less than 50 milliseconds away from the previous timestamp
-        if i > 0 and common_timestamps[i] - common_timestamps[i-1] < time_threshold:
-            # Add the current timestamp to the current group
-            current_group.append(common_timestamps[i])
-        else:
-            # If the current timestamp is not part of the current group
-            if current_group:
-                # Add the current group to the list of groups
-                groups.append(current_group)
-                # Reset the current group
-                current_group = []
-            # Add the current timestamp to a new group
-            current_group.append(common_timestamps[i])
-    # If there is a group left after the loop
-    if current_group:
-        # Add the current group to the list of groups
-        groups.append(current_group)
-    # Compute the mean of each group and return it
-    return [np.mean(group) for group in groups]
->>>>>>> ef61cec6958a71f2b0a513fc073e1c9427a0171b
-
     for i in range(1, len(timestamps)):
+
         if timestamps[i] - timestamps[i-1] < threshold:
             current_group.append(timestamps[i])
         else:
@@ -127,7 +103,6 @@ if __name__ == "__main__":
 
     timestamps = [[1.2, 1.5, 1.3], [],
                   [1.21, 1.51, 1.31], [1.19, 1.49, 1.29], [1.22, 1.52, 1.32], [1.2, 1.5, 1.3]]
-    print(group_timestamps_v2(timestamps, 2, 0.05))
-    print(group_timestamps_v3(timestamps, 2, 0.05))
-    print(group_and_mean_timestamps(
+    print(group_timestamps(timestamps, 2, 0.05))
+    print(purge_duplicates(
         [1, 2, 3, 4, 5, 6, 6.02, 7, 8, 8.02], 0.05))
