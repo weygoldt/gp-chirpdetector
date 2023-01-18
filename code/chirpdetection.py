@@ -12,7 +12,7 @@ from sklearn.preprocessing import normalize
 from modules.filters import bandpass_filter, envelope, highpass_filter
 from modules.filehandling import ConfLoader, LoadData
 from modules.plotstyle import PlotStyle
-from modules.timestamps import group_timestamps, group_timestamps_v2
+
 
 ps = PlotStyle()
 
@@ -649,9 +649,19 @@ def main(datapath: str) -> None:
     t0 = (3 * 60 * 60 + 6 * 60 + 43.5)
     data_oi = data.raw[window_starts[0]:window_starts[-1]+ int(dt*data.raw_rate), 10]
     plot_spectrogram(ax, data_oi, data.raw_rate, t0)
-    chirps = np.concatenate(chirps)
-    for ch in chirps:
+    chirps_concat = np.concatenate(chirps)
+    for ch in chirps_concat:
         ax. axvline(ch, color='b', lw=1)
+
+    chirps_new = []
+    chirps_ids = []
+    [chirps[x] for x in tr_index]
+    for tr in np.unique(fish_ids):
+        tr_index = np.asarray(fish_ids) == tr
+
+        ts = list(np.ravel(chirps[fish_ids == int(tr)]))
+        chirps_new.extend(ts)
+        chirps_ids.extend(list(np.ones_like(ts)*tr))
 
 
 
