@@ -527,7 +527,10 @@ def main(datapath: str) -> None:
                 if len(baseline_ts) == 0 or len(search_ts) == 0 or len(freq_ts) == 0:
                     continue
 
+                #current_chirps = group_timestamps_v2(
+                #    [list(baseline_ts), list(search_ts), list(freq_ts)], 3)
 
+               
                 # get index for each feature
                 baseline_idx = np.zeros_like(baseline_ts)
                 search_idx = np.ones_like(search_ts)
@@ -561,7 +564,7 @@ def main(datapath: str) -> None:
                         current_chirps.append(np.mean(timestamps[cm]))
                         electrodes_of_chirps.append(el)
                     bool_timestamps[cm] = False
-
+                
                 # for checking if there are chirps on multiple electrodes
 
                 chirps_electrodes.append(current_chirps)
@@ -610,11 +613,16 @@ def main(datapath: str) -> None:
                 cm = index_vector[(sort_chirps_electrodes >= seoc) & (
                     sort_chirps_electrodes <= seoc + config.chirp_window_threshold)]
 
+                
+                chirps_unique = []
                 for combination in combinations_best_elctrodes:
                     if set(combination).issubset(sort_electrodes[cm]):
-                        the_real_chirps.append(
-                            np.mean(sort_chirps_electrodes[cm]))
+                        chirps_unique.append(np.mean(sort_chirps_electrodes[cm]))
 
+                the_real_chirps.append(np.mean(chirps_unique))
+
+
+                """
                 if set([0,1]).issubset(sort_electrodes[cm]):
                     the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
                 elif set([1,0]).issubset(sort_electrodes[cm]):
@@ -623,12 +631,14 @@ def main(datapath: str) -> None:
                     the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
                 elif set([1,2]).issubset(sort_electrodes[cm]):
                     the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-
+                """
                 bool_vector[cm] = False
+            chirps.append(the_real_chirps)
             for ct in the_real_chirps:
                 axs[0, el].axvline(ct, color='b', lw=1)
-            embed()
-            plt.show()
+    embed()
+
+
 
 
 if __name__ == "__main__":

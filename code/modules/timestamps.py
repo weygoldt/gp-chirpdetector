@@ -82,7 +82,8 @@ def group_timestamps_v2(sublists: List[List[Union[int, float]]], n: int, time_th
     current_group = []
     # Create a set to store the timestamps that occur in at least n of the sublists
     common_timestamps = set.intersection(*[set(lst) for lst in sublists])
-    embed()
+    # convert the set to a list
+    common_timestamps = list(common_timestamps)
     # Iterate through the timestamps
     for i in range(len(common_timestamps)):
         # If the current timestamp is less than 50 milliseconds away from the previous timestamp
