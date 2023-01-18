@@ -17,7 +17,7 @@ def makeLogger(name: str):
     # create stream handler for terminal output
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(console_formatter)
-    console_handler.setLevel(logging.DEBUG)
+    console_handler.setLevel(logging.INFO)
 
     # create script specific logger
     logger = logging.getLogger(name)

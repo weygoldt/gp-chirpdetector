@@ -2,6 +2,7 @@ from itertools import combinations, compress
 from dataclasses import dataclass
 
 import numpy as np
+from tqdm import tqdm
 from IPython import embed
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
@@ -77,14 +78,17 @@ class PlotBuffer:
         # plot spectrogram
         plot_spectrogram(axs[0], data_oi, self.data.raw_rate, self.t0)
 
-        # plot baseline instantaneos frequency
-        axs[1].plot(self.frequency_time, self.frequency)
+        for chirp in chirps:
+            axs[0].scatter(chirp, np.median(self.frequency),  c=ps.red)
 
         # plot waveform of filtered signal
-        axs[2].plot(self.time, self.baseline, c=ps.green)
+        axs[1].plot(self.time, self.baseline, c=ps.green)
 
         # plot waveform of filtered search signal
-        axs[3].plot(self.time, self.search)
+        axs[2].plot(self.time, self.search)
+
+        # plot baseline instantaneos frequency
+        axs[3].plot(self.frequency_time, self.frequency)
 
         # plot filtered and rectified envelope
         axs[4].plot(self.time, self.baseline_envelope)
@@ -109,12 +113,12 @@ class PlotBuffer:
             self.frequency_filtered[self.frequency_peaks],
             c=ps.red,
         )
-
+        axs[0].set_ylim(np.max(self.frequency)-200, top=np.max(self.frequency)+200)
         axs[6].set_xlabel("Time [s]")
         axs[0].set_title("Spectrogram")
-        axs[1].set_title("Fitered baseline instanenous frequency")
-        axs[2].set_title("Fitered baseline")
-        axs[3].set_title("Fitered above")
+        axs[1].set_title("Fitered baseline")
+        axs[2].set_title("Fitered above")
+        axs[3].set_title("Fitered baseline instanenous frequency")
         axs[4].set_title("Filtered envelope of baseline envelope")
         axs[5].set_title("Search envelope")
         axs[6].set_title(
@@ -275,7 +279,7 @@ def main(datapath: str, plot: str) -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # # good chirp times for data: 2022-06-02-10_00
-    # t0 = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    #t0 = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
     # dt = 60 * data.raw_rate
 
     t0 = 0
@@ -297,7 +301,8 @@ def main(datapath: str, plot: str) -> None:
     chirps = []
     fish_ids = []
 
-    for st, start_index in enumerate(window_starts):
+    for st, start_index in tqdm(enumerate(window_starts)):
+        #print(f"Processing window {st/data.raw_rate} of {len(window_starts/data.raw_rate)}")
 
         logger.debug(f"Processing window {st} of {len(window_starts)}")
 
@@ -328,7 +333,6 @@ def main(datapath: str, plot: str) -> None:
 
             logger.debug(f"Processing track {tr} of {len(track_ids)}")
 
-            print(f"Track ID: {track_id}")
 
             # get index of track data in this time window
             window_idx = np.arange(len(data.idx))[
@@ -425,7 +429,7 @@ def main(datapath: str, plot: str) -> None:
             else:
                 search_freq = config.default_search_freq
 
-            print(f"Search frequency: {search_freq}")
+            #print(f"Search frequency: {search_freq}")
             # ----------- chrips on the two best electrodes-----------
             chirps_electrodes = []
             electrodes_of_chirps = []
