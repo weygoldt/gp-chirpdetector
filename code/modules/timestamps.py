@@ -72,7 +72,37 @@ def group_timestamps(sublists: List[List[float]], n: int, threshold: float) -> L
     timestamps.sort()
 
     groups = []
+<<<<<<< HEAD
     current_group = [timestamps[0]]
+=======
+    # Create a variable to store the current group of timestamps
+    current_group = []
+    # Create a set to store the timestamps that occur in at least n of the sublists
+    common_timestamps = set.intersection(*[set(lst) for lst in sublists])
+    # convert the set to a list
+    common_timestamps = list(common_timestamps)
+    # Iterate through the timestamps
+    for i in range(len(common_timestamps)):
+        # If the current timestamp is less than 50 milliseconds away from the previous timestamp
+        if i > 0 and common_timestamps[i] - common_timestamps[i-1] < time_threshold:
+            # Add the current timestamp to the current group
+            current_group.append(common_timestamps[i])
+        else:
+            # If the current timestamp is not part of the current group
+            if current_group:
+                # Add the current group to the list of groups
+                groups.append(current_group)
+                # Reset the current group
+                current_group = []
+            # Add the current timestamp to a new group
+            current_group.append(common_timestamps[i])
+    # If there is a group left after the loop
+    if current_group:
+        # Add the current group to the list of groups
+        groups.append(current_group)
+    # Compute the mean of each group and return it
+    return [np.mean(group) for group in groups]
+>>>>>>> ef61cec6958a71f2b0a513fc073e1c9427a0171b
 
     for i in range(1, len(timestamps)):
         if timestamps[i] - timestamps[i-1] < threshold:
