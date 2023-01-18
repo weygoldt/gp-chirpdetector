@@ -517,6 +517,7 @@ def main(datapath: str) -> None:
                 axs[6, el].set_title(
                     "Filtered absolute instantaneous frequency")
 
+
                 # DETECT CHIRPS IN SEARCH WINDOW -------------------------------
 
                 baseline_ts = time_oi[baseline_peaks]
@@ -569,6 +570,7 @@ def main(datapath: str) -> None:
 
                 chirps_electrodes.append(current_chirps)
 
+
                 for ct in current_chirps:
                     axs[0, el].axvline(ct, color='r', lw=1)
 
@@ -588,6 +590,7 @@ def main(datapath: str) -> None:
                     np.ones_like((time_oi)[baseline_peaks]) * 600,
                     c=ps.red,
                 )
+
             # make one array
             chirps_electrodes = np.concatenate(chirps_electrodes)
 
@@ -634,9 +637,17 @@ def main(datapath: str) -> None:
                 """
                 bool_vector[cm] = False
             chirps.append(the_real_chirps)
+
             for ct in the_real_chirps:
                 axs[0, el].axvline(ct, color='b', lw=1)
+
     embed()
+    fig, ax = plt.subplots()
+    t0 = (3 * 60 * 60 + 6 * 60 + 43.5)
+    data_oi = data.raw[window_starts[0]:window_starts[-1]+ int(dt*data.raw_rate), 10]
+    plot_spectrogram(ax, data_oi, data.raw_rate, t0)
+    for ch in chirps:
+        ax. axvline(ch, color='b', lw=1)
 
 
 
