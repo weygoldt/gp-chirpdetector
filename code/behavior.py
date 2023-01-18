@@ -11,6 +11,7 @@ class Behavior:
     """Load behavior data from csv file as class attributes
         Attributes
     ----------
+    behavior: 0: chasing onset, 1: chasing offset, 2: physical contact
     behavior_type:         
     behavioral_category:   
     comment_start:         
@@ -20,8 +21,8 @@ class Behavior:
     media_file:            
     observation_date:      
     observation_id:        
-    start_s:               
-    stop_s:                
+    start_s: start time of the event in seconds               
+    stop_s:  stop time of the event in seconds               
     total_length:          
     """
 
