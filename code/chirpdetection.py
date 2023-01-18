@@ -12,7 +12,7 @@ from sklearn.preprocessing import normalize
 from modules.filters import bandpass_filter, envelope, highpass_filter
 from modules.filehandling import ConfLoader, LoadData
 from modules.plotstyle import PlotStyle
-from modules.timestamps import group_timestamps, group_timestamp_v2
+from modules.timestamps import group_timestamps, group_timestamps_v2
 
 ps = PlotStyle()
 
@@ -527,6 +527,7 @@ def main(datapath: str) -> None:
                 if len(baseline_ts) == 0 or len(search_ts) == 0 or len(freq_ts) == 0:
                     continue
 
+
                 # get index for each feature
                 baseline_idx = np.zeros_like(baseline_ts)
                 search_idx = np.ones_like(search_ts)
@@ -562,6 +563,7 @@ def main(datapath: str) -> None:
                     bool_timestamps[cm] = False
 
                 # for checking if there are chirps on multiple electrodes
+
                 chirps_electrodes.append(current_chirps)
 
                 for ct in current_chirps:
@@ -597,20 +599,22 @@ def main(datapath: str) -> None:
             bool_vector = np.ones(len(sort_chirps_electrodes), dtype=bool)
             # make index vector
             index_vector = np.arange(len(sort_chirps_electrodes))
-            # make it more than only two electrodes for the search after chirps 
-            combinations_best_elctrodes = list(itertools.combinations(range(3), 2))
+            # make it more than only two electrodes for the search after chirps
+            combinations_best_elctrodes = list(
+                itertools.combinations(range(3), 2))
 
             the_real_chirps = []
             for chirp_index, seoc in enumerate(sort_chirps_electrodes):
                 if bool_vector[chirp_index] == False:
                     continue
                 cm = index_vector[(sort_chirps_electrodes >= seoc) & (
-                        sort_chirps_electrodes <= seoc + config.chirp_window_threshold)]
-                
+                    sort_chirps_electrodes <= seoc + config.chirp_window_threshold)]
+
                 for combination in combinations_best_elctrodes:
                     if set(combination).issubset(sort_electrodes[cm]):
-                        the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                """
+                        the_real_chirps.append(
+                            np.mean(sort_chirps_electrodes[cm]))
+
                 if set([0,1]).issubset(sort_electrodes[cm]):
                     the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
                 elif set([1,0]).issubset(sort_electrodes[cm]):
@@ -619,7 +623,6 @@ def main(datapath: str) -> None:
                     the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
                 elif set([1,2]).issubset(sort_electrodes[cm]):
                     the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                """
 
                 bool_vector[cm] = False
             for ct in the_real_chirps:
