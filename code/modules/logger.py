@@ -17,13 +17,13 @@ def makeLogger(name: str):
     # create stream handler for terminal output
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(console_formatter)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.DEBUG)
 
     # create script specific logger
     logger = logging.getLogger(name)
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     return logger
 

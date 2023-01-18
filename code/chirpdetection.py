@@ -1,4 +1,5 @@
 from itertools import combinations, compress
+from dataclasses import dataclass
 
 import numpy as np
 from IPython import embed
@@ -11,11 +12,114 @@ from sklearn.preprocessing import normalize
 
 from modules.filters import bandpass_filter, envelope, highpass_filter
 from modules.filehandling import ConfLoader, LoadData
-from modules.datahandling import flatten, purge_duplicates
+from modules.datahandling import flatten, purge_duplicates, group_timestamps
 from modules.plotstyle import PlotStyle
+from modules.logger import makeLogger
 
-
+logger = makeLogger(__name__)
 ps = PlotStyle()
+
+
+@dataclass
+class PlotBuffer:
+    t0: float
+    dt: float
+    track_id: float
+    electrode: int
+    data: LoadData
+
+    time: np.ndarray
+    baseline: np.ndarray
+    baseline_envelope: np.ndarray
+    baseline_peaks: np.ndarray
+    search: np.ndarray
+    search_envelope: np.ndarray
+    search_peaks: np.ndarray
+
+    frequency_time: np.ndarray
+    frequency: np.ndarray
+    frequency_filtered: np.ndarray
+    frequency_peaks: np.ndarray
+
+    def plot_buffer(self, chirps) -> None:
+
+        logger.debug("Starting plotting")
+
+        # make data for plotting
+
+        # get index of track data in this time window
+        window_idx = np.arange(len(self.data.idx))[
+            (self.data.ident == self.track_id) & (self.data.time[self.data.idx] >= self.t0) & (
+                self.data.time[self.data.idx] <= (self.t0 + self.dt))
+        ]
+
+        # get tracked frequencies and their times
+        freq_temp = self.data.freq[window_idx]
+        # time_temp = self.data.times[window_idx]
+
+        # get indices on raw data
+        start_idx = self.t0 * self.data.raw_rate
+        window_duration = self.dt * self.data.raw_rate
+        stop_idx = start_idx + window_duration
+
+        # get raw data
+        data_oi = self.data.raw[start_idx:stop_idx, self.electrode]
+
+        fig, axs = plt.subplots(
+            7,
+            1,
+            figsize=(20 / 2.54, 12 / 2.54),
+            constrained_layout=True,
+            sharex=True,
+            sharey='row',
+        )
+
+        # plot spectrogram
+        plot_spectrogram(axs[0], data_oi, self.data.raw_rate, self.t0)
+
+        # plot baseline instantaneos frequency
+        axs[1].plot(self.frequency_time, self.frequency)
+
+        # plot waveform of filtered signal
+        axs[2].plot(self.time, self.baseline, c=ps.green)
+
+        # plot waveform of filtered search signal
+        axs[3].plot(self.time, self.search)
+
+        # plot filtered and rectified envelope
+        axs[4].plot(self.time, self.baseline_envelope)
+        axs[4].scatter(
+            (self.time)[self.baseline_peaks],
+            self.baseline_envelope[self.baseline_peaks],
+            c=ps.red,
+        )
+
+        # plot envelope of search signal
+        axs[5].plot(self.time, self.search_envelope)
+        axs[5].scatter(
+            (self.time)[self.search_peaks],
+            self.search_envelope[self.search_peaks],
+            c=ps.red,
+        )
+
+        # plot filtered instantaneous frequency
+        axs[6].plot(self.frequency_time, self.frequency_filtered)
+        axs[6].scatter(
+            self.frequency_time[self.frequency_peaks],
+            self.frequency_filtered[self.frequency_peaks],
+            c=ps.red,
+        )
+
+        axs[6].set_xlabel("Time [s]")
+        axs[0].set_title("Spectrogram")
+        axs[1].set_title("Fitered baseline instanenous frequency")
+        axs[2].set_title("Fitered baseline")
+        axs[3].set_title("Fitered above")
+        axs[4].set_title("Filtered envelope of baseline envelope")
+        axs[5].set_title("Search envelope")
+        axs[6].set_title(
+            "Filtered absolute instantaneous frequency")
+        plt.show()
 
 
 def instantaneos_frequency(
@@ -78,6 +182,9 @@ def plot_spectrogram(axis, signal: np.ndarray, samplerate: float, t0: float) -> 
     t0 : float
         Start time of the signal.
     """
+
+    logger.debug("Plotting spectrogram")
+
     # compute spectrogram
     spec_power, spec_freqs, spec_times = spectrogram(
         signal,
@@ -137,7 +244,9 @@ def double_bandpass(
     return (filtered_baseline, filtered_search_freq)
 
 
-def main(datapath: str) -> None:
+def main(datapath: str, plot: str) -> None:
+
+    assert plot in ["save", "show", "false"]
 
     # load raw file
     data = LoadData(datapath)
@@ -165,9 +274,12 @@ def main(datapath: str) -> None:
     # make time array for raw data
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
-    # good chirp times for data: 2022-06-02-10_00
-    t0 = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
-    dt = 60 * data.raw_rate
+    # # good chirp times for data: 2022-06-02-10_00
+    # t0 = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    # dt = 60 * data.raw_rate
+
+    t0 = 0
+    dt = data.raw.shape[0]
 
     # generate starting points of rolling window
     window_starts = np.arange(
@@ -177,15 +289,17 @@ def main(datapath: str) -> None:
         dtype=int
     )
 
-    # ask how many windows should be calulated
-    nwindows = int(
-        input("How many windows should be calculated (integer number)? "))
+    # # ask how many windows should be calulated
+    # nwindows = int(
+    #     input("How many windows should be calculated (integer number)? "))
 
     # ititialize lists to store data
     chirps = []
     fish_ids = []
 
-    for st, start_index in enumerate(window_starts[: nwindows]):
+    for st, start_index in enumerate(window_starts):
+
+        logger.debug(f"Processing window {st} of {len(window_starts)}")
 
         # make t0 and dt
         t0 = start_index / data.raw_rate
@@ -212,6 +326,8 @@ def main(datapath: str) -> None:
         # iterate through all fish
         for tr, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])):
 
+            logger.debug(f"Processing track {tr} of {len(track_ids)}")
+
             print(f"Track ID: {track_id}")
 
             # get index of track data in this time window
@@ -233,15 +349,6 @@ def main(datapath: str) -> None:
             if len(freq_temp) < expected_duration * 0.9:
                 continue
 
-            fig, axs = plt.subplots(
-                7,
-                config.number_electrodes,
-                figsize=(20 / 2.54, 12 / 2.54),
-                constrained_layout=True,
-                sharex=True,
-                sharey='row',
-            )
-
             # get best electrode
             best_electrodes = np.argsort(np.nanmean(
                 powers_temp, axis=0))[-config.number_electrodes:]
@@ -258,7 +365,7 @@ def main(datapath: str) -> None:
             check_track_ids = track_ids[(median_freq > search_window[0]) & (
                 median_freq < search_window[-1])]
 
-           # iterate through theses tracks
+            # iterate through theses tracks
             if check_track_ids.size != 0:
 
                 for j, check_track_id in enumerate(check_track_ids):
@@ -325,7 +432,10 @@ def main(datapath: str) -> None:
 
             # iterate through electrodes
             for el, electrode in enumerate(best_electrodes):
-                print(el)
+
+                logger.debug(
+                    f"Processing electrode {el} of {len(best_electrodes)}")
+
                 # load region of interest of raw data file
                 data_oi = data.raw[start_index:stop_index, :]
                 time_oi = raw_time[start_index:stop_index]
@@ -420,7 +530,7 @@ def main(datapath: str) -> None:
 
                 baseline_envelope = normalize([baseline_envelope])[0]
                 search_envelope = normalize([search_envelope])[0]
-                inst_freq_filtered = normalize([inst_freq_filtered])[0]
+                inst_freq_filtered = normalize([np.abs(inst_freq_filtered)])[0]
 
                 # PEAK DETECTION ----------------------------------------------
 
@@ -428,7 +538,7 @@ def main(datapath: str) -> None:
                 prominence = np.percentile(
                     baseline_envelope, config.baseline_prominence_percentile)
                 baseline_peaks, _ = find_peaks(
-                    np.abs(baseline_envelope), prominence=prominence)
+                    baseline_envelope, prominence=prominence)
 
                 # detect peaks search_envelope
                 prominence = np.percentile(
@@ -442,81 +552,80 @@ def main(datapath: str) -> None:
                     config.instantaneous_prominence_percentile
                 )
                 inst_freq_peaks, _ = find_peaks(
-                    np.abs(inst_freq_filtered),
+                    inst_freq_filtered,
                     prominence=prominence
                 )
 
-                # # SAVE DATA ---------------------------------------------------
+                # # PLOT --------------------------------------------------------
 
-                # PLOT --------------------------------------------------------
+                # # plot spectrogram
+                # plot_spectrogram(
+                #     axs[0, el], data_oi[:, electrode], data.raw_rate, t0)
 
-                # plot spectrogram
-                plot_spectrogram(
-                    axs[0, el], data_oi[:, electrode], data.raw_rate, t0)
+                # # plot baseline instantaneos frequency
 
-                # plot baseline instantaneos frequency
-                axs[1, el].plot(baseline_freq_time, baseline_freq -
-                                np.median(baseline_freq))
+                # axs[1, el].plot(baseline_freq_time, baseline_freq -
+                #                 np.median(baseline_freq))
 
-                # plot waveform of filtered signal
-                axs[2, el].plot(time_oi, baseline, c=ps.green)
+                # # plot waveform of filtered signal
+                # axs[2, el].plot(time_oi, baseline, c=ps.green)
 
-                # plot broad filtered baseline
-                axs[2, el].plot(
-                    time_oi,
-                    broad_baseline,
-                )
+                # # plot broad filtered baseline
+                # axs[2, el].plot(
+                #     time_oi,
+                #     broad_baseline,
+                # )
 
-                # plot narrow filtered baseline envelope
-                axs[2, el].plot(
-                    time_oi,
-                    baseline_envelope_unfiltered,
-                    c=ps.red
-                )
+                # # plot narrow filtered baseline envelope
+                # axs[2, el].plot(
+                #     time_oi,
+                #     baseline_envelope_unfiltered,
+                #     c=ps.red
+                # )
 
-                # plot waveform of filtered search signal
-                axs[3, el].plot(time_oi, search)
+                # # plot waveform of filtered search signal
+                # axs[3, el].plot(time_oi, search)
 
-                # plot envelope of search signal
-                axs[3, el].plot(
-                    time_oi,
-                    search_envelope,
-                    c=ps.red
-                )
+                # # plot envelope of search signal
+                # axs[3, el].plot(
+                #     time_oi,
+                #     search_envelope,
+                #     c=ps.red
+                # )
 
-                # plot filtered and rectified envelope
-                axs[4, el].plot(time_oi, baseline_envelope)
-                axs[4, el].scatter(
-                    (time_oi)[baseline_peaks],
-                    baseline_envelope[baseline_peaks],
-                    c=ps.red,
-                )
+                # # plot filtered and rectified envelope
+                # axs[4, el].plot(time_oi, baseline_envelope)
+                # axs[4, el].scatter(
+                #     (time_oi)[baseline_peaks],
+                #     baseline_envelope[baseline_peaks],
+                #     c=ps.red,
+                # )
 
-                # plot envelope of search signal
-                axs[5, el].plot(time_oi, search_envelope)
-                axs[5, el].scatter(
-                    (time_oi)[search_peaks],
-                    search_envelope[search_peaks],
-                    c=ps.red,
-                )
+                # # plot envelope of search signal
+                # axs[5, el].plot(time_oi, search_envelope)
+                # axs[5, el].scatter(
+                #     (time_oi)[search_peaks],
+                #     search_envelope[search_peaks],
+                #     c=ps.red,
+                # )
 
-                # plot filtered instantaneous frequency
-                axs[6, el].plot(baseline_freq_time, np.abs(inst_freq_filtered))
-                axs[6, el].scatter(
-                    baseline_freq_time[inst_freq_peaks],
-                    np.abs(inst_freq_filtered)[inst_freq_peaks],
-                    c=ps.red,
-                )
+                # # plot filtered instantaneous frequency
+                # axs[6, el].plot(baseline_freq_time, np.abs(inst_freq_filtered))
+                # axs[6, el].scatter(
+                #     baseline_freq_time[inst_freq_peaks],
+                #     np.abs(inst_freq_filtered)[inst_freq_peaks],
+                #     c=ps.red,
+                # )
 
-                axs[6, el].set_xlabel("Time [s]")
-                axs[0, el].set_title("Spectrogram")
-                axs[1, el].set_title("Fitered baseline instanenous frequency")
-                axs[2, el].set_title("Fitered baseline")
-                axs[3, el].set_title("Fitered above")
-                axs[4, el].set_title("Filtered envelope of baseline envelope")
-                axs[5, el].set_title("Search envelope")
-                axs[6, el].set_title(
-                    "Filtered absolute instantaneous frequency")
+                # axs[6, el].set_xlabel("Time [s]")
+                # axs[0, el].set_title("Spectrogram")
+                # axs[1, el].set_title("Fitered baseline instanenous frequency")
+                # axs[2, el].set_title("Fitered baseline")
+                # axs[3, el].set_title("Fitered above")
+                # axs[4, el].set_title("Filtered envelope of baseline envelope")
+                # axs[5, el].set_title("Search envelope")
+                # axs[6, el].set_title(
+                #     "Filtered absolute instantaneous frequency")
 
                 # DETECT CHIRPS IN SEARCH WINDOW -------------------------------
 
@@ -556,7 +665,7 @@ def main(datapath: str) -> None:
                 current_chirps = []
                 bool_timestamps = np.ones_like(timestamps, dtype=bool)
                 for bo, tt in enumerate(timestamps):
-                    if bool_timestamps[bo] == False:
+                    if bool_timestamps[bo] is False:
                         continue
                     cm = timestamps_idx[(timestamps >= tt) & (
                         timestamps <= tt + config.chirp_window_threshold)]
@@ -566,87 +675,141 @@ def main(datapath: str) -> None:
                     bool_timestamps[cm] = False
 
                 # for checking if there are chirps on multiple electrodes
+                if len(current_chirps) == 0:
+                    continue
 
                 chirps_electrodes.append(current_chirps)
 
-                for ct in current_chirps:
-                    axs[0, el].axvline(ct, color='r', lw=1)
+                # for ct in current_chirps:
+                #     axs[0, el].axvline(ct, color='r', lw=1)
 
-                axs[0, el].scatter(
-                    baseline_freq_time[inst_freq_peaks],
-                    np.ones_like(baseline_freq_time[inst_freq_peaks]) * 600,
-                    c=ps.red,
-                )
-                axs[0, el].scatter(
-                    (time_oi)[search_peaks],
-                    np.ones_like((time_oi)[search_peaks]) * 600,
-                    c=ps.red,
-                )
+                # axs[0, el].scatter(
+                #     baseline_freq_time[inst_freq_peaks],
+                #     np.ones_like(baseline_freq_time[inst_freq_peaks]) * 600,
+                #     c=ps.red,
+                # )
+                # axs[0, el].scatter(
+                #     (time_oi)[search_peaks],
+                #     np.ones_like((time_oi)[search_peaks]) * 600,
+                #     c=ps.red,
+                # )
 
-                axs[0, el].scatter(
-                    (time_oi)[baseline_peaks],
-                    np.ones_like((time_oi)[baseline_peaks]) * 600,
-                    c=ps.red,
-                )
+                # axs[0, el].scatter(
+                #     (time_oi)[baseline_peaks],
+                #     np.ones_like((time_oi)[baseline_peaks]) * 600,
+                #     c=ps.red,
+                # )
+
+                if (el == config.number_electrodes - 1) &  \
+                        (len(current_chirps) > 0) & \
+                        (plot in ["show", "save"]):
+
+                    logger.debug("Detected chirp, ititialize buffer ...")
+
+                    # save data to Buffer
+                    buffer = PlotBuffer(
+                        t0=t0,
+                        dt=dt,
+                        electrode=electrode,
+                        track_id=track_id,
+                        data=data,
+                        time=time_oi,
+                        baseline=baseline,
+                        baseline_envelope=baseline_envelope,
+                        baseline_peaks=baseline_peaks,
+                        search=search,
+                        search_envelope=search_envelope,
+                        search_peaks=search_peaks,
+                        frequency_time=baseline_freq_time,
+                        frequency=baseline_freq,
+                        frequency_filtered=inst_freq_filtered,
+                        frequency_peaks=inst_freq_peaks,
+                    )
+
+                    logger.debug("Buffer initialized!")
+
+            logger.debug(
+                f"Processed all electrodes for fish {track_id} for this window, sorting chirps ...")
+
+            # continue if no chirps for current fish
 
             # make one array
-            chirps_electrodes = np.concatenate(chirps_electrodes)
+            # chirps_electrodes = np.concatenate(chirps_electrodes)
 
             # make shure they are numpy arrays
-            chirps_electrodes = np.asarray(chirps_electrodes)
-            electrodes_of_chirps = np.asarray(electrodes_of_chirps)
-            # sort them
-            sort_chirps_electrodes = chirps_electrodes[np.argsort(
-                chirps_electrodes)]
-            sort_electrodes = electrodes_of_chirps[np.argsort(
-                chirps_electrodes)]
-            bool_vector = np.ones(len(sort_chirps_electrodes), dtype=bool)
-            # make index vector
-            index_vector = np.arange(len(sort_chirps_electrodes))
-            # make it more than only two electrodes for the search after chirps
-            combinations_best_elctrodes = list(
-                combinations(range(3), 2))
+            # electrodes_of_chirps = np.asarray(electrodes_of_chirps)
 
-            the_real_chirps = []
-            for chirp_index, seoc in enumerate(sort_chirps_electrodes):
-                if bool_vector[chirp_index] == False:
-                    continue
-                cm = index_vector[(sort_chirps_electrodes >= seoc) & (
-                    sort_chirps_electrodes <= seoc + config.chirp_window_threshold)]
+            # # sort them
+            # sort_chirps_electrodes = chirps_electrodes[np.argsort(
+            #     chirps_electrodes)]
+            # sort_electrodes = electrodes_of_chirps[np.argsort(
+            #     chirps_electrodes)]
+            # bool_vector = np.ones(len(sort_chirps_electrodes), dtype=bool)
 
-                chirps_unique = []
-                for combination in combinations_best_elctrodes:
-                    if set(combination).issubset(sort_electrodes[cm]):
-                        chirps_unique.append(
-                            np.mean(sort_chirps_electrodes[cm]))
+            # # make index vector
+            # index_vector = np.arange(len(sort_chirps_electrodes))
 
-                the_real_chirps.append(np.mean(chirps_unique))
+            # # make it more than only two electrodes for the search after chirps
+            # combinations_best_elctrodes = list(
+            #     combinations(range(3), 2))
 
-                """
-                if set([0,1]).issubset(sort_electrodes[cm]):
-                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                elif set([1,0]).issubset(sort_electrodes[cm]):
-                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                elif set([0,2]).issubset(sort_electrodes[cm]):
-                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                elif set([1,2]).issubset(sort_electrodes[cm]):
-                    the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
-                """
-                bool_vector[cm] = False
+            if len(chirps_electrodes) == 0:
+                continue
+
+            the_real_chirps = group_timestamps(chirps_electrodes, 2, 0.05)
+
+            # for chirp_index, seoc in enumerate(sort_chirps_electrodes):
+            #     if bool_vector[chirp_index] is False:
+            #         continue
+            #     cm = index_vector[(sort_chirps_electrodes >= seoc) & (
+            #         sort_chirps_electrodes <= seoc + config.chirp_window_threshold)]
+
+            #     chirps_unique = []
+            #     for combination in combinations_best_elctrodes:
+            #         if set(combination).issubset(sort_electrodes[cm]):
+            #             chirps_unique.append(
+            #                 np.mean(sort_chirps_electrodes[cm]))
+
+            #     the_real_chirps.append(np.mean(chirps_unique))
+
+            #     """
+            #     if set([0,1]).issubset(sort_electrodes[cm]):
+            #         the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+            #     elif set([1,0]).issubset(sort_electrodes[cm]):
+            #         the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+            #     elif set([0,2]).issubset(sort_electrodes[cm]):
+            #         the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+            #     elif set([1,2]).issubset(sort_electrodes[cm]):
+            #         the_real_chirps.append(np.mean(sort_chirps_electrodes[cm]))
+            #     """
+            #     bool_vector[cm] = False
+
             chirps.append(the_real_chirps)
             fish_ids.append(track_id)
 
-            for ct in the_real_chirps:
-                axs[0, el].axvline(ct, color='b', lw=1)
+#             for ct in the_real_chirps:
+#                 axs[0, el].axvline(ct, color='b', lw=1)
 
-    plt.close()
-    fig, ax = plt.subplots()
-    t0 = (3 * 60 * 60 + 6 * 60 + 43.5)
-    data_oi = data.raw[window_starts[0]:window_starts[-1] + int(dt*data.raw_rate), 10]
-    plot_spectrogram(ax, data_oi, data.raw_rate, t0)
-    chirps_concat = np.concatenate(chirps)
-    for ch in chirps_concat:
-        ax. axvline(ch, color='b', lw=1)
+            logger.debug('Found %d chirps, starting plotting ... ' %
+                         len(the_real_chirps))
+            if len(the_real_chirps) > 0:
+                try:
+                    buffer.plot_buffer(the_real_chirps)
+                except NameError:
+                    pass
+            else:
+                try:
+                    del buffer
+                except NameError:
+                    pass
+
+    # fig, ax = plt.subplots()
+    # t0 = (3 * 60 * 60 + 6 * 60 + 43.5)
+    # data_oi = data.raw[window_starts[0]:window_starts[-1] + int(dt*data.raw_rate), 10]
+    # plot_spectrogram(ax, data_oi, data.raw_rate, t0)
+    # chirps_concat = np.concatenate(chirps)
+    # for ch in chirps_concat:
+    #     ax. axvline(ch, color='b', lw=1)
 
     chirps_new = []
     chirps_ids = []
@@ -667,9 +830,7 @@ def main(datapath: str) -> None:
             purged_chirps.extend(list(tr_chirps_purged))
             purged_chirps_ids.extend(list(np.ones_like(tr_chirps_purged)*tr))
 
-    embed()
-
 
 if __name__ == "__main__":
     datapath = "../data/2022-06-02-10_00/"
-    main(datapath)
+    main(datapath, plot="show")
