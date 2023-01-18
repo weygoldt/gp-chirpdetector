@@ -4,7 +4,7 @@ overlap: 1
 edge: 0.25
 
 # Number of electrodes to go over
-electrodes: 3
+number_electrodes: 3
 
 # Boundary for search frequency in Hz
 search_boundary: 100
@@ -26,7 +26,7 @@ instantaneous_highf: 8000
 baseline_prominence_percentile: 90
 
 # Search envelope peak detection parameters
-search_prominence_percentile: 75
+search_prominence_percentile: 90
 
 # Instantaneous frequency peak detection parameters
 instantaneous_prominence_percentile: 90
@@ -39,4 +39,9 @@ search_freq_percentiles:
   - 5
   - 95
 default_search_freq: 50
+
+
+chirp_window_threshold: 0.05
+
+
 
