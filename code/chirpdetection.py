@@ -1,4 +1,4 @@
-import itertools
+from itertools import combinations, compress
 
 import numpy as np
 from IPython import embed
@@ -11,6 +11,7 @@ from sklearn.preprocessing import normalize
 
 from modules.filters import bandpass_filter, envelope, highpass_filter
 from modules.filehandling import ConfLoader, LoadData
+from modules.datahandling import flatten, purge_duplicates
 from modules.plotstyle import PlotStyle
 
 
@@ -517,7 +518,6 @@ def main(datapath: str) -> None:
                 axs[6, el].set_title(
                     "Filtered absolute instantaneous frequency")
 
-
                 # DETECT CHIRPS IN SEARCH WINDOW -------------------------------
 
                 baseline_ts = time_oi[baseline_peaks]
@@ -528,10 +528,9 @@ def main(datapath: str) -> None:
                 if len(baseline_ts) == 0 or len(search_ts) == 0 or len(freq_ts) == 0:
                     continue
 
-                #current_chirps = group_timestamps_v2(
+                # current_chirps = group_timestamps_v2(
                 #    [list(baseline_ts), list(search_ts), list(freq_ts)], 3)
 
-               
                 # get index for each feature
                 baseline_idx = np.zeros_like(baseline_ts)
                 search_idx = np.ones_like(search_ts)
@@ -565,11 +564,10 @@ def main(datapath: str) -> None:
                         current_chirps.append(np.mean(timestamps[cm]))
                         electrodes_of_chirps.append(el)
                     bool_timestamps[cm] = False
-                
+
                 # for checking if there are chirps on multiple electrodes
 
                 chirps_electrodes.append(current_chirps)
-
 
                 for ct in current_chirps:
                     axs[0, el].axvline(ct, color='r', lw=1)
@@ -607,7 +605,7 @@ def main(datapath: str) -> None:
             index_vector = np.arange(len(sort_chirps_electrodes))
             # make it more than only two electrodes for the search after chirps
             combinations_best_elctrodes = list(
-                itertools.combinations(range(3), 2))
+                combinations(range(3), 2))
 
             the_real_chirps = []
             for chirp_index, seoc in enumerate(sort_chirps_electrodes):
@@ -616,14 +614,13 @@ def main(datapath: str) -> None:
                 cm = index_vector[(sort_chirps_electrodes >= seoc) & (
                     sort_chirps_electrodes <= seoc + config.chirp_window_threshold)]
 
-                
                 chirps_unique = []
                 for combination in combinations_best_elctrodes:
                     if set(combination).issubset(sort_electrodes[cm]):
-                        chirps_unique.append(np.mean(sort_chirps_electrodes[cm]))
+                        chirps_unique.append(
+                            np.mean(sort_chirps_electrodes[cm]))
 
                 the_real_chirps.append(np.mean(chirps_unique))
-
 
                 """
                 if set([0,1]).issubset(sort_electrodes[cm]):
@@ -638,16 +635,14 @@ def main(datapath: str) -> None:
                 bool_vector[cm] = False
             chirps.append(the_real_chirps)
             fish_ids.append(track_id)
-            
 
             for ct in the_real_chirps:
                 axs[0, el].axvline(ct, color='b', lw=1)
-            
+
     plt.close()
-    embed()
     fig, ax = plt.subplots()
     t0 = (3 * 60 * 60 + 6 * 60 + 43.5)
-    data_oi = data.raw[window_starts[0]:window_starts[-1]+ int(dt*data.raw_rate), 10]
+    data_oi = data.raw[window_starts[0]:window_starts[-1] + int(dt*data.raw_rate), 10]
     plot_spectrogram(ax, data_oi, data.raw_rate, t0)
     chirps_concat = np.concatenate(chirps)
     for ch in chirps_concat:
@@ -655,15 +650,24 @@ def main(datapath: str) -> None:
 
     chirps_new = []
     chirps_ids = []
-    [chirps[x] for x in tr_index]
     for tr in np.unique(fish_ids):
         tr_index = np.asarray(fish_ids) == tr
-
-        ts = list(np.ravel(chirps[fish_ids == int(tr)]))
+        ts = flatten(list(compress(chirps, tr_index)))
         chirps_new.extend(ts)
         chirps_ids.extend(list(np.ones_like(ts)*tr))
 
+    # purge duplicates
+    purged_chirps = []
+    purged_chirps_ids = []
+    for tr in np.unique(fish_ids):
+        tr_chirps = np.asarray(chirps_new)[np.asarray(chirps_ids) == tr]
+        if len(tr_chirps) > 0:
+            tr_chirps_purged = purge_duplicates(
+                tr_chirps, config.chirp_window_threshold)
+            purged_chirps.extend(list(tr_chirps_purged))
+            purged_chirps_ids.extend(list(np.ones_like(tr_chirps_purged)*tr))
 
+    embed()
 
 
 if __name__ == "__main__":
