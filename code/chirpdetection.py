@@ -12,6 +12,7 @@ from sklearn.preprocessing import normalize
 from modules.filters import bandpass_filter, envelope, highpass_filter
 from modules.filehandling import ConfLoader, LoadData
 from modules.plotstyle import PlotStyle
+from modules.timestamps import group_timestamps, group_timestamp_v2
 
 ps = PlotStyle()
 
@@ -317,10 +318,10 @@ def main(datapath: str) -> None:
                 search_freq = config.default_search_freq
 
             print(f"Search frequency: {search_freq}")
-            #----------- chrips on the two best electrodes-----------
+            # ----------- chrips on the two best electrodes-----------
             chirps_electrodes = []
-            electrodes_of_chirps = [] 
-            
+            electrodes_of_chirps = []
+
             # iterate through electrodes
             for el, electrode in enumerate(best_electrodes):
                 print(el)
@@ -541,14 +542,12 @@ def main(datapath: str) -> None:
                     timestamps)]
                 timestamps = timestamps[np.argsort(timestamps)]
 
-
                 # # get chirps
                 # diff = np.empty(timestamps.shape)
                 # diff[0] = np.inf  # always retain the 1st element
                 # diff[1:] = np.diff(timestamps)
                 # mask = diff < config.chirp_window_threshold
                 # shared_peak_indices = timestamp_idx[mask]
-
 
                 current_chirps = []
                 bool_timestamps = np.ones_like(timestamps, dtype=bool)
@@ -561,12 +560,10 @@ def main(datapath: str) -> None:
                         current_chirps.append(np.mean(timestamps[cm]))
                         electrodes_of_chirps.append(el)
                     bool_timestamps[cm] = False
-              
 
                 # for checking if there are chirps on multiple electrodes
                 chirps_electrodes.append(current_chirps)
-                
-             
+
                 for ct in current_chirps:
                     axs[0, el].axvline(ct, color='r', lw=1)
 
@@ -586,17 +583,19 @@ def main(datapath: str) -> None:
                     np.ones_like((time_oi)[baseline_peaks]) * 600,
                     c=ps.red,
                 )
-            # make one array    
+            # make one array
             chirps_electrodes = np.concatenate(chirps_electrodes)
 
             # make shure they are numpy arrays
             chirps_electrodes = np.asarray(chirps_electrodes)
             electrodes_of_chirps = np.asarray(electrodes_of_chirps)
             # sort them
-            sort_chirps_electrodes = chirps_electrodes[np.argsort(chirps_electrodes)]
-            sort_electrodes = electrodes_of_chirps[np.argsort(chirps_electrodes)]
+            sort_chirps_electrodes = chirps_electrodes[np.argsort(
+                chirps_electrodes)]
+            sort_electrodes = electrodes_of_chirps[np.argsort(
+                chirps_electrodes)]
             bool_vector = np.ones(len(sort_chirps_electrodes), dtype=bool)
-            # make index vector 
+            # make index vector
             index_vector = np.arange(len(sort_chirps_electrodes))
             # make it more than only two electrodes for the search after chirps 
             combinations_best_elctrodes = list(itertools.combinations(range(3), 2))
@@ -627,10 +626,6 @@ def main(datapath: str) -> None:
                 axs[0, el].axvline(ct, color='b', lw=1)
             embed()
             plt.show()
-
-
-                
-   
 
 
 if __name__ == "__main__":
