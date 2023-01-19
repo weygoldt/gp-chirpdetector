@@ -32,6 +32,7 @@ class Behavior:
         LED_on_time_BORIS = np.load(os.path.join(folder_path, 'LED_on_time.npy'), allow_pickle=True)
         self.time = np.load(datapath + "times.npy", allow_pickle=True)
         self.dataframe = read_csv(os.path.join(folder_path,  self.file[1:-7] + '.csv'))
+        
         for k, key in enumerate(self.dataframe.keys()):
             key = key.lower() 
             if ' ' in key:
@@ -83,5 +84,5 @@ def main(datapath: str):
 
 if __name__ == '__main__':
     # Path to the data
-    datapath = '../data/mount_data/2020-03-13-10_00/'
+    datapath = '../data/mount_data/2020-05-13-10_00/'
     main(datapath)
