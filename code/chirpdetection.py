@@ -688,6 +688,9 @@ def main(datapath: str, plot: str) -> None:
             purged_chirps.extend(list(tr_chirps_purged))
             purged_chirps_ids.extend(list(np.ones_like(tr_chirps_purged)*tr))
 
+    np.save(datapath + 'chirps.npy', purged_chirps)
+    np.save(datapath + 'chirps_ids.npy', purged_chirps_ids)
+
 
 if __name__ == "__main__":
     datapath = "../data/2022-06-02-10_00/"
