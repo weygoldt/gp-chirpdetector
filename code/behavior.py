@@ -3,6 +3,7 @@ import os
 import numpy as np
 from IPython import embed
 from pandas import read_csv
+import matplotlib.pyplot as plt 
 
 
 
@@ -27,12 +28,15 @@ class Behavior:
     """
 
     def __init__(self, folder_path: str) -> None:
-        self.file = os.path.join(datapath, "traces-grid1.raw")
         
+
         LED_on_time_BORIS = np.load(os.path.join(folder_path, 'LED_on_time.npy'), allow_pickle=True)
-        self.time = np.load(datapath + "times.npy", allow_pickle=True)
-        self.dataframe = read_csv(os.path.join(folder_path,  self.file[1:-7] + '.csv'))
-        
+        self.time = np.load(os.path.join(folder_path, "times.npy"), allow_pickle=True)
+        csv_filename = [f for f in os.listdir(folder_path) if f.endswith('.csv')][0] # check if there are more than one csv file
+        self.dataframe = read_csv(os.path.join(folder_path, csv_filename))
+        self.chirps = np.load(os.path.join(folder_path, 'chirps.npy'), allow_pickle=True)
+        self.chirps_ids = np.load(os.path.join(folder_path, 'chirps_ids.npy'), allow_pickle=True)
+
         for k, key in enumerate(self.dataframe.keys()):
             key = key.lower() 
             if ' ' in key:
@@ -41,12 +45,13 @@ class Behavior:
                     key = key.replace('(', '')
                     key = key.replace(')', '')
             setattr(self, key, np.array(self.dataframe[self.dataframe.keys()[k]]))
+        
         last_LED_t_BORIS = LED_on_time_BORIS[-1]
         real_time_range = self.time[-1] - self.time[0]
         factor = 1.034141
-        self.shift = last_LED_t_BORIS - real_time_range * factor
-        self.start_s = (self.start_s - self.shift) / factor
-        self.stop_s = (self.stop_s - self.shift) / factor
+        shift = last_LED_t_BORIS - real_time_range * factor
+        self.start_s = (self.start_s - shift) / factor
+        self.stop_s = (self.stop_s - shift) / factor
   
 
 
@@ -79,7 +84,17 @@ temporal encpding needs to be corrected ... not exactly 25FPS.
 
 def main(datapath: str):
     # behabvior is pandas dataframe with all the data
-    behavior = Behavior(datapath)
+    bh = Behavior(datapath)
+    
+
+    fig, ax = plt.subplots()
+    ax.plot(bh.chirps, np.ones_like(bh.chirps), marker='o')
+    ax.plot(bh.start_s, np.ones_like(bh.start_s)*2, marker='*')
+    plt.show()
+        
+    
+    embed()
+    exit()
 
 
 if __name__ == '__main__':
