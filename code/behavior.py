@@ -53,8 +53,6 @@ class Behavior:
         self.start_s = (self.start_s - shift) / factor
         self.stop_s = (self.stop_s - shift) / factor
   
-
-
 """
 1 - chasing onset
 2 - chasing offset
@@ -83,9 +81,14 @@ temporal encpding needs to be corrected ... not exactly 25FPS.
 """
 
 def main(datapath: str):
-    # behabvior is pandas dataframe with all the data
+
+    # behavior is pandas dataframe with all the data
     bh = Behavior(datapath)
     
+    # chirps are not sorted in time (presumably due to prior groupings)
+    # sort chirps and corresponding fish_ids of the chirps
+    bh.chirps = bh.chirps[np.argsort(bh.chirps)]
+    bh.chirps_ids = bh.chirps_ids[np.argsort(bh.chirps)]
 
     fig, ax = plt.subplots()
     ax.plot(bh.chirps, np.ones_like(bh.chirps), marker='o')
