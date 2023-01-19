@@ -86,16 +86,31 @@ def main(datapath: str):
     bh = Behavior(datapath)
     
     # chirps are not sorted in time (presumably due to prior groupings)
-    # sort chirps and corresponding fish_ids of the chirps
-    bh.chirps = bh.chirps[np.argsort(bh.chirps)]
-    bh.chirps_ids = bh.chirps_ids[np.argsort(bh.chirps)]
+    # get and sort chirps and corresponding fish_ids of the chirps
+    chirps = bh.chirps[np.argsort(bh.chirps)]
+    chirps_ids = bh.chirps_ids[np.argsort(bh.chirps)]
+    category = bh.behavior
+    timestamps = bh.start_s
 
+    # split categories
+    chasing_onset = timestamps[category == 0]
+    chasing_offset = timestamps[category == 1]
+    physical_contact = timestamps[category == 2]
+
+    # Physical contact-triggered chirps (PTC) mit Rasterplot
+    # Wahrscheinlichkeit von Phys auf Ch und vice versa
+    # Chasing-triggered chirps (CTC) mit Rasterplot
+    # Wahrscheinlichkeit von Chase auf Ch und vice versa
+
+    # First overview plot
     fig, ax = plt.subplots()
-    ax.plot(bh.chirps, np.ones_like(bh.chirps), marker='o')
-    ax.plot(bh.start_s, np.ones_like(bh.start_s)*2, marker='*')
+    ax.scatter(chirps, np.ones_like(chirps), marker='*', color='royalblue', label='Chirps')
+    ax.scatter(chasing_onset, np.ones_like(chasing_onset)*2, marker='.', color='forestgreen', label='Chasing onset')
+    ax.scatter(chasing_offset, np.ones_like(chasing_offset)*2.5, marker='.', color='firebrick', label='Chasing offset')
+    ax.scatter(physical_contact, np.ones_like(physical_contact)*3, marker='x', color='black', label='Physical contact')
+    plt.legend()
     plt.show()
-        
-    
+
     embed()
     exit()
 
