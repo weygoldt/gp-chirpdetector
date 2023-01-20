@@ -63,19 +63,24 @@ class PlotBuffer:
 
         # get index of track data in this time window
         window_idx = np.arange(len(self.data.idx))[
-            (self.data.ident == self.track_id) & (self.data.time[self.data.idx] >= self.t0) & (
-                self.data.time[self.data.idx] <= (self.t0 + self.dt))
+            (self.data.ident == self.track_id)
+            & (self.data.time[self.data.idx] >= self.t0)
+            & (self.data.time[self.data.idx] <= (self.t0 + self.dt))
         ]
 
         # get tracked frequencies and their times
         freq_temp = self.data.freq[window_idx]
-        time_temp = self.data.time[(self.data.time >= self.t0) & (
-            self.data.time <= (self.t0 + self.dt))]
+        time_temp = self.data.time[
+            (self.data.time >= self.t0)
+            & (self.data.time <= (self.t0 + self.dt))
+        ]
 
         # remake the band we filtered in
         q25, q50, q75 = np.percentile(freq_temp, [25, 50, 75])
-        search_upper, search_lower = q50 + self.search_frequency + self.config.minimal_bandwidth / \
-            2, q50 + self.search_frequency - self.config.minimal_bandwidth / 2
+        search_upper, search_lower = (
+            q50 + self.search_frequency + self.config.minimal_bandwidth / 2,
+            q50 + self.search_frequency - self.config.minimal_bandwidth / 2,
+        )
 
         # get indices on raw data
         start_idx = self.t0 * self.data.raw_rate
@@ -85,16 +90,18 @@ class PlotBuffer:
         # get raw data
         data_oi = self.data.raw[start_idx:stop_idx, self.electrode]
 
-        self.time = (self.time - self.t0)
-        self.frequency_time = (self.frequency_time - self.t0)
-        chirps = (np.ararray(chirps) - self.t0)
+        self.time = self.time - self.t0
+        self.frequency_time = self.frequency_time - self.t0
+        chirps = np.ararray(chirps) - self.t0
         self.t0 = 0
 
-        fig = plt.figure(figsize=(16 / 2.54, 24 / 2.54),
-                         constrained_layout=True)
+        fig = plt.figure(
+            figsize=(16 / 2.54, 24 / 2.54), constrained_layout=True
+        )
 
-        grid = gr.GridSpec(9, 1, figure=fig, height_ratios=[
-            4, 0.5, 1, 1, 1, 0.5, 1, 1, 1])
+        grid = gr.GridSpec(
+            9, 1, figure=fig, height_ratios=[4, 0.5, 1, 1, 1, 0.5, 1, 1, 1]
+        )
 
         ax0 = fig.add_subplot(grid[0, 0])
         ax1 = fig.add_subplot(grid[2, 0], sharex=ax0)
@@ -113,7 +120,8 @@ class PlotBuffer:
             q50 + self.config.minimal_bandwidth / 2,
             color=ps.black,
             lw=0,
-            alpha=0.2)
+            alpha=0.2,
+        )
 
         ax0.fill_between(
             np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
@@ -121,7 +129,8 @@ class PlotBuffer:
             search_upper,
             color=ps.black,
             lw=0,
-            alpha=0.2)
+            alpha=0.2,
+        )
 
         for chirp in chirps:
             ax0.scatter(
@@ -372,8 +381,7 @@ def find_searchband(
         for j, check_track_id in enumerate(check_track_ids):
 
             q1, q2 = np.percentile(
-                data.freq[data.ident == check_track_id],
-                [25, 75]
+                data.freq[data.ident == check_track_id], [25, 75]
             )
             print(q1, q2)
 
@@ -751,7 +759,9 @@ def main(datapath: str, plot: str) -> None:
                 baseline_peak_timestamps = current_raw_time[
                     baseline_peak_indices
                 ]
-                search_peak_timestamps = current_raw_time[search_peak_indices]
+                search_peak_timestamps = current_raw_time[
+                    search_peak_indices]
+
                 frequency_peak_timestamps = baseline_frequency_time[
                     frequency_peak_indices
                 ]
@@ -853,9 +863,10 @@ def main(datapath: str, plot: str) -> None:
             multiwindow_chirps.append(multielectrode_chirps_validated)
             multiwindow_ids.append(track_id)
 
-            logger.debug(
-                "Found %d chirps, starting plotting ... "
-                % len(multielectrode_chirps_validated)
+            logger.info(
+                "Found %d chirps for fish %d"
+                % len(multielectrode_chirps_validated),
+                track_id,
             )
             # if chirps are detected and the plot flag is set, plot the
             # chirps, otheswise try to delete the buffer if it exists
