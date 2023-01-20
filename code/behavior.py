@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 
 from IPython import embed
 from pandas import read_csv
+from modules.logger import makeLogger
 
-
+logger = makeLogger(__name__)
 
 class Behavior:
     """Load behavior data from csv file as class attributes
@@ -95,19 +96,20 @@ def correct_chasing_events(
         len_diff = len(onset_ids) - len(offset_ids)
         longer_array = onset_ids
         shorter_array = offset_ids
+        logger.info(f'Onsets are greater than offsets by {len_diff}')
     elif len(onset_ids) < len(offset_ids):
         len_diff = len(offset_ids) - len(onset_ids)
         longer_array = offset_ids
         shorter_array = onset_ids
+        logger.info(f'Offsets are greater than offsets by {len_diff}')
     elif len(onset_ids) == len(offset_ids):
-
-        print('Chasing events are equal')
+        logger.info('Chasing events are equal')
         return category, timestamps
 
 
     # Correct the wrong chasing events; delete double events
     wrong_ids = []
-    for i in range(len(longer_array)-len_diff+1):
+    for i in range(len(longer_array)-(len_diff+1)):
         if (shorter_array[i] > longer_array[i]) & (shorter_array[i] < longer_array[i+1]):
             pass
         else:
@@ -129,11 +131,12 @@ def main(datapath: str):
     # chirps are not sorted in time (presumably due to prior groupings)
     # get and sort chirps and corresponding fish_ids of the chirps
     chirps = bh.chirps[np.argsort(bh.chirps)]
-    chirps_ids = bh.chirps_ids[np.argsort(bh.chirps)]
+    chirps_fish_ids = bh.chirps_ids[np.argsort(bh.chirps)]
     category = bh.behavior
     timestamps = bh.start_s
 
-    # Correct for 
+    # Correct for doubles in chasing on- and offsets to get the right on-/offset pairs
+    # Get rid of tracking faults (two onsets or two offsets after another)
     category, timestamps = correct_chasing_events(category, timestamps)
 
     # split categories
@@ -156,11 +159,11 @@ def main(datapath: str):
     # plt.show()
 
     # Get fish ids
-    all_fish_ids = np.unique(chirps_ids)
+    all_fish_ids = np.unique(chirps_fish_ids)
 
     # Associate chirps to inidividual fish
-    fish1 = chirps[chirps_ids == all_fish_ids[0]]
-    fish2 = chirps[chirps_ids == all_fish_ids[1]]
+    fish1 = chirps[chirps_fish_ids == all_fish_ids[0]]
+    fish2 = chirps[chirps_fish_ids == all_fish_ids[1]]
     fish = [len(fish1), len(fish2)]
 
     #### Chirp counts per fish general #####
@@ -170,14 +173,15 @@ def main(datapath: str):
     ax2.bar(x, fish, width=width)
     ax2.set_ylabel('Chirp count')
     # plt.show()
-
-    ##### Count chirps emitted during chasing events and chirps emitted out of chasing events #####
-
-    # Check if on- and offset are equal in length to get the right on-/offset pairs
-    # Get rid of tracking faults (two onsets or two offsets after another)
-
     embed()
-    exit()
+    ##### Count chirps emitted during chasing events and chirps emitted out of chasing events #####
+    chirps_in_chasing = []
+    for onset, offset in zip(chasing_onset, chasing_offset):
+        if chirps.any((chirps > onset) & (chirps < offset)):
+            chirps_in_chasing.append(chirps)
+        print(chirps_in_chasing)
+        embed()
+
 
 
 if __name__ == '__main__':
