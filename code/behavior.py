@@ -1,10 +1,10 @@
 import os 
 
 import numpy as np
-from IPython import embed
-from pandas import read_csv
 import matplotlib.pyplot as plt 
 
+from IPython import embed
+from pandas import read_csv
 
 
 
@@ -80,6 +80,47 @@ temporal encpding needs to be corrected ... not exactly 25FPS.
     behavior = data['Behavior']
 """
 
+def correct_chasing_events(
+    category: np.ndarray, 
+    timestamps: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
+
+    onset_ids = np.arange(
+        len(category))[category == 0]
+    offset_ids = np.arange(
+        len(category))[category == 1]
+
+    # Check whether on- or offset is longer and calculate length difference
+    if len(onset_ids) > len(offset_ids):
+        len_diff = len(onset_ids) - len(offset_ids)
+        longer_array = onset_ids
+        shorter_array = offset_ids
+    elif len(onset_ids) < len(offset_ids):
+        len_diff = len(offset_ids) - len(onset_ids)
+        longer_array = offset_ids
+        shorter_array = onset_ids
+    elif len(onset_ids) == len(offset_ids):
+
+        print('Chasing events are equal')
+        return category, timestamps
+
+
+    # Correct the wrong chasing events; delete double events
+    wrong_ids = []
+    for i in range(len(longer_array)-len_diff+1):
+        if (shorter_array[i] > longer_array[i]) & (shorter_array[i] < longer_array[i+1]):
+            pass
+        else:
+            wrong_ids.append(longer_array[i])
+            longer_array = np.delete(longer_array, i)
+        
+    category = np.delete(
+        category, wrong_ids)
+    timestamps = np.delete(
+        timestamps, wrong_ids)
+    return category, timestamps
+
+
 def main(datapath: str):
 
     # behavior is pandas dataframe with all the data
@@ -92,24 +133,48 @@ def main(datapath: str):
     category = bh.behavior
     timestamps = bh.start_s
 
+    # Correct for 
+    category, timestamps = correct_chasing_events(category, timestamps)
+
     # split categories
     chasing_onset = timestamps[category == 0]
     chasing_offset = timestamps[category == 1]
     physical_contact = timestamps[category == 2]
 
-    # Physical contact-triggered chirps (PTC) mit Rasterplot
+    ##### TODO Physical contact-triggered chirps (PTC) mit Rasterplot #####
     # Wahrscheinlichkeit von Phys auf Ch und vice versa
     # Chasing-triggered chirps (CTC) mit Rasterplot
     # Wahrscheinlichkeit von Chase auf Ch und vice versa
 
     # First overview plot
-    fig, ax = plt.subplots()
-    ax.scatter(chirps, np.ones_like(chirps), marker='*', color='royalblue', label='Chirps')
-    ax.scatter(chasing_onset, np.ones_like(chasing_onset)*2, marker='.', color='forestgreen', label='Chasing onset')
-    ax.scatter(chasing_offset, np.ones_like(chasing_offset)*2.5, marker='.', color='firebrick', label='Chasing offset')
-    ax.scatter(physical_contact, np.ones_like(physical_contact)*3, marker='x', color='black', label='Physical contact')
+    fig1, ax1 = plt.subplots()
+    ax1.scatter(chirps, np.ones_like(chirps), marker='*', color='royalblue', label='Chirps')
+    ax1.scatter(chasing_onset, np.ones_like(chasing_onset)*2, marker='.', color='forestgreen', label='Chasing onset')
+    ax1.scatter(chasing_offset, np.ones_like(chasing_offset)*2.5, marker='.', color='firebrick', label='Chasing offset')
+    ax1.scatter(physical_contact, np.ones_like(physical_contact)*3, marker='x', color='black', label='Physical contact')
     plt.legend()
-    plt.show()
+    # plt.show()
+
+    # Get fish ids
+    all_fish_ids = np.unique(chirps_ids)
+
+    # Associate chirps to inidividual fish
+    fish1 = chirps[chirps_ids == all_fish_ids[0]]
+    fish2 = chirps[chirps_ids == all_fish_ids[1]]
+    fish = [len(fish1), len(fish2)]
+
+    #### Chirp counts per fish general #####
+    fig2, ax2 = plt.subplots()
+    x = ['Fish1', 'Fish2']
+    width = 0.35
+    ax2.bar(x, fish, width=width)
+    ax2.set_ylabel('Chirp count')
+    # plt.show()
+
+    ##### Count chirps emitted during chasing events and chirps emitted out of chasing events #####
+
+    # Check if on- and offset are equal in length to get the right on-/offset pairs
+    # Get rid of tracking faults (two onsets or two offsets after another)
 
     embed()
     exit()
