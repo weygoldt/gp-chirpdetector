@@ -1,5 +1,59 @@
 import numpy as np
 from typing import List, Any
+from scipy.ndimage import gaussian_filter1d
+
+
+def instantaneous_frequency(
+    signal: np.ndarray,
+    samplerate: int,
+    smoothing_window: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Compute the instantaneous frequency of a signal that is approximately
+    sinusoidal and symmetric around 0.
+
+    Parameters
+    ----------
+    signal : np.ndarray
+        Signal to compute the instantaneous frequency from.
+    samplerate : int
+        Samplerate of the signal.
+    smoothing_window : int
+        Window size for the gaussian filter.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+
+    """
+    # calculate instantaneous frequency with zero crossings
+    roll_signal = np.roll(signal, shift=1)
+    time_signal = np.arange(len(signal)) / samplerate
+    period_index = np.arange(len(signal))[(roll_signal < 0) & (signal >= 0)][
+        1:-1
+    ]
+
+    upper_bound = np.abs(signal[period_index])
+    lower_bound = np.abs(signal[period_index - 1])
+    upper_time = np.abs(time_signal[period_index])
+    lower_time = np.abs(time_signal[period_index - 1])
+
+    # create ratio
+    lower_ratio = lower_bound / (lower_bound + upper_bound)
+
+    # appy to time delta
+    time_delta = upper_time - lower_time
+    true_zero = lower_time + lower_ratio * time_delta
+
+    # create new time array
+    instantaneous_frequency_time = true_zero[:-1] + 0.5 * np.diff(true_zero)
+
+    # compute frequency
+    instantaneous_frequency = gaussian_filter1d(
+        1 / np.diff(true_zero), smoothing_window
+    )
+
+    return instantaneous_frequency_time, instantaneous_frequency
 
 
 def purge_duplicates(
@@ -64,7 +118,7 @@ def purge_duplicates(
 
 
 def group_timestamps(
-    sublists: List[List[float]], n: int, threshold: float
+    sublists: List[List[float]], at_least_in: int, difference_threshold: float
 ) -> List[float]:
     """
     Groups timestamps that are less than `threshold` milliseconds apart from
@@ -100,7 +154,7 @@ def group_timestamps(
 
     # Group timestamps that are less than threshold milliseconds apart
     for i in range(1, len(timestamps)):
-        if timestamps[i] - timestamps[i - 1] < threshold:
+        if timestamps[i] - timestamps[i - 1] < difference_threshold:
             current_group.append(timestamps[i])
         else:
             groups.append(current_group)
@@ -111,7 +165,7 @@ def group_timestamps(
     # Retain only groups that contain at least n timestamps
     final_groups = []
     for group in groups:
-        if len(group) >= n:
+        if len(group) >= at_least_in:
             final_groups.append(group)
 
     # Calculate the mean of each group
