@@ -2,6 +2,7 @@ from itertools import compress
 from dataclasses import dataclass
 
 import numpy as np
+from IPython import embed
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gr
 from scipy.signal import find_peaks
@@ -374,6 +375,7 @@ def find_searchband(
                 data.freq[data.ident == check_track_id],
                 [25, 75]
             )
+            print(q1, q2)
 
             search_window_bool[
                 (search_window > q1) & (search_window < q2)
@@ -386,6 +388,8 @@ def find_searchband(
         search_window_gaps = np.diff(search_window_bool, append=np.nan)
         nonzeros = search_window_gaps[np.nonzero(search_window_gaps)[0]]
         nonzeros = nonzeros[~np.isnan(nonzeros)]
+
+        embed()
 
         # if the first value is -1, the array starst with true, so a gap
         if nonzeros[0] == -1:
@@ -470,13 +474,16 @@ def main(datapath: str, plot: str) -> None:
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
-    window_start_seconds = (23495 + ((28336-23495)/3)) * data.raw_rate
-    window_duration_seconds = (28336 - 23495) * data.raw_rate
+    # window_start_seconds = (23495 + ((28336-23495)/3)) * data.raw_rate
+    # window_duration_seconds = (28336 - 23495) * data.raw_rate
+
+    window_start_index = 0
+    window_duration_index = data.raw.shape[0]
 
     # generate starting points of rolling window
     window_start_indices = np.arange(
-        window_start_seconds,
-        window_start_seconds + window_duration_seconds,
+        window_start_index,
+        window_start_index + window_duration_index,
         window_duration - (window_overlap + 2 * window_edge),
         dtype=int,
     )
@@ -913,5 +920,6 @@ def main(datapath: str, plot: str) -> None:
 if __name__ == "__main__":
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-05-13-10_00/"
     # datapath = "../data/2022-06-02-10_00/"
-    datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
+    # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
+    datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
     main(datapath, plot="show")
