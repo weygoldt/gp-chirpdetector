@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Union, Any
+from typing import List, Any
 
 
 def purge_duplicates(
