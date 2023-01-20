@@ -3,8 +3,8 @@ import numpy as np
 
 
 def bandpass_filter(
-        data: np.ndarray,
-        rate: float,
+        signal: np.ndarray,
+        samplerate: float,
         lowf: float,
         highf: float,
 ) -> np.ndarray:
@@ -12,7 +12,7 @@ def bandpass_filter(
 
     Parameters
     ----------
-    data : np.ndarray
+    signal : np.ndarray
         The data to be filtered
     rate : float
         The sampling rate
@@ -26,21 +26,22 @@ def bandpass_filter(
     np.ndarray
         The filtered data
     """
-    sos = butter(2, (lowf, highf), "bandpass", fs=rate, output="sos")
-    fdata = sosfiltfilt(sos, data)
-    return fdata
+    sos = butter(2, (lowf, highf), "bandpass", fs=samplerate, output="sos")
+    filtered_signal = sosfiltfilt(sos, signal)
+
+    return filtered_signal
 
 
 def highpass_filter(
-    data: np.ndarray,
-    rate: float,
+    signal: np.ndarray,
+    samplerate: float,
     cutoff: float,
 ) -> np.ndarray:
     """Highpass filter a signal.
 
     Parameters
     ----------
-    data : np.ndarray
+    signal : np.ndarray
         The data to be filtered
     rate : float
         The sampling rate
@@ -52,14 +53,15 @@ def highpass_filter(
     np.ndarray
         The filtered data
     """
-    sos = butter(2, cutoff, "highpass", fs=rate, output="sos")
-    fdata = sosfiltfilt(sos, data)
-    return fdata
+    sos = butter(2, cutoff, "highpass", fs=samplerate, output="sos")
+    filtered_signal = sosfiltfilt(sos, signal)
+
+    return filtered_signal
 
 
 def lowpass_filter(
-    data: np.ndarray,
-    rate: float,
+    signal: np.ndarray,
+    samplerate: float,
     cutoff: float
 ) -> np.ndarray:
     """Lowpass filter a signal.
@@ -78,21 +80,25 @@ def lowpass_filter(
     np.ndarray
         The filtered data
     """
-    sos = butter(2, cutoff, "lowpass", fs=rate, output="sos")
-    fdata = sosfiltfilt(sos, data)
-    return fdata
+    sos = butter(2, cutoff, "lowpass", fs=samplerate, output="sos")
+    filtered_signal = sosfiltfilt(sos, signal)
+
+    return filtered_signal
 
 
-def envelope(data: np.ndarray, rate: float, freq: float) -> np.ndarray:
+def envelope(signal: np.ndarray,
+             samplerate: float,
+             cutoff_frequency: float
+             ) -> np.ndarray:
     """Calculate the envelope of a signal using a lowpass filter.
 
     Parameters
     ----------
-    data : np.ndarray
+    signal : np.ndarray
         The signal to calculate the envelope of
-    rate : float
+    samplingrate : float
         The sampling rate of the signal
-    freq : float
+    cutoff_frequency : float
         The cutoff frequency of the lowpass filter
 
     Returns
@@ -100,6 +106,7 @@ def envelope(data: np.ndarray, rate: float, freq: float) -> np.ndarray:
     np.ndarray
         The envelope of the signal
     """
-    sos = butter(2, freq, "lowpass", fs=rate, output="sos")
-    envelope = np.sqrt(2) * sosfiltfilt(sos, np.abs(data))
+    sos = butter(2, cutoff_frequency, "lowpass", fs=samplerate, output="sos")
+    envelope = np.sqrt(2) * sosfiltfilt(sos, np.abs(signal))
+
     return envelope

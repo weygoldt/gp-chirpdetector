@@ -1,3 +1,4 @@
+# directory setup
 dataroot: "../data/"
 outputdir: "../output/"
 
@@ -10,30 +11,26 @@ edge: 0.25
 number_electrodes: 3
 minimum_electrodes: 2
 
-# Search window bandwidth
+# Search window bandwidth and minimal baseline bandwidth
+minimal_bandwidth: 10
 
-# Cutoff frequency for envelope estimation by lowpass filter
-envelope_cutoff: 25
+# Instantaneous frequency smoothing usint a gaussian kernel of this width
+baseline_frequency_smoothing: 5
 
-# Cutoff frequency for envelope highpass filter
-envelope_highpass_cutoff: 3
+# Baseline processing parameters
+baseline_envelope_cutoff: 25
+baseline_envelope_bandpass_lowf: 4
+baseline_envelope_bandpass_highf: 100
+baseline_envelope_envelope_cutoff: 4
 
-# Cutoff frequency for envelope of envelope
-envelope_envelope_cutoff: 5
+# search envelope processing parameters
+search_envelope_cutoff: 5
 
 # Instantaneous frequency bandpass filter cutoff frequencies
-instantaneous_lowf: 15
-instantaneous_highf: 8000
+baseline_frequency_highpass_cutoff: 0.000005
+baseline_frequency_envelope_cutoff: 0.000005
 
-# Baseline envelope peak detection parameters
-# baseline_prominence_percentile: 90
-
-# Search envelope peak detection parameters
-# search_prominence_percentile: 90
-
-# Instantaneous frequency peak detection parameters
-# instantaneous_prominence_percentile: 90
-
+# peak detecion parameters
 prominence: 0.005
 
 # search freq parameter
