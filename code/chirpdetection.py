@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gr
 from scipy.signal import find_peaks
 from thunderfish.powerspectrum import spectrogram, decibel
 from sklearn.preprocessing import normalize
@@ -13,6 +14,7 @@ from modules.plotstyle import PlotStyle
 from modules.logger import makeLogger
 from modules.datahandling import (
     flatten,
+    norm,
     purge_duplicates,
     group_timestamps,
     instantaneous_frequency,
@@ -42,6 +44,7 @@ class PlotBuffer:
     baseline: np.ndarray
     baseline_envelope: np.ndarray
     baseline_peaks: np.ndarray
+    search_frequency: float
     search: np.ndarray
     search_envelope: np.ndarray
     search_peaks: np.ndarray
@@ -57,15 +60,21 @@ class PlotBuffer:
 
         # make data for plotting
 
-        # # get index of track data in this time window
-        # window_idx = np.arange(len(self.data.idx))[
-        #     (self.data.ident == self.track_id) & (self.data.time[self.data.idx] >= self.t0) & (
-        #         self.data.time[self.data.idx] <= (self.t0 + self.dt))
-        # ]
+        # get index of track data in this time window
+        window_idx = np.arange(len(self.data.idx))[
+            (self.data.ident == self.track_id) & (self.data.time[self.data.idx] >= self.t0) & (
+                self.data.time[self.data.idx] <= (self.t0 + self.dt))
+        ]
 
         # get tracked frequencies and their times
-        # freq_temp = self.data.freq[window_idx]
-        # time_temp = self.data.times[window_idx]
+        freq_temp = self.data.freq[window_idx]
+        time_temp = self.data.time[(self.data.time >= self.t0) & (
+            self.data.time <= (self.t0 + self.dt))]
+
+        # remake the band we filtered in
+        q25, q50, q75 = np.percentile(freq_temp, [25, 50, 75])
+        search_upper, search_lower = q50 + self.search_frequency + self.config.minimal_bandwidth / \
+            2, q50 + self.search_frequency - self.config.minimal_bandwidth / 2
 
         # get indices on raw data
         start_idx = self.t0 * self.data.raw_rate
@@ -75,66 +84,90 @@ class PlotBuffer:
         # get raw data
         data_oi = self.data.raw[start_idx:stop_idx, self.electrode]
 
-        fig, axs = plt.subplots(
-            7,
-            1,
-            figsize=(20 / 2.54, 12 / 2.54),
-            constrained_layout=True,
-            sharex=True,
-            sharey="row",
-        )
+        self.time = (self.time - self.t0)
+        self.frequency_time = (self.frequency_time - self.t0)
+        chirps = (np.ararray(chirps) - self.t0)
+        self.t0 = 0
+
+        fig = plt.figure(figsize=(16 / 2.54, 24 / 2.54),
+                         constrained_layout=True)
+
+        grid = gr.GridSpec(9, 1, figure=fig, height_ratios=[
+            4, 0.5, 1, 1, 1, 0.5, 1, 1, 1])
+
+        ax0 = fig.add_subplot(grid[0, 0])
+        ax1 = fig.add_subplot(grid[2, 0], sharex=ax0)
+        ax2 = fig.add_subplot(grid[3, 0], sharex=ax0)
+        ax3 = fig.add_subplot(grid[4, 0], sharex=ax0)
+        ax4 = fig.add_subplot(grid[6, 0], sharex=ax0)
+        ax5 = fig.add_subplot(grid[7, 0], sharex=ax0)
+        ax6 = fig.add_subplot(grid[8, 0], sharex=ax0)
 
         # plot spectrogram
-        plot_spectrogram(axs[0], data_oi, self.data.raw_rate, self.t0)
+        plot_spectrogram(ax0, data_oi, self.data.raw_rate, self.t0)
+
+        ax0.fill_between(
+            np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
+            q50 - self.config.minimal_bandwidth / 2,
+            q50 + self.config.minimal_bandwidth / 2,
+            color=ps.black,
+            lw=0,
+            alpha=0.2)
+
+        ax0.fill_between(
+            np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
+            search_lower,
+            search_upper,
+            color=ps.black,
+            lw=0,
+            alpha=0.2)
 
         for chirp in chirps:
-            axs[0].scatter(
+            ax0.scatter(
                 chirp, np.median(self.frequency), c=ps.black, marker="x"
             )
 
         # plot waveform of filtered signal
-        axs[1].plot(self.time, self.baseline, c=ps.green)
+        ax1.plot(self.time, norm(self.baseline))
 
         # plot waveform of filtered search signal
-        axs[2].plot(self.time, self.search)
+        ax2.plot(self.time, norm(self.search))
 
         # plot baseline instantaneous frequency
-        axs[3].plot(self.frequency_time, self.frequency)
+        ax3.plot(self.frequency_time, self.frequency)
 
         # plot filtered and rectified envelope
-        axs[4].plot(self.time, self.baseline_envelope)
-        axs[4].scatter(
+        ax4.plot(self.time, self.baseline_envelope)
+        ax4.scatter(
             (self.time)[self.baseline_peaks],
             self.baseline_envelope[self.baseline_peaks],
             c=ps.red,
         )
 
         # plot envelope of search signal
-        axs[5].plot(self.time, self.search_envelope)
-        axs[5].scatter(
+        ax5.plot(self.time, self.search_envelope)
+        ax5.scatter(
             (self.time)[self.search_peaks],
             self.search_envelope[self.search_peaks],
             c=ps.red,
         )
 
         # plot filtered instantaneous frequency
-        axs[6].plot(self.frequency_time, self.frequency_filtered)
-        axs[6].scatter(
+        ax6.plot(self.frequency_time, self.frequency_filtered)
+        ax6.scatter(
             self.frequency_time[self.frequency_peaks],
             self.frequency_filtered[self.frequency_peaks],
             c=ps.red,
         )
-        axs[0].set_ylim(
-            np.max(self.frequency) - 200, top=np.max(self.frequency) + 200
+        ax0.set_ylim(
+            np.max(self.frequency) - 200, top=np.max(self.frequency) + 400
         )
-        axs[6].set_xlabel("Time [s]")
-        axs[0].set_title("Spectrogram")
-        axs[1].set_title("Fitered baseline")
-        axs[2].set_title("Fitered above")
-        axs[3].set_title("Fitered baseline instanenous frequency")
-        axs[4].set_title("Filtered envelope of baseline envelope")
-        axs[5].set_title("Search envelope")
-        axs[6].set_title("Filtered absolute instantaneous frequency")
+        ax0.set_title("Spectrogram of raw data")
+        ax1.set_title("Extracted features")
+        ax4.set_title("Filtered and rectified features")
+        ax6.set_xlabel("Time [s]")
+
+        ax0.set_xlim(0, 5)
 
         if plot == "show":
             plt.show()
@@ -172,7 +205,7 @@ def plot_spectrogram(
     spec_power, spec_freqs, spec_times = spectrogram(
         signal,
         ratetime=samplerate,
-        freq_resolution=20,
+        freq_resolution=10,
         overlap_frac=0.5,
     )
 
@@ -339,7 +372,7 @@ def find_searchband(
 
             q1, q2 = np.percentile(
                 data.freq[data.ident == check_track_id],
-                config.search_freq_percentiles,
+                [25, 75]
             )
 
             search_window_bool[
@@ -432,11 +465,13 @@ def main(datapath: str, plot: str) -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    window_start_seconds = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
-    window_duration_seconds = 60 * data.raw_rate
+    # window_start_seconds = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    # window_duration_seconds = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
+    window_start_seconds = (23495 + ((28336-23495)/3)) * data.raw_rate
+    window_duration_seconds = (28336 - 23495) * data.raw_rate
 
     # generate starting points of rolling window
     window_start_indices = np.arange(
@@ -773,6 +808,7 @@ def main(datapath: str, plot: str) -> None:
                         baseline=baselineband,
                         baseline_envelope=baseline_envelope,
                         baseline_peaks=baseline_peak_indices,
+                        search_frequency=search_frequency,
                         search=searchband,
                         search_envelope=search_envelope,
                         search_peaks=search_peak_indices,
@@ -876,5 +912,6 @@ def main(datapath: str, plot: str) -> None:
 
 if __name__ == "__main__":
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-05-13-10_00/"
-    datapath = "../data/2022-06-02-10_00/"
+    # datapath = "../data/2022-06-02-10_00/"
+    datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     main(datapath, plot="show")
