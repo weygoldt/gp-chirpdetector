@@ -30,10 +30,14 @@ def PlotStyle() -> None:
         purple = "#cba6f7"
         pink = "#f5c2e7"
         lavender = "#b4befe"
+        gblue1 = "#8cb8ff"
+        gblue2 = "#7cdcdc"
+        gblue3 = "#82e896"
 
         @classmethod
         def lims(cls, track1, track2):
-            """Helper function to get frequency y axis limits from two fundamental frequency tracks.
+            """Helper function to get frequency y axis limits from two
+            fundamental frequency tracks.
 
             Args:
                 track1 (array): First track
@@ -90,6 +94,16 @@ def PlotStyle() -> None:
             plt.setp(ax.spines.values(), visible=False)
             ax.tick_params(left=False, labelleft=False)
             ax.patch.set_visible(False)
+
+        @classmethod
+        def hide_xax(cls, ax):
+            ax.xaxis.set_visible(False)
+            ax.spines["bottom"].set_visible(False)
+
+        @classmethod
+        def hide_yax(cls, ax):
+            ax.yaxis.set_visible(False)
+            ax.spines["left"].set_visible(False)
 
         @classmethod
         def set_boxplot_color(cls, bp, color):
@@ -216,8 +230,8 @@ def PlotStyle() -> None:
     plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
     plt.rcParams["image.cmap"] = 'cmo.haline'
-    # plt.rcParams["axes.xmargin"] = 0.1
-    # plt.rcParams["axes.ymargin"] = 0.15
+    plt.rcParams["axes.xmargin"] = 0.05
+    plt.rcParams["axes.ymargin"] = 0.1
     plt.rcParams["axes.titlelocation"] = "left"
     plt.rcParams["axes.titlesize"] = BIGGER_SIZE
     # plt.rcParams["axes.titlepad"] = -10
@@ -230,9 +244,9 @@ def PlotStyle() -> None:
     plt.rcParams["legend.borderaxespad"] = 0.5
     plt.rcParams["legend.fancybox"] = False
 
-    # specify the custom font to use
-    plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.sans-serif"] = "Helvetica Now Text"
+    # # specify the custom font to use
+    # plt.rcParams["font.family"] = "sans-serif"
+    # plt.rcParams["font.sans-serif"] = "Helvetica Now Text"
 
     # dark mode modifications
     plt.rcParams["boxplot.flierprops.color"] = white
@@ -271,7 +285,7 @@ def PlotStyle() -> None:
     plt.rcParams["ytick.color"] = gray  # color of the ticks
     plt.rcParams["grid.color"] = dark_gray  # grid color
     plt.rcParams["figure.facecolor"] = black    # figure face color
-    plt.rcParams["figure.edgecolor"] = "#555169"   # figure edge color
+    plt.rcParams["figure.edgecolor"] = black   # figure edge color
     plt.rcParams["savefig.facecolor"] = black  # figure face color when saving
 
     return style
