@@ -199,7 +199,25 @@ def main(datapath: str):
     plt.show()
     plt.close()  
 
-    # comparison between chasing events with and without chirps  
+    # comparison between chasing events with and without chirps
+
+    ##### Chasing triggered chirps CTC #####
+    # Evaluate how many chirps were emitted in specific time window around the chasing onset events
+
+    # Goal: 
+    # Plot with Chasing onsets centered at t = 0 on x-axis as a function of event type (0, 1, 2) (or later as a function of recordings) with chirps as rasterplot in background
+
+    # Chasing onset is defined at the point event 'chasing'
+    # Iterate over chasing onsets (later over fish)
+    # Get chirps which in a time window of -5 to +5 seconds aroung the chasing onset and save them
+    # Set Chasing onset at timepoint 0: Chasing onset timestamp - chasing onset timestamp
+    # Calculate chirp timestamps relative to chasing onset: Chirp timestamp - Chasing onset timestamp
+    # For rasterplot look at plt.eventplot() function
+    # Do the plot
+    # Then same with physical onset events (PTC)
+    
+
+
 
 
 
