@@ -157,6 +157,7 @@ def main(datapath: str):
     ax1.scatter(physical_contact, np.ones_like(physical_contact)*3, marker='x', color='black', label='Physical contact')
     plt.legend()
     # plt.show()
+    plt.close()
 
     # Get fish ids
     all_fish_ids = np.unique(chirps_fish_ids)
@@ -173,14 +174,40 @@ def main(datapath: str):
     ax2.bar(x, fish, width=width)
     ax2.set_ylabel('Chirp count')
     # plt.show()
-    embed()
+    plt.close()
+
+ 
     ##### Count chirps emitted during chasing events and chirps emitted out of chasing events #####
-    chirps_in_chasing = []
+    chirps_in_chasings = []
     for onset, offset in zip(chasing_onset, chasing_offset):
-        if chirps.any((chirps > onset) & (chirps < offset)):
-            chirps_in_chasing.append(chirps)
-        print(chirps_in_chasing)
-        embed()
+        chirps_in_chasing = [c for c in chirps if (c > onset) & (c < offset)]
+        chirps_in_chasings.append(chirps_in_chasing)
+
+    # chirps out of chasing events
+    counts_chirps_chasings = 0
+    chasings_without_chirps = 0
+    for i in chirps_in_chasings:
+        if i:
+            chasings_without_chirps += 1
+        else:
+            counts_chirps_chasings += 1
+
+    # chirps in chasing events
+    fig3 , ax3 = plt.subplots()
+    ax3.bar(['Chirps in chasing events',  'Chasing events without Chirps'], [counts_chirps_chasings, chasings_without_chirps], width=width)
+    plt.ylabel('Count')
+    plt.show()
+    plt.close()  
+
+    # comparison between chasing events with and without chirps  
+
+
+
+
+
+    embed()
+
+
 
 
 
