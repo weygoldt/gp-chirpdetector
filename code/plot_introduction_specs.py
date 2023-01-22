@@ -17,9 +17,9 @@ def main():
     data = LoadData(datapath)
 
     # good chirp times for data: 2022-06-02-10_00
-    window_start_seconds = 3 * 60 * 60 + 6 * 60 + 43.5 + 9 + 6.22
+    window_start_seconds = 3 * 60 * 60 + 6 * 60 + 43.5 + 9 + 6.25
     window_start_index = window_start_seconds * data.raw_rate
-    window_duration_seconds = 0.3
+    window_duration_seconds = 0.2
     window_duration_index = window_duration_seconds * data.raw_rate
 
     timescaler = 1000
@@ -28,7 +28,7 @@ def main():
                    window_duration_index, 10]
 
     fig, (ax1, ax2, ax3) = plt.subplots(
-        3, 1, figsize=(16 * ps.cm, 12*ps.cm), sharex=True, sharey=True)
+        3, 1, figsize=(12 * ps.cm, 10*ps.cm), sharex=True, sharey=True)
 
     # plot instantaneous frequency
     filtered1 = bandpass_filter(
@@ -103,12 +103,15 @@ def main():
     ax3.set_xlabel("time [ms]")
     ax2.set_ylabel("frequency [Hz]")
 
-    ax1.set_yticks(np.arange(300, 1201, 300))
-    ax1.spines.left.set_bounds((300, 1200))
-    ax2.set_yticks(np.arange(300, 1201, 300))
-    ax2.spines.left.set_bounds((300, 1200))
-    ax3.set_yticks(np.arange(300, 1201, 300))
-    ax3.spines.left.set_bounds((300, 1200))
+    ax1.set_yticks(np.arange(400, 1201, 400))
+    ax1.spines.left.set_bounds((400, 1200))
+    ax2.set_yticks(np.arange(400, 1201, 400))
+    ax2.spines.left.set_bounds((400, 1200))
+    ax3.set_yticks(np.arange(400, 1201, 400))
+    ax3.spines.left.set_bounds((400, 1200))
+
+    plt.subplots_adjust(left=0.17, right=0.98, top=0.9,
+                        bottom=0.14, hspace=0.35)
 
     plt.savefig('../poster/figs/introplot.pdf')
     plt.show()
