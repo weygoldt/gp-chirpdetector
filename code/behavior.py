@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from IPython import embed
 from pandas import read_csv
 from modules.logger import makeLogger
+from scipy.ndimage import gaussian_filter1d
 
 logger = makeLogger(__name__)
 
@@ -106,7 +107,6 @@ def correct_chasing_events(
         logger.info('Chasing events are equal')
         return category, timestamps
 
-
     # Correct the wrong chasing events; delete double events
     wrong_ids = []
     for i in range(len(longer_array)-(len_diff+1)):
@@ -121,6 +121,32 @@ def correct_chasing_events(
     timestamps = np.delete(
         timestamps, wrong_ids)
     return category, timestamps
+
+
+def event_triggered_chirps(
+    event: np.ndarray, 
+    chirps:np.ndarray,
+    time_before_event: int,
+    time_after_event: int
+    )-> tuple[np.ndarray, np.ndarray]:
+
+
+
+    event_chirps = []   # chirps that are in specified window around event
+    centered_chirps = []    # timestamps of chirps around event centered on the event timepoint
+
+    for event_timestamp in event:
+        start = event_timestamp - time_before_event    # timepoint of window start
+        stop = event_timestamp + time_after_event    # timepoint of window ending
+        chirps_around_event = [c for c in chirps if (c >= start) & (c <= stop)]     # get chirps that are in a -5 to +5 sec window around event
+        event_chirps.append(chirps_around_event)
+        if len(chirps_around_event) == 0:
+            continue
+        else: 
+            centered_chirps.append(chirps_around_event - event_timestamp)
+    centered_chirps = np.concatenate(centered_chirps, axis=0)   # convert list of arrays to one array for plotting
+
+    return event_chirps, centered_chirps
 
 
 def main(datapath: str):
@@ -144,11 +170,6 @@ def main(datapath: str):
     chasing_offset = timestamps[category == 1]
     physical_contact = timestamps[category == 2]
 
-    ##### TODO Physical contact-triggered chirps (PTC) mit Rasterplot #####
-    # Wahrscheinlichkeit von Phys auf Ch und vice versa
-    # Chasing-triggered chirps (CTC) mit Rasterplot
-    # Wahrscheinlichkeit von Chase auf Ch und vice versa
-
     # First overview plot
     fig1, ax1 = plt.subplots()
     ax1.scatter(chirps, np.ones_like(chirps), marker='*', color='royalblue', label='Chirps')
@@ -160,11 +181,41 @@ def main(datapath: str):
     plt.close()
 
     # Get fish ids
-    all_fish_ids = np.unique(chirps_fish_ids)
+    fish_ids = np.unique(chirps_fish_ids)
+
+    ##### Chasing triggered chirps CTC #####
+    # Evaluate how many chirps were emitted in specific time window around the chasing onset events
+
+    # Iterate over chasing onsets (later over fish)
+    time_around_event = 5    # time window around the event in which chirps are counted, 5 = -5 to +5 sec around event
+
+    #### Loop crashes at concatenate in function ####
+    for i in range(len(fish_ids)):
+        fish = fish_ids[i]
+        chirps = chirps[chirps_fish_ids == fish]
+        print(fish)
+
+        chasing_chirps, centered_chasing_chirps = event_triggered_chirps(chasing_onset, chirps, time_around_event, time_around_event)
+        physical_chirps, centered_physical_chirps = event_triggered_chirps(physical_contact, chirps, time_around_event, time_around_event)
+
+        # Kernel density estimation ???
+        # centered_chasing_chirps_convolved = gaussian_filter1d(centered_chasing_chirps, 5)
+        
+        # centered_chasing = chasing_onset[0] - chasing_onset[0]   ## get the 0 timepoint for plotting; set one chasing event to 0
+        offsets = [0.5, 1]
+        fig4, ax4 = plt.subplots(figsize=(20 / 2.54, 12 / 2.54), constrained_layout=True)
+        ax4.eventplot(np.array([centered_chasing_chirps, centered_physical_chirps]), lineoffsets=offsets, linelengths=0.25, colors=['g', 'r'])
+        ax4.vlines(0, 0, 1.5, 'tab:grey', 'dashed', 'Timepoint of event')
+        # ax4.plot(centered_chasing_chirps_convolved)
+        ax4.set_yticks(offsets)
+        ax4.set_yticklabels(['Chasings', 'Physical \n contacts'])
+        ax4.set_xlabel('Time[s]')
+        ax4.set_ylabel('Type of event')
+        plt.show()
 
     # Associate chirps to inidividual fish
-    fish1 = chirps[chirps_fish_ids == all_fish_ids[0]]
-    fish2 = chirps[chirps_fish_ids == all_fish_ids[1]]
+    fish1 = chirps[chirps_fish_ids == fish_ids[0]]
+    fish2 = chirps[chirps_fish_ids == fish_ids[1]]
     fish = [len(fish1), len(fish2)]
 
     #### Chirp counts per fish general #####
@@ -196,36 +247,15 @@ def main(datapath: str):
     fig3 , ax3 = plt.subplots()
     ax3.bar(['Chirps in chasing events',  'Chasing events without Chirps'], [counts_chirps_chasings, chasings_without_chirps], width=width)
     plt.ylabel('Count')
-    plt.show()
+    # plt.show()
     plt.close()  
 
     # comparison between chasing events with and without chirps
 
-    ##### Chasing triggered chirps CTC #####
-    # Evaluate how many chirps were emitted in specific time window around the chasing onset events
 
-    # Goal: 
-    # Plot with Chasing onsets centered at t = 0 on x-axis as a function of event type (0, 1, 2) (or later as a function of recordings) with chirps as rasterplot in background
-
-    # Chasing onset is defined at the point event 'chasing'
-    # Iterate over chasing onsets (later over fish)
-    # Get chirps which in a time window of -5 to +5 seconds aroung the chasing onset and save them
-    # Set Chasing onset at timepoint 0: Chasing onset timestamp - chasing onset timestamp
-    # Calculate chirp timestamps relative to chasing onset: Chirp timestamp - Chasing onset timestamp
-    # For rasterplot look at plt.eventplot() function
-    # Do the plot
-    # Then same with physical onset events (PTC)
     
-
-
-
-
-
-
-
     embed()
-
-
+    exit()
 
 
 
