@@ -36,7 +36,8 @@ class Behavior:
 
         LED_on_time_BORIS = np.load(os.path.join(folder_path, 'LED_on_time.npy'), allow_pickle=True)
         self.time = np.load(os.path.join(folder_path, "times.npy"), allow_pickle=True)
-        csv_filename = [f for f in os.listdir(folder_path) if f.endswith('.csv')][0] # check if there are more than one csv file
+        csv_filename = [f for f in os.listdir(folder_path) if f.endswith('.csv')][0]
+        logger.info(f'CSV file: {csv_filename}')
         self.dataframe = read_csv(os.path.join(folder_path, csv_filename))
         self.chirps = np.load(os.path.join(folder_path, 'chirps.npy'), allow_pickle=True)
         self.chirps_ids = np.load(os.path.join(folder_path, 'chirps_ids.npy'), allow_pickle=True)
@@ -103,6 +104,7 @@ def correct_chasing_events(
 def main(datapath: str):
     # behabvior is pandas dataframe with all the data
     bh = Behavior(datapath)
+    embed()
     # chirps are not sorted in time (presumably due to prior groupings)
     # get and sort chirps and corresponding fish_ids of the chirps
     chirps = bh.chirps[np.argsort(bh.chirps)]
