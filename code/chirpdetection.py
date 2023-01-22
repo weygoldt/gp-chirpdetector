@@ -71,10 +71,11 @@ class PlotBuffer:
 
         # get tracked frequencies and their times
         freq_temp = self.data.freq[window_idx]
-        time_temp = self.data.time[
-            (self.data.time >= self.t0)
-            & (self.data.time <= (self.t0 + self.dt))
-        ]
+        # time_temp = self.data.time[
+        #     self.data.idx[self.data.ident == self.track_id]][
+        #     (self.data.time >= self.t0)
+        #     & (self.data.time <= (self.t0 + self.dt))
+        # ]
 
         # remake the band we filtered in
         q25, q50, q75 = np.percentile(freq_temp, [25, 50, 75])
@@ -84,8 +85,8 @@ class PlotBuffer:
         )
 
         # get indices on raw data
-        start_idx = self.t0 * self.data.raw_rate
-        window_duration = self.dt * self.data.raw_rate
+        start_idx = (self.t0 - 5) * self.data.raw_rate
+        window_duration = (self.dt + 10) * self.data.raw_rate
         stop_idx = start_idx + window_duration
 
         # get raw data
@@ -98,58 +99,81 @@ class PlotBuffer:
         self.t0 = 0
 
         fig = plt.figure(
-            figsize=(16 / 2.54, 20 / 2.54)
+            figsize=(14 / 2.54, 20 / 2.54)
         )
 
         gs0 = gr.GridSpec(
-            6, 1, figure=fig, height_ratios=[1, 0.05, 1, 0.05, 1, 0.05]
+            3, 1, figure=fig, height_ratios=[1, 1, 1]
         )
         gs1 = gs0[0].subgridspec(1, 1)
-        gs2 = gs0[2].subgridspec(3, 1)
-        gs3 = gs0[4].subgridspec(3, 1)
-        gs4 = gs0[5].subgridspec(1, 1)
+        gs2 = gs0[1].subgridspec(3, 1, hspace=0.4)
+        gs3 = gs0[2].subgridspec(3, 1, hspace=0.4)
+        # gs4 = gs0[5].subgridspec(1, 1)
 
-        ax0 = fig.add_subplot(gs1[0, 0])
-        ax1 = fig.add_subplot(gs2[0, 0], sharex=ax0)
-        ax2 = fig.add_subplot(gs2[1, 0], sharex=ax0)
-        ax3 = fig.add_subplot(gs2[2, 0], sharex=ax0)
-        ax4 = fig.add_subplot(gs3[0, 0], sharex=ax0)
-        ax5 = fig.add_subplot(gs3[1, 0], sharex=ax0)
-        ax6 = fig.add_subplot(gs3[2, 0], sharex=ax0)
-        ax7 = fig.add_subplot(gs4[0, 0], sharex=ax0)
+        ax6 = fig.add_subplot(gs3[2, 0])
+        ax0 = fig.add_subplot(gs1[0, 0], sharex=ax6)
+        ax1 = fig.add_subplot(gs2[0, 0], sharex=ax6)
+        ax2 = fig.add_subplot(gs2[1, 0], sharex=ax6)
+        ax3 = fig.add_subplot(gs2[2, 0], sharex=ax6)
+        ax4 = fig.add_subplot(gs3[0, 0], sharex=ax6)
+        ax5 = fig.add_subplot(gs3[1, 0], sharex=ax6)
+        # ax7 = fig.add_subplot(gs4[0, 0], sharex=ax0)
 
         # ax_leg = fig.add_subplot(gs0[1, 0])
 
         waveform_scaler = 1000
+        lw = 1.5
 
         # plot spectrogram
         _ = plot_spectrogram(
             ax0,
             data_oi,
             self.data.raw_rate,
-            self.t0,
+            self.t0 - 5,
             [np.max(self.frequency) - 200, np.max(self.frequency) + 200]
         )
 
-        # ax0.fill_between(
-        #     np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
-        #     q50 - self.config.minimal_bandwidth / 2,
-        #     q50 + self.config.minimal_bandwidth / 2,
-        #     color=ps.black,
-        #     lw=1,
-        #     ls="dashed",
-        #     alpha=0.5,
-        # )
+        for track_id in self.data.ids:
 
-        # ax0.fill_between(
-        #     np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
-        #     search_lower,
-        #     search_upper,
-        #     color=ps.black,
-        #     lw=1,
-        #     ls="dashed",
-        #     alpha=0.5,
-        # )
+            t0_track = self.t0_old - 5
+            dt_track = self.dt + 10
+            window_idx = np.arange(len(self.data.idx))[
+                (self.data.ident == track_id)
+                & (self.data.time[self.data.idx] >= t0_track)
+                & (self.data.time[self.data.idx] <= (t0_track + dt_track))
+            ]
+
+            # get tracked frequencies and their times
+            f = self.data.freq[window_idx]
+            t = self.data.time[
+                self.data.idx[self.data.ident == self.track_id]]
+            tmask = (t >= t0_track) & (t <= (t0_track + dt_track))
+            if track_id == self.track_id:
+                ax0.plot(t[tmask]-self.t0_old, f, lw=lw,
+                         zorder=10, color=ps.gblue1)
+            else:
+                ax0.plot(t[tmask]-self.t0_old, f, lw=lw,
+                         zorder=10, color=ps.gray, alpha=0.5)
+
+        ax0.fill_between(
+            np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
+            q50 - self.config.minimal_bandwidth / 2,
+            q50 + self.config.minimal_bandwidth / 2,
+            color=ps.gblue1,
+            lw=1,
+            ls="dashed",
+            alpha=0.5,
+        )
+
+        ax0.fill_between(
+            np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
+            search_lower,
+            search_upper,
+            color=ps.gblue2,
+            lw=1,
+            ls="dashed",
+            alpha=0.5,
+        )
         # ax0.axhline(q50, spec_times[0], spec_times[-1],
         #             color=ps.gblue1, lw=2, ls="dashed")
         # ax0.axhline(q50 + self.search_frequency,
@@ -163,46 +187,52 @@ class PlotBuffer:
 
         # plot waveform of filtered signal
         ax1.plot(self.time, self.baseline * waveform_scaler,
-                 c=ps.gray, lw=2, alpha=0.5)
+                 c=ps.gray, lw=lw, alpha=0.5)
         ax1.plot(self.time, self.baseline_envelope_unfiltered *
-                 waveform_scaler, c=ps.gblue1, lw=2, label="baseline envelope")
+                 waveform_scaler, c=ps.gblue1, lw=lw, label="baseline envelope")
 
         # plot waveform of filtered search signal
         ax2.plot(self.time, self.search * waveform_scaler,
-                 c=ps.gray, lw=2, alpha=0.5)
+                 c=ps.gray, lw=lw, alpha=0.5)
         ax2.plot(self.time, self.search_envelope_unfiltered *
-                 waveform_scaler, c=ps.gblue2, lw=2, label="search envelope")
+                 waveform_scaler, c=ps.gblue2, lw=lw, label="search envelope")
 
         # plot baseline instantaneous frequency
         ax3.plot(self.frequency_time, self.frequency,
-                 c=ps.gblue3, lw=2, label="baseline inst. freq.")
+                 c=ps.gblue3, lw=lw, label="baseline inst. freq.")
 
         # plot filtered and rectified envelope
-        ax4.plot(self.time, self.baseline_envelope, c=ps.gblue1, lw=2)
+        ax4.plot(self.time, self.baseline_envelope, c=ps.gblue1, lw=lw)
         ax4.scatter(
             (self.time)[self.baseline_peaks],
             self.baseline_envelope[self.baseline_peaks],
-            c=ps.red,
+            edgecolors=ps.red,
             zorder=10,
+            marker="o",
+            facecolors="none",
         )
 
         # plot envelope of search signal
-        ax5.plot(self.time, self.search_envelope, c=ps.gblue2, lw=2)
+        ax5.plot(self.time, self.search_envelope, c=ps.gblue2, lw=lw)
         ax5.scatter(
             (self.time)[self.search_peaks],
             self.search_envelope[self.search_peaks],
-            c=ps.red,
+            edgecolors=ps.red,
             zorder=10,
+            marker="o",
+            facecolors="none",
         )
 
         # plot filtered instantaneous frequency
         ax6.plot(self.frequency_time,
-                 self.frequency_filtered, c=ps.gblue3, lw=2)
+                 self.frequency_filtered, c=ps.gblue3, lw=lw)
         ax6.scatter(
             self.frequency_time[self.frequency_peaks],
             self.frequency_filtered[self.frequency_peaks],
-            c=ps.red,
+            edgecolors=ps.red,
             zorder=10,
+            marker="o",
+            facecolors="none",
         )
 
         ax0.set_ylabel("frequency [Hz]")
@@ -210,27 +240,24 @@ class PlotBuffer:
         ax2.set_ylabel("a.u.")
         ax3.set_ylabel("Hz")
         ax5.set_ylabel("a.u.")
-        ax7.set_xlabel("time [s]")
+        ax6.set_xlabel("time [s]")
 
-        ps.hide_xax(ax0)
-        ps.hide_xax(ax1)
-        ps.hide_xax(ax2)
-        ps.hide_xax(ax3)
-        ps.hide_xax(ax4)
-        ps.hide_xax(ax5)
-        ps.hide_xax(ax6)
-        ps.hide_yax(ax7)
+        plt.setp(ax0.get_xticklabels(), visible=False)
+        plt.setp(ax1.get_xticklabels(), visible=False)
+        plt.setp(ax2.get_xticklabels(), visible=False)
+        plt.setp(ax3.get_xticklabels(), visible=False)
+        plt.setp(ax4.get_xticklabels(), visible=False)
+        plt.setp(ax5.get_xticklabels(), visible=False)
 
-        ps.letter_subplots([ax0, ax1, ax4], xoffset=-0.21)
+        # ps.letter_subplots([ax0, ax1, ax4], xoffset=-0.21)
 
-        ax7.set_xticks(np.arange(0, 5.5, 1))
-        ax7.spines.bottom.set_bounds((0, 5))
+        # ax7.set_xticks(np.arange(0, 5.5, 1))
+        # ax7.spines.bottom.set_bounds((0, 5))
 
-        ax0.set_ymargin(0)
-        plt.subplots_adjust(left=0.19, right=0.99,
-                            top=0.98, bottom=0.08, hspace=0.15)
+        ax0.set_xlim(0, self.config.window)
+        plt.subplots_adjust(left=0.165, right=0.975,
+                            top=0.98, bottom=0.074, hspace=0.2)
         fig.align_labels()
-        ax0.autoscale(enable=True)
 
         if plot == "show":
             plt.show()
@@ -241,6 +268,7 @@ class PlotBuffer:
             )
 
             plt.savefig(f"{out}{self.track_id}_{self.t0_old}.pdf")
+            plt.savefig(f"{out}{self.track_id}_{self.t0_old}.svg")
             plt.close()
 
 
@@ -292,7 +320,7 @@ def plot_spectrogram(
         interpolation="gaussian",
         alpha=1,
     )
-    axis.use_sticky_edges = False
+    # axis.use_sticky_edges = False
     return spec_times
 
 
@@ -561,7 +589,7 @@ def main(datapath: str, plot: str) -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5 + 5) * data.raw_rate
     window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
@@ -1021,4 +1049,4 @@ if __name__ == "__main__":
     datapath = "../data/2022-06-02-10_00/"
     # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
-    main(datapath, plot="show")
+    main(datapath, plot="save")
