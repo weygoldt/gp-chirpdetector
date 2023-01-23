@@ -6,9 +6,6 @@ import matplotlib.pyplot as plt
 from IPython import embed
 from pandas import read_csv
 from modules.logger import makeLogger
-from scipy.ndimage import gaussian_filter1d
-
-logger = makeLogger(__name__)
 
 class Behavior:
     """Load behavior data from csv file as class attributes
@@ -55,6 +52,7 @@ class Behavior:
         self.start_s = (self.start_s - shift) / factor
         self.stop_s = (self.stop_s - shift) / factor
   
+
 """
 1 - chasing onset
 2 - chasing offset
@@ -81,6 +79,7 @@ temporal encpding needs to be corrected ... not exactly 25FPS.
     data_times = np.array(data_times)
     behavior = data['Behavior']
 """
+
 
 def correct_chasing_events(
     category: np.ndarray, 
@@ -169,16 +168,6 @@ def main(datapath: str):
     chasing_offset = timestamps[category == 1]
     physical_contact = timestamps[category == 2]
 
-    # First overview plot
-    fig1, ax1 = plt.subplots()
-    ax1.scatter(chirps, np.ones_like(chirps), marker='*', color='royalblue', label='Chirps')
-    ax1.scatter(chasing_onset, np.ones_like(chasing_onset)*2, marker='.', color='forestgreen', label='Chasing onset')
-    ax1.scatter(chasing_offset, np.ones_like(chasing_offset)*2.5, marker='.', color='firebrick', label='Chasing offset')
-    ax1.scatter(physical_contact, np.ones_like(physical_contact)*3, marker='x', color='black', label='Physical contact')
-    plt.legend()
-    # plt.show()
-    plt.close()
-
     # Get fish ids
     fish_ids = np.unique(chirps_fish_ids)
 
@@ -223,41 +212,6 @@ def main(datapath: str):
         # One CTC, one PTC
     # 3. All recordings, all losers
         # One CTC, one PTC
-
-    #### Chirp counts per fish general #####
-    fig2, ax2 = plt.subplots()
-    x = ['Fish1', 'Fish2']
-    width = 0.35
-    ax2.bar(x, fish, width=width)
-    ax2.set_ylabel('Chirp count')
-    # plt.show()
-    plt.close()
-
- 
-    ##### Count chirps emitted during chasing events and chirps emitted out of chasing events #####
-    chirps_in_chasings = []
-    for onset, offset in zip(chasing_onset, chasing_offset):
-        chirps_in_chasing = [c for c in chirps if (c > onset) & (c < offset)]
-        chirps_in_chasings.append(chirps_in_chasing)
-
-    # chirps out of chasing events
-    counts_chirps_chasings = 0
-    chasings_without_chirps = 0
-    for i in chirps_in_chasings:
-        if i:
-            chasings_without_chirps += 1
-        else:
-            counts_chirps_chasings += 1
-
-    # chirps in chasing events
-    fig3 , ax3 = plt.subplots()
-    ax3.bar(['Chirps in chasing events',  'Chasing events without Chirps'], [counts_chirps_chasings, chasings_without_chirps], width=width)
-    plt.ylabel('Count')
-    # plt.show()
-    plt.close()  
-
-    # comparison between chasing events with and without chirps
-
 
     
     embed()
