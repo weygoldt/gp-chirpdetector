@@ -3,6 +3,24 @@ from typing import List, Any
 from scipy.ndimage import gaussian_filter1d
 
 
+def norm(data):
+    """
+    Normalize data to [0, 1]
+
+    Parameters
+    ----------
+    data : np.ndarray
+        Data to normalize.
+
+    Returns
+    -------
+    np.ndarray
+        Normalized data.
+
+    """
+    return (2*((data - np.min(data)) / (np.max(data) - np.min(data)))) - 1
+
+
 def instantaneous_frequency(
     signal: np.ndarray,
     samplerate: int,
