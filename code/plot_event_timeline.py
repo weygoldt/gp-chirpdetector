@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 import matplotlib.pyplot as plt 
+from thunderfish.powerspectrum import decibel
 
 from IPython import embed
 from pandas import read_csv
@@ -49,7 +50,8 @@ class Behavior:
         self.ident = np.load(os.path.join(folder_path, 'ident_v.npy'), allow_pickle=True)
         self.idx = np.load(os.path.join(folder_path, 'idx_v.npy'), allow_pickle=True)
         self.freq = np.load(os.path.join(folder_path, 'fund_v.npy'), allow_pickle=True)
-        self.time = np.load(os.path.join(folder_path, "times.npy"), allow_pickle=True)            
+        self.time = np.load(os.path.join(folder_path, "times.npy"), allow_pickle=True)
+        self.spec = np.load(os.path.join(folder_path, "spec.npy"), allow_pickle=True)    
 
         for k, key in enumerate(self.dataframe.keys()):
             key = key.lower() 
@@ -154,6 +156,7 @@ def main(datapath: str):
     time_temp = bh.time[bh.idx[bh.ident==fish2_id]]
     ax[3].plot((time_temp/ 60) /60, freq_temp, color=fish2_color)
 
+    #ax[3].imshow(decibel(bh.spec), extent=[bh.time[0]/60/60, bh.time[-1]/60/60, 0, 2000], aspect='auto', origin='lower')
 
         # Hide grid lines
     ax[0].grid(False)
@@ -168,7 +171,6 @@ def main(datapath: str):
     ax[1].set_xticks([])
     ax[1].set_yticks([])
     ps.hide_ax(ax[1])
-
 
     ax[2].grid(False)
     ax[2].set_frame_on(False)
@@ -190,7 +192,7 @@ def main(datapath: str):
     ax[3].set_xlabel('Time [h]')
 
     plt.show()
-
+    embed()
 
     # plot chirps
 
