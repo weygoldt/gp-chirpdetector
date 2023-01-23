@@ -218,61 +218,61 @@ def main(datapath: str):
     nshuffled_chirps_offset = []
     nshuffled_chirps_physical = []
 
-    # for i in range(nbootstrapping):
-    # # Calculate interchirp intervals; add first chirp timestamp in beginning to get equal lengths
-    #     interchirp_intervals = np.append(np.array([chirps[0]]), np.diff(chirps))
-    #     np.random.shuffle(interchirp_intervals)
-    #     shuffled_chirps = np.cumsum(interchirp_intervals)
-    #     # Shuffled chasing onset chirps
-    #     _, _, cc_shuffled_onset_chirps = event_triggered_chirps(chasing_onsets, shuffled_chirps, time_before_event, time_after_event, dt, width)
-    #     nshuffled_chirps_onset.append(cc_shuffled_onset_chirps)
-    #     # Shuffled chasing offset chirps
-    #     _, _, cc_shuffled_offset_chirps = event_triggered_chirps(chasing_offsets, shuffled_chirps, time_before_event, time_after_event, dt, width)
-    #     nshuffled_chirps_offset.append(cc_shuffled_offset_chirps)
-    #     # Shuffled physical contact chirps
-    #     _, _, cc_shuffled_physical_chirps = event_triggered_chirps(physical_contacts, shuffled_chirps, time_before_event, time_after_event, dt, width)
-    #     nshuffled_chirps_physical.append(cc_shuffled_physical_chirps)
+    for i in range(nbootstrapping):
+    # Calculate interchirp intervals; add first chirp timestamp in beginning to get equal lengths
+        interchirp_intervals = np.append(np.array([chirps[0]]), np.diff(chirps))
+        np.random.shuffle(interchirp_intervals)
+        shuffled_chirps = np.cumsum(interchirp_intervals)
+        # Shuffled chasing onset chirps
+        _, _, cc_shuffled_onset_chirps = event_triggered_chirps(chasing_onsets, shuffled_chirps, time_before_event, time_after_event, dt, width)
+        nshuffled_chirps_onset.append(cc_shuffled_onset_chirps)
+        # Shuffled chasing offset chirps
+        _, _, cc_shuffled_offset_chirps = event_triggered_chirps(chasing_offsets, shuffled_chirps, time_before_event, time_after_event, dt, width)
+        nshuffled_chirps_offset.append(cc_shuffled_offset_chirps)
+        # Shuffled physical contact chirps
+        _, _, cc_shuffled_physical_chirps = event_triggered_chirps(physical_contacts, shuffled_chirps, time_before_event, time_after_event, dt, width)
+        nshuffled_chirps_physical.append(cc_shuffled_physical_chirps)
     
-    # shuffled_q5_onset, shuffled_median_onset, shuffled_q95_onset = np.percentile(nshuffled_chirps_onset, (5, 50, 95), axis=0)
-    # shuffled_q5_offset, shuffled_median_offset, shuffled_q95_offset = np.percentile(nshuffled_chirps_offset, (5, 50, 95), axis=0)
-    # shuffled_q5_physical, shuffled_median_physical, shuffled_q95_physical = np.percentile(nshuffled_chirps_physical, (5, 50, 95), axis=0)
+    shuffled_q5_onset, shuffled_median_onset, shuffled_q95_onset = np.percentile(nshuffled_chirps_onset, (5, 50, 95), axis=0)
+    shuffled_q5_offset, shuffled_median_offset, shuffled_q95_offset = np.percentile(nshuffled_chirps_offset, (5, 50, 95), axis=0)
+    shuffled_q5_physical, shuffled_median_physical, shuffled_q95_physical = np.percentile(nshuffled_chirps_physical, (5, 50, 95), axis=0)
 
     # Plot all events with all shuffled
-    # fig, ax = plt.subplots(1, 3, figsize=(50 / 2.54, 15 / 2.54), constrained_layout=True, sharey='all')
-    # offset = [1.35]
-    # ax[0].set_xlabel('Time[s]')
-    # # Plot chasing onsets
-    # ax[0].set_ylabel('Chirp rate [Hz]')
-    # ax[0].plot(time, cc_chasing_onset_chirps, color='tab:blue', zorder=100)
-    # ax0 = ax[0].twinx()
-    # ax0.eventplot(np.array([centered_chasing_onset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=-100)
-    # ax0.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    # ax0.set_yticklabels([])
-    # ax0.set_yticks([])
-    # ax[0].fill_between(time, shuffled_q5_onset, shuffled_q95_onset, color='tab:gray', alpha=0.5)
-    # ax[0].plot(time, shuffled_median_onset, color='k')
-    # # Plot chasing offets
-    # ax[1].set_xlabel('Time[s]')
-    # ax[1].plot(time, cc_chasing_offset_chirps, color='tab:blue', zorder=100)
-    # ax1 = ax[1].twinx()
-    # ax1.eventplot(np.array([centered_chasing_offset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=-100)
-    # ax1.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    # ax1.set_yticklabels([])
-    # ax1.set_yticks([])
-    # ax[1].fill_between(time, shuffled_q5_offset, shuffled_q95_offset, color='tab:gray', alpha=0.5)
-    # ax[1].plot(time, shuffled_median_offset, color='k')
-    # # Plot physical contacts
-    # ax[2].set_xlabel('Time[s]')
-    # ax[2].plot(time, cc_physical_chirps, color='tab:blue', zorder=100)
-    # ax2 = ax[2].twinx()
-    # ax2.eventplot(np.array([centered_physical_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=-100)
-    # ax2.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    # ax2.set_yticklabels([])
-    # ax2.set_yticks([])
-    # ax[2].fill_between(time, shuffled_q5_physical, shuffled_q95_physical, color='tab:gray', alpha=0.5)
-    # ax[2].plot(time, shuffled_median_physical, color='k')
-    # plt.show()
-    # plt.close()
+    fig, ax = plt.subplots(1, 3, figsize=(50 / 2.54, 15 / 2.54), constrained_layout=True, sharey='all')
+    offset = [1.35]
+    ax[0].set_xlabel('Time[s]')
+    # Plot chasing onsets
+    ax[0].set_ylabel('Chirp rate [Hz]')
+    ax[0].plot(time, cc_chasing_onset_chirps, color='tab:blue', zorder=100)
+    ax0 = ax[0].twinx()
+    ax0.eventplot(np.array([centered_chasing_onset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=-100)
+    ax0.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax0.set_yticklabels([])
+    ax0.set_yticks([])
+    ax[0].fill_between(time, shuffled_q5_onset, shuffled_q95_onset, color='tab:gray', alpha=0.5)
+    ax[0].plot(time, shuffled_median_onset, color='k')
+    # Plot chasing offets
+    ax[1].set_xlabel('Time[s]')
+    ax[1].plot(time, cc_chasing_offset_chirps, color='tab:blue', zorder=100)
+    ax1 = ax[1].twinx()
+    ax1.eventplot(np.array([centered_chasing_offset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=-100)
+    ax1.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax1.set_yticklabels([])
+    ax1.set_yticks([])
+    ax[1].fill_between(time, shuffled_q5_offset, shuffled_q95_offset, color='tab:gray', alpha=0.5)
+    ax[1].plot(time, shuffled_median_offset, color='k')
+    # Plot physical contacts
+    ax[2].set_xlabel('Time[s]')
+    ax[2].plot(time, cc_physical_chirps, color='tab:blue', zorder=100)
+    ax2 = ax[2].twinx()
+    ax2.eventplot(np.array([centered_physical_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=-100)
+    ax2.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax2.set_yticklabels([])
+    ax2.set_yticks([])
+    ax[2].fill_between(time, shuffled_q5_physical, shuffled_q95_physical, color='tab:gray', alpha=0.5)
+    ax[2].plot(time, shuffled_median_physical, color='k')
+    plt.show()
+    plt.close()
     
 
 
@@ -303,6 +303,7 @@ def main(datapath: str):
     _, loser_centered_offset, loser_cc_offset = event_triggered_chirps(chasing_offsets, loser_chirps, time_before_event, time_after_event, dt, width)
     _, loser_centered_physical, loser_cc_physical = event_triggered_chirps(physical_contacts, loser_chirps, time_before_event, time_after_event, dt, width)
 
+    ########## !Winner physical strange! ##########
     fig, ax = plt.subplots(2, 3, figsize=(50 / 2.54, 15 / 2.54), constrained_layout=True, sharey='row')
     offset = [1.35]
     ax[1][0].set_xlabel('Time[s]')
