@@ -3,7 +3,7 @@ dataroot: "../data/"
 outputdir: "../output/"
 
 # Duration and overlap of the analysis window in seconds
-window: 5
+window: 10
 overlap: 1
 edge: 0.25
 
@@ -12,7 +12,7 @@ number_electrodes: 3
 minimum_electrodes: 2
 
 # Search window bandwidth and minimal baseline bandwidth
-minimal_bandwidth: 10
+minimal_bandwidth: 20
 
 # Instantaneous frequency smoothing usint a gaussian kernel of this width
 baseline_frequency_smoothing: 5
