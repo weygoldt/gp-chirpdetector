@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from IPython import embed
 from pandas import read_csv
 from modules.logger import makeLogger
-from modules.datahandling import causal_kde1d
+from modules.datahandling import causal_kde1d, acausal_kde1d
 
 logger = makeLogger(__name__)
 
@@ -129,17 +129,18 @@ def event_triggered_chirps(
     event: np.ndarray, 
     chirps:np.ndarray,
     time_before_event: int,
-    time_after_event: int
-    )-> tuple[np.ndarray, np.ndarray]:
-
+    time_after_event: int,
+    dt: float,
+    width: float,
+    )-> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     event_chirps = []   # chirps that are in specified window around event
     centered_chirps = []    # timestamps of chirps around event centered on the event timepoint
 
     for event_timestamp in event:
-        start = event_timestamp - time_before_event    # timepoint of window start
-        stop = event_timestamp + time_after_event    # timepoint of window ending
-        chirps_around_event = [c for c in chirps if (c >= start) & (c <= stop)]     # get chirps that are in a -5 to +5 sec window around event
+        start = event_timestamp - time_before_event
+        stop = event_timestamp + time_after_event
+        chirps_around_event = [c for c in chirps if (c >= start) & (c <= stop)]
         event_chirps.append(chirps_around_event)
         if len(chirps_around_event) == 0:
             continue
@@ -147,7 +148,11 @@ def event_triggered_chirps(
             centered_chirps.append(chirps_around_event - event_timestamp)
     centered_chirps = np.concatenate(centered_chirps, axis=0)   # convert list of arrays to one array for plotting
 
-    return event_chirps, centered_chirps
+    # Kernel density estimation
+    time = np.arange(-time_before_event, time_after_event, dt)
+    centered_chirps_convolved = (acausal_kde1d(centered_chirps, time, width)) / len(event)
+
+    return event_chirps, centered_chirps, centered_chirps_convolved
 
 
 def main(datapath: str):
@@ -167,46 +172,79 @@ def main(datapath: str):
     category, timestamps = correct_chasing_events(category, timestamps)
 
     # split categories
-    chasing_onset = timestamps[category == 0]
-    chasing_offset = timestamps[category == 1]
-    physical_contact = timestamps[category == 2]
+    chasing_onsets = timestamps[category == 0]
+    chasing_offsets = timestamps[category == 1]
+    physical_contacts = timestamps[category == 2]
+
+    chasing_durations = []
+    # Calculate chasing duration to evaluate a nice time window for kernel density estimation
+    for onset, offset in zip(chasing_onsets, chasing_offsets):
+        duration = offset - onset
+        chasing_durations.append(duration)
+
+    fig, ax = plt.subplots()
+    ax.boxplot(chasing_durations)
+    plt.show()
+    plt.close()
 
     # Get fish ids
     fish_ids = np.unique(chirps_fish_ids)
 
-    ##### Chasing triggered chirps CTC #####
-    # Evaluate how many chirps were emitted in specific time window around the chasing onset events
+    # # Associate chirps to individual fish
+    # fish1 = chirps[chirps_fish_ids == fish_ids[0]]
+    # fish2 = chirps[chirps_fish_ids == fish_ids[1]]
+    # fish = [len(fish1), len(fish2)]
 
-    # Iterate over chasing onsets (later over fish)
-    time_around_event = 5    # time window around the event in which chirps are counted, 5 = -5 to +5 sec around event
+    # Define time window for chirp around event analysis
+    time_before_event = 30
+    time_after_event = 60
+    dt = 0.01
+    width = 1
+
     #### Loop crashes at concatenate in function ####
-    # for i in range(len(fish_ids)):
-    #     fish = fish_ids[i]
-    #     chirps = chirps[chirps_fish_ids == fish]
-    #     print(fish)
+    for i in range(len(fish_ids)):
+        fish = fish_ids[i]
+        chirps_temp = chirps[chirps_fish_ids == fish]
+        print(fish)
 
-    chasing_chirps, centered_chasing_chirps = event_triggered_chirps(chasing_onset, chirps, time_around_event, time_around_event)
-    physical_chirps, centered_physical_chirps = event_triggered_chirps(physical_contact, chirps, time_around_event, time_around_event)
+        ##### Chirps around events #####
+        time = np.arange(-time_before_event, time_after_event, dt)
 
-    # Kernel density estimation ???
-    # centered_chasing_chirps_convolved = gaussian_filter1d(centered_chasing_chirps, 5)
-    
-    # centered_chasing = chasing_onset[0] - chasing_onset[0]   ## get the 0 timepoint for plotting; set one chasing event to 0
-    offsets = [0.5, 1]
-    fig4, ax4 = plt.subplots(figsize=(20 / 2.54, 12 / 2.54), constrained_layout=True)
-    ax4.eventplot(np.array([centered_chasing_chirps, centered_physical_chirps]), lineoffsets=offsets, linelengths=0.25, colors=['g', 'r'])
-    ax4.vlines(0, 0, 1.5, 'tab:grey', 'dashed', 'Timepoint of event')
-    # ax4.plot(centered_chasing_chirps_convolved)
-    ax4.set_yticks(offsets)
-    ax4.set_yticklabels(['Chasings', 'Physical \n contacts'])
-    ax4.set_xlabel('Time[s]')
-    ax4.set_ylabel('Type of event')
-    plt.show()
+        # Chirps around chasing onsets
+        _, centered_chasing_onset_chirps, cc_chasing_onset_chirps = event_triggered_chirps(chasing_onsets, chirps_temp, time_before_event, time_after_event, dt, width)
+        # Chirps around chasing offsets
+        _, centered_chasing_offset_chirps, cc_chasing_offset_chirps = event_triggered_chirps(chasing_offsets, chirps_temp, time_before_event, time_after_event, dt, width)
+        # Chirps around physical contacts
+        _, centered_physical_chirps, cc_physical_chirps = event_triggered_chirps(physical_contacts, chirps_temp, time_before_event, time_after_event, dt, width)
 
-    # Associate chirps to inidividual fish
-    fish1 = chirps[chirps_fish_ids == fish_ids[0]]
-    fish2 = chirps[chirps_fish_ids == fish_ids[1]]
-    fish = [len(fish1), len(fish2)]
+        fig, ax = plt.subplots(1, 3, figsize=(50 / 2.54, 15 / 2.54), constrained_layout=True, sharey='all')
+        offset = [0.25]
+        ax[0].set_xlabel('Time[s]')
+        # Plot chasing onsets
+        ax[0].set_ylabel('Chirp rate [Hz]')
+        ax[0].plot(time, cc_chasing_onset_chirps, color='tab:blue')
+        ax0 = ax[0].twinx()
+        ax0.eventplot(np.array([centered_chasing_onset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'])
+        ax0.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+        ax0.set_yticklabels([])
+        ax0.set_yticks([])
+        # Plot chasing offets
+        ax[1].set_xlabel('Time[s]')
+        ax[1].plot(time, cc_chasing_offset_chirps, color='tab:blue')
+        ax1 = ax[1].twinx()
+        ax1.eventplot(np.array([centered_chasing_offset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'])
+        ax1.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+        ax1.set_yticklabels([])
+        ax1.set_yticks([])
+        # Plot physical contacts
+        ax[2].set_xlabel('Time[s]')
+        ax[2].plot(time, cc_physical_chirps, color='tab:blue')
+        ax2 = ax[2].twinx()
+        ax2.eventplot(np.array([centered_physical_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'])
+        ax2.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+        ax2.set_yticklabels([])
+        ax2.set_yticks([])
+        plt.show()
 
     ### Plots:
     # 1. All recordings, all fish, all chirps
