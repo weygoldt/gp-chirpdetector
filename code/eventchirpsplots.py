@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from IPython import embed
 from pandas import read_csv
 from modules.logger import makeLogger
+from modules.datahandling import causal_kde1d
+
+logger = makeLogger(__name__)
 
 class Behavior:
     """Load behavior data from csv file as class attributes
