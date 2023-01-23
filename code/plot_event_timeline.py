@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 from IPython import embed
 from pandas import read_csv
 from modules.logger import makeLogger
+from modules.plotstyle import PlotStyle
+
+ps = PlotStyle()
 
 logger = makeLogger(__name__)
 
@@ -35,12 +38,18 @@ class Behavior:
         
 
         LED_on_time_BORIS = np.load(os.path.join(folder_path, 'LED_on_time.npy'), allow_pickle=True)
-        self.time = np.load(os.path.join(folder_path, "times.npy"), allow_pickle=True)
+
         csv_filename = [f for f in os.listdir(folder_path) if f.endswith('.csv')][0]
         logger.info(f'CSV file: {csv_filename}')
         self.dataframe = read_csv(os.path.join(folder_path, csv_filename))
+
         self.chirps = np.load(os.path.join(folder_path, 'chirps.npy'), allow_pickle=True)
         self.chirps_ids = np.load(os.path.join(folder_path, 'chirps_ids.npy'), allow_pickle=True)
+
+        self.ident = np.load(os.path.join(folder_path, 'ident_v.npy'), allow_pickle=True)
+        self.idx = np.load(os.path.join(folder_path, 'idx_v.npy'), allow_pickle=True)
+        self.freq = np.load(os.path.join(folder_path, 'fund_v.npy'), allow_pickle=True)
+        self.time = np.load(os.path.join(folder_path, "times.npy"), allow_pickle=True)            
 
         for k, key in enumerate(self.dataframe.keys()):
             key = key.lower() 
@@ -120,37 +129,57 @@ def main(datapath: str):
     physical_contact = (timestamps[category == 2] / 60) /60
 
     all_fish_ids = np.unique(chirps_fish_ids)
+    fish1_id = all_fish_ids[0]
+    fish2_id = all_fish_ids[1]
     # Associate chirps to inidividual fish
-    fish1 = (chirps[chirps_fish_ids == all_fish_ids[0]] / 60) /60
-    fish2 = (chirps[chirps_fish_ids == all_fish_ids[1]] / 60) /60
+    fish1 = (chirps[chirps_fish_ids == fish1_id] / 60) /60
+    fish2 = (chirps[chirps_fish_ids == fish2_id] / 60) /60
+    fish1_color = ps.red
+    fish2_color = ps.orange
 
     fig, ax = plt.subplots(4, 1, figsize=(10, 5), height_ratios=[0.5, 0.5, 0.5, 6], sharex=True)
     # marker size 
     s = 200
-    ax[0].scatter(physical_contact, np.ones(len(physical_contact)), color='red', marker='|', s=s)
-    ax[1].scatter(chasing_onset, np.ones(len(chasing_onset)), color='blue', marker='|', s=s )
-    ax[1].scatter(chasing_offset, np.ones(len(chasing_offset)), color='green', marker='|', s=s)
-    ax[2].scatter(fish1, np.ones(len(fish1))-0.25, color='blue', marker='|', s=s)
-    ax[2].scatter(fish2, np.zeros(len(fish2))+0.25, color='green', marker='|', s=s)
-    ax[3].scatter(fish2, np.zeros(len(fish2))+0.25, color='green', marker='|', s=s)
+    ax[0].scatter(physical_contact, np.ones(len(physical_contact)), color='firebrick', marker='|', s=s)
+    ax[1].scatter(chasing_onset, np.ones(len(chasing_onset)), color='green', marker='|', s=s )
+    ax[2].scatter(fish1, np.ones(len(fish1))-0.25, color=fish1_color, marker='|', s=s)
+    ax[2].scatter(fish2, np.zeros(len(fish2))+0.25, color=fish2_color, marker='|', s=s)
+   
+
+    freq_temp = bh.freq[bh.ident==fish1_id]
+    time_temp = bh.time[bh.idx[bh.ident==fish1_id]]
+    ax[3].plot((time_temp/ 60) /60, freq_temp, color=fish1_color)
+
+    freq_temp = bh.freq[bh.ident==fish2_id]
+    time_temp = bh.time[bh.idx[bh.ident==fish2_id]]
+    ax[3].plot((time_temp/ 60) /60, freq_temp, color=fish2_color)
+
 
         # Hide grid lines
     ax[0].grid(False)
     ax[0].set_frame_on(False)
     ax[0].set_xticks([])
     ax[0].set_yticks([])
+    ps.hide_ax(ax[0])
+
 
     ax[1].grid(False)
     ax[1].set_frame_on(False)
     ax[1].set_xticks([])
     ax[1].set_yticks([])
+    ps.hide_ax(ax[1])
+
 
     ax[2].grid(False)
     ax[2].set_frame_on(False)
     ax[2].set_yticks([])
     ax[2].set_xticks([])
+    ps.hide_ax(ax[2])
+
+
 
     ax[3].axvspan(0, 3, 0, 5, facecolor='grey', alpha=0.5)
+    ax[3].set_xticks(np.arange(0, 6.1, 0.5))
 
     labelpad = 40
     ax[0].set_ylabel('Physical contact', rotation=0, labelpad=labelpad)
@@ -162,21 +191,9 @@ def main(datapath: str):
 
     plt.show()
 
+
     # plot chirps
 
-
-    """
-    for track_id in np.unique(ident):
-        # window_index for time array in time window 
-        window_index = np.arange(len(idx))[(ident == track_id) &
-                                    (time[idx] >= t0) &
-                                    (time[idx] <= (t0+dt))]
-        freq_temp = freq[window_index]
-        time_temp = time[idx[window_index]] 
-        #mean_freq = np.mean(freq_temp)
-        #fdata = bandpass_filter(data_oi[:, track_id], data.samplerate, mean_freq-5, mean_freq+200)
-        ax.plot(time_temp - t0, freq_temp)
-    """
 
 if __name__ == '__main__':
     # Path to the data
