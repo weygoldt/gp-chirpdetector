@@ -104,7 +104,6 @@ def correct_chasing_events(
 def main(datapath: str):
     # behabvior is pandas dataframe with all the data
     bh = Behavior(datapath)
-    embed()
     # chirps are not sorted in time (presumably due to prior groupings)
     # get and sort chirps and corresponding fish_ids of the chirps
     chirps = bh.chirps[np.argsort(bh.chirps)]
@@ -125,7 +124,7 @@ def main(datapath: str):
     fish1 = (chirps[chirps_fish_ids == all_fish_ids[0]] / 60) /60
     fish2 = (chirps[chirps_fish_ids == all_fish_ids[1]] / 60) /60
 
-    fig, ax = plt.subplots(4, 1, figsize=(10, 5), height_ratios=[0.5, 0.5, 0.5, 6])
+    fig, ax = plt.subplots(4, 1, figsize=(10, 5), height_ratios=[0.5, 0.5, 0.5, 6], sharex=True)
     # marker size 
     s = 200
     ax[0].scatter(physical_contact, np.ones(len(physical_contact)), color='red', marker='|', s=s)
