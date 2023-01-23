@@ -130,7 +130,7 @@ class PlotBuffer:
             data_oi,
             self.data.raw_rate,
             self.t0 - 5,
-            [np.max(self.frequency) - 200, np.max(self.frequency) + 200]
+            [np.min(self.frequency) - 200, np.max(self.frequency) + 200]
         )
 
         for track_id in self.data.ids:
@@ -145,14 +145,15 @@ class PlotBuffer:
 
             # get tracked frequencies and their times
             f = self.data.freq[window_idx]
-            t = self.data.time[
-                self.data.idx[self.data.ident == self.track_id]]
-            tmask = (t >= t0_track) & (t <= (t0_track + dt_track))
+            # t = self.data.time[
+            #     self.data.idx[self.data.ident == self.track_id]]
+            # tmask = (t >= t0_track) & (t <= (t0_track + dt_track))
+            t = self.data.time[self.data.idx[window_idx]]
             if track_id == self.track_id:
-                ax0.plot(t[tmask]-self.t0_old, f, lw=lw,
+                ax0.plot(t-self.t0_old, f, lw=lw,
                          zorder=10, color=ps.gblue1)
             else:
-                ax0.plot(t[tmask]-self.t0_old, f, lw=lw,
+                ax0.plot(t-self.t0_old, f, lw=lw,
                          zorder=10, color=ps.gray, alpha=0.5)
 
         ax0.fill_between(
@@ -472,7 +473,9 @@ def find_searchband(
     )
 
     # search window in boolean
-    search_window_bool = np.ones_like(len(search_window), dtype=bool)
+    bool_lower = np.ones_like(search_window, dtype=bool)
+    bool_upper = np.ones_like(search_window, dtype=bool)
+    search_window_bool = np.ones_like(search_window, dtype=bool)
 
     # make seperate arrays from the qartiles
     q25 = np.asarray([i[0] for i in frequency_percentiles])
@@ -492,11 +495,10 @@ def find_searchband(
             q25_temp = q25[percentiles_ids == check_track_id]
             q75_temp = q75[percentiles_ids == check_track_id]
 
-            print(q25_temp, q75_temp)
-
-            search_window_bool[
-                (search_window > q25_temp) & (search_window < q75_temp)
-            ] = False
+            bool_lower[search_window > q25_temp - config.search_res] = False
+            bool_upper[search_window < q75_temp + config.search_res] = False
+            search_window_bool[(bool_lower == False) &
+                               (bool_upper == False)] = False
 
         # find gaps in search window
         search_window_indices = np.arange(len(search_window))
@@ -552,7 +554,7 @@ def find_searchband(
     return config.default_search_freq
 
 
-def main(datapath: str, plot: str) -> None:
+def chirpdetection(datapath: str, plot: str) -> None:
 
     assert plot in [
         "save",
@@ -561,6 +563,7 @@ def main(datapath: str, plot: str) -> None:
     ], "plot must be 'save', 'show' or 'false'"
 
     # load raw file
+    print('datapath', datapath)
     data = LoadData(datapath)
 
     # load config file
@@ -589,8 +592,8 @@ def main(datapath: str, plot: str) -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    # window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5 + 5) * data.raw_rate
-    # window_duration_index = 60 * data.raw_rate
+    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5 + 5) * data.raw_rate
+    window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
@@ -651,14 +654,14 @@ def main(datapath: str, plot: str) -> None:
             # approximate sampling rate to compute expected durations if there
             # is data available for this time window for this fish id
 
-            track_samplerate = np.mean(1 / np.diff(data.time))
-            expected_duration = (
-                (window_start_seconds + window_duration_seconds)
-                - window_start_seconds
-            ) * track_samplerate
+#             track_samplerate = np.mean(1 / np.diff(data.time))
+#             expected_duration = (
+#                 (window_start_seconds + window_duration_seconds)
+#                 - window_start_seconds
+#             ) * track_samplerate
 
             # check if tracked data available in this window
-            if len(current_frequencies) < expected_duration / 2:
+            if len(current_frequencies) < 3:
                 logger.warning(
                     f"Track {track_id} has no data in window {st}, skipping."
                 )
@@ -918,11 +921,9 @@ def main(datapath: str, plot: str) -> None:
                 multielectrode_chirps.append(singleelectrode_chirps)
 
                 # only initialize the plotting buffer if chirps are detected
-                chirp_detected = (
-                    (el == config.number_electrodes - 1)
-                    & (len(singleelectrode_chirps) > 0)
-                    & (plot in ["show", "save"])
-                )
+                chirp_detected = (el == (config.number_electrodes - 1)
+                                  & (plot in ["show", "save"])
+                                  )
 
                 if chirp_detected:
 
@@ -987,11 +988,12 @@ def main(datapath: str, plot: str) -> None:
             # if chirps are detected and the plot flag is set, plot the
             # chirps, otheswise try to delete the buffer if it exists
 
-            if len(multielectrode_chirps_validated) > 0:
+            if ((len(multielectrode_chirps_validated) > 0) & (plot in ["show", "save"])):
                 try:
                     buffer.plot_buffer(multielectrode_chirps_validated, plot)
+                    del buffer
                 except NameError:
-                    pass
+                    embed()
             else:
                 try:
                     del buffer
@@ -1049,4 +1051,4 @@ if __name__ == "__main__":
     datapath = "../data/2022-06-02-10_00/"
     # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
-    main(datapath, plot="save")
+    chirpdetection(datapath, plot="show")
