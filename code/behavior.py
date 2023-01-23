@@ -1,4 +1,5 @@
 import os 
+import os 
 
 import numpy as np
 import matplotlib.pyplot as plt 
@@ -267,5 +268,6 @@ def main(datapath: str):
 
 if __name__ == '__main__':
     # Path to the data
+    datapath = '../data/mount_data/2020-05-13-10_00/'
     datapath = '../data/mount_data/2020-05-13-10_00/'
     main(datapath)
