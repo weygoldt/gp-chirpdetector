@@ -7,7 +7,7 @@ from IPython import embed
 def main(datapaths):
 
     for path in datapaths:
-        chirpdetection(path, plot='show')
+        chirpdetection(path, plot='show', debug='electrode')
 
 
 if __name__ == '__main__':
@@ -39,6 +39,7 @@ if __name__ == '__main__':
 
     datapaths = [os.path.join(dataroot, dataset) +
                  '/' for dataset in valid_datasets]
-    embed()
 
-    main(datapaths[3])
+    main(datapaths)
+
+# window 1524 + 244 in dataset index 4 is nice example
