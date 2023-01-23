@@ -589,16 +589,16 @@ def main(datapath: str, plot: str) -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5 + 5) * data.raw_rate
-    window_duration_index = 60 * data.raw_rate
+    # window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5 + 5) * data.raw_rate
+    # window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
     # window_start_seconds = (23495 + ((28336-23495)/3)) * data.raw_rate
     # window_duration_seconds = (28336 - 23495) * data.raw_rate
 
-    # window_start_index = 0
-    # window_duration_index = data.raw.shape[0]
+    window_start_index = 0
+    window_duration_index = data.raw.shape[0]
 
     # generate starting points of rolling window
     window_start_indices = np.arange(
