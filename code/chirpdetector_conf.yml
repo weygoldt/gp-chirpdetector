@@ -3,7 +3,7 @@ dataroot: "../data/"
 outputdir: "../output/"
 
 # Duration and overlap of the analysis window in seconds
-window: 10
+window: 5
 overlap: 1
 edge: 0.25
 
