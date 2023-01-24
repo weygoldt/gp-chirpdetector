@@ -69,18 +69,15 @@ def main(datapath: str):
 
 
     fig, ax = plt.subplots()
-    ax.boxplot([chirps_winner, chirps_loser])
-
+    ax.boxplot([chirps_winner, chirps_loser], showfliers=False)
+    ax.scatter(np.ones(len(chirps_winner)), chirps_winner, color='r')
+    ax.scatter(np.ones(len(chirps_loser))*2, chirps_loser, color='r')
     ax.set_xticklabels(['winner', 'loser'])
-    ax.set_ylabel('Chirpscount per trial')
+    for w, l in zip(chirps_winner, chirps_loser):
+        ax.plot([1,2], [w,l], color='r', alpha=0.5, linewidth=0.5)
+
+    ax.set_ylabel('Chirpscounts [n]')
     plt.show()
-
-    
-
-    embed()
-    exit()
-
-
 
 if __name__ == '__main__':
 
