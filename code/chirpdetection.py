@@ -133,8 +133,10 @@ class ChirpPlotBuffer:
             data_oi,
             self.data.raw_rate,
             self.t0 - 5,
-            [np.min(self.frequency) - 100, np.max(self.frequency) + 200]
+            [np.min(self.frequency) - 300, np.max(self.frequency) + 300]
         )
+        ax0.set_ylim(np.min(self.frequency) - 100,
+                     np.max(self.frequency) + 200)
 
         for track_id in self.data.ids:
 
@@ -157,27 +159,35 @@ class ChirpPlotBuffer:
                          zorder=10, color=ps.gblue1)
             else:
                 ax0.plot(t-self.t0_old, f, lw=lw,
-                         zorder=10, color=ps.gray, alpha=0.5)
+                         zorder=10, color=ps.black)
 
-        ax0.fill_between(
-            np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
-            q50 - self.config.minimal_bandwidth / 2,
-            q50 + self.config.minimal_bandwidth / 2,
-            color=ps.gblue1,
-            lw=1,
-            ls="dashed",
-            alpha=0.5,
-        )
+        # ax0.fill_between(
+        #     np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
+        #     q50 - self.config.minimal_bandwidth / 2,
+        #     q50 + self.config.minimal_bandwidth / 2,
+        #     color=ps.gblue1,
+        #     lw=1,
+        #     ls="dashed",
+        #     alpha=0.5,
+        # )
 
-        ax0.fill_between(
-            np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
-            search_lower,
-            search_upper,
-            color=ps.gblue2,
-            lw=1,
-            ls="dashed",
-            alpha=0.5,
-        )
+        # ax0.fill_between(
+        #     np.arange(self.t0, self.t0 + self.dt, 1 / self.data.raw_rate),
+        #     search_lower,
+        #     search_upper,
+        #     color=ps.gblue2,
+        #     lw=1,
+        #     ls="dashed",
+        #     alpha=0.5,
+        # )
+
+        ax0.axhline(q50 - self.config.minimal_bandwidth / 2,
+                    color=ps.gblue1, lw=1, ls="dashed")
+        ax0.axhline(q50 + self.config.minimal_bandwidth / 2,
+                    color=ps.gblue1, lw=1, ls="dashed")
+        ax0.axhline(search_lower, color=ps.gblue2, lw=1, ls="dashed")
+        ax0.axhline(search_upper, color=ps.gblue2, lw=1, ls="dashed")
+
         # ax0.axhline(q50, spec_times[0], spec_times[-1],
         #             color=ps.gblue1, lw=2, ls="dashed")
         # ax0.axhline(q50 + self.search_frequency,
@@ -187,7 +197,11 @@ class ChirpPlotBuffer:
         if len(chirps) > 0:
             for chirp in chirps:
                 ax0.scatter(
-                    chirp, np.median(self.frequency) + 150, c=ps.black, marker="v"
+                    chirp, np.median(self.frequency), c=ps.red, marker=".",
+                    edgecolors=ps.red,
+                    facecolors=ps.red,
+                    zorder=10,
+                    s=70,
                 )
 
         # plot waveform of filtered signal
@@ -207,25 +221,31 @@ class ChirpPlotBuffer:
                  c=ps.gblue3, lw=lw, label="baseline inst. freq.")
 
         # plot filtered and rectified envelope
-        ax4.plot(self.time, self.baseline_envelope, c=ps.gblue1, lw=lw)
+        ax4.plot(self.time, self.baseline_envelope *
+                 waveform_scaler, c=ps.gblue1, lw=lw)
         ax4.scatter(
             (self.time)[self.baseline_peaks],
-            self.baseline_envelope[self.baseline_peaks],
+            (self.baseline_envelope*waveform_scaler)[self.baseline_peaks],
             edgecolors=ps.red,
+            facecolors=ps.red,
             zorder=10,
-            marker="o",
-            facecolors="none",
+            marker=".",
+            s=70,
+            # facecolors="none",
         )
 
         # plot envelope of search signal
-        ax5.plot(self.time, self.search_envelope, c=ps.gblue2, lw=lw)
+        ax5.plot(self.time, self.search_envelope *
+                 waveform_scaler, c=ps.gblue2, lw=lw)
         ax5.scatter(
             (self.time)[self.search_peaks],
-            self.search_envelope[self.search_peaks],
+            (self.search_envelope*waveform_scaler)[self.search_peaks],
             edgecolors=ps.red,
+            facecolors=ps.red,
             zorder=10,
-            marker="o",
-            facecolors="none",
+            marker=".",
+            s=70,
+            # facecolors="none",
         )
 
         # plot filtered instantaneous frequency
@@ -235,16 +255,20 @@ class ChirpPlotBuffer:
             self.frequency_time[self.frequency_peaks],
             self.frequency_filtered[self.frequency_peaks],
             edgecolors=ps.red,
+            facecolors=ps.red,
             zorder=10,
-            marker="o",
-            facecolors="none",
+            marker=".",
+            s=70,
+            # facecolors="none",
         )
 
         ax0.set_ylabel("frequency [Hz]")
-        ax1.set_ylabel("a.u.")
-        ax2.set_ylabel("a.u.")
+        ax1.set_ylabel(r"$\mu$V")
+        ax2.set_ylabel(r"$\mu$V")
         ax3.set_ylabel("Hz")
-        ax5.set_ylabel("a.u.")
+        ax4.set_ylabel(r"$\mu$V")
+        ax5.set_ylabel(r"$\mu$V")
+        ax6.set_ylabel("Hz")
         ax6.set_xlabel("time [s]")
 
         plt.setp(ax0.get_xticklabels(), visible=False)
@@ -323,7 +347,7 @@ def plot_spectrogram(
         aspect="auto",
         origin="lower",
         interpolation="gaussian",
-        alpha=0.6,
+        # alpha=0.6,
     )
     # axis.use_sticky_edges = False
     return spec_times
@@ -628,16 +652,16 @@ def chirpdetection(datapath: str, plot: str, debug: str = 'false') -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    # window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5 + 5) * data.raw_rate
-    # window_duration_index = 60 * data.raw_rate
+    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
     # window_start_seconds = (23495 + ((28336-23495)/3)) * data.raw_rate
     # window_duration_seconds = (28336 - 23495) * data.raw_rate
 
-    window_start_index = 0
-    window_duration_index = data.raw.shape[0]
+    # window_start_index = 0
+    # window_duration_index = data.raw.shape[0]
 
     # generate starting points of rolling window
     window_start_indices = np.arange(
@@ -1097,4 +1121,4 @@ if __name__ == "__main__":
     datapath = "../data/2022-06-02-10_00/"
     # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
-    chirpdetection(datapath, plot="show", debug="false")
+    chirpdetection(datapath, plot="save", debug="false")
