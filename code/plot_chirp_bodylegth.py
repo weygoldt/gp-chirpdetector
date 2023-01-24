@@ -69,16 +69,18 @@ def main(datapath: str):
         print(all_fish_ids)
 
     fig, ax = plt.subplots()
+    scatterwinner = 1.15
+    scatterloser = 1.85
     bplot1 = ax.boxplot(chirps_winner, positions=[
                         1], showfliers=False, patch_artist=True)
     bplot2 = ax.boxplot(chirps_loser,  positions=[
                         2], showfliers=False, patch_artist=True)
-    ax.scatter(np.ones(len(chirps_winner))*1.15, chirps_winner, color='r')
-    ax.scatter(np.ones(len(chirps_loser))*1.85, chirps_loser, color='r')
+    ax.scatter(np.ones(len(chirps_winner))*scatterwinner, chirps_winner, color='r')
+    ax.scatter(np.ones(len(chirps_loser))*scatterloser, chirps_loser, color='r')
     ax.set_xticklabels(['winner', 'loser'])
 
     for w, l in zip(chirps_winner, chirps_loser):
-        ax.plot([1.15, 1.85], [w, l], color='r', alpha=0.5, linewidth=0.5)
+        ax.plot([scatterwinner, scatterloser], [w, l], color='r', alpha=0.5, linewidth=0.5)
 
     colors1 = ps.red
     ps.set_boxplot_color(bplot1, colors1)
@@ -87,6 +89,7 @@ def main(datapath: str):
 
     ax.set_ylabel('Chirpscounts [n]')
     plt.savefig('../poster/figs/chirps_winner_loser.pdf')
+    plt.show()
 
 
 if __name__ == '__main__':
