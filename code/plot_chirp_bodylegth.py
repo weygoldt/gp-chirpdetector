@@ -86,7 +86,7 @@ def main(datapath: str):
     ps.set_boxplot_color(bplot2, colors1)
 
     ax.set_ylabel('Chirpscounts [n]')
-    plt.show()
+    plt.savefig('../poster/figs/chirps_winner_loser.pdf')
 
 
 if __name__ == '__main__':
