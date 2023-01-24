@@ -108,9 +108,6 @@ def PlotStyle() -> None:
         @classmethod
         def set_boxplot_color(cls, bp, color):
             plt.setp(bp["boxes"], color=color)
-            plt.setp(bp["whiskers"], color=color)
-            plt.setp(bp["caps"], color=color)
-            plt.setp(bp["medians"], color=color)
 
         @classmethod
         def label_subplots(cls, labels, axes, fig):
@@ -250,11 +247,11 @@ def PlotStyle() -> None:
 
     # dark mode modifications
     plt.rcParams["boxplot.flierprops.color"] = white
-    plt.rcParams["boxplot.flierprops.markeredgecolor"] = gray
+    plt.rcParams["boxplot.flierprops.markeredgecolor"] = white
     plt.rcParams["boxplot.boxprops.color"] = gray
-    plt.rcParams["boxplot.whiskerprops.color"] = gray
-    plt.rcParams["boxplot.capprops.color"] = gray
-    plt.rcParams["boxplot.medianprops.color"] = gray
+    plt.rcParams["boxplot.whiskerprops.color"] = white
+    plt.rcParams["boxplot.capprops.color"] = white
+    plt.rcParams["boxplot.medianprops.color"] = white
     plt.rcParams["text.color"] = white
     plt.rcParams["axes.facecolor"] = black  # axes background color
     plt.rcParams["axes.edgecolor"] = gray  # axes edge color

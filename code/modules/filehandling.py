@@ -3,6 +3,7 @@ import os
 import yaml
 import numpy as np
 from thunderfish.dataloader import DataLoader
+import matplotlib.pyplot as plt
 
 
 class ConfLoader:
