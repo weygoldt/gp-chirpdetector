@@ -4,12 +4,15 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt 
 
+from tqdm import tqdm
 from IPython import embed
 from pandas import read_csv
 from modules.logger import makeLogger
+from modules.plotstyle import PlotStyle
 from modules.datahandling import causal_kde1d, acausal_kde1d
 
 logger = makeLogger(__name__)
+ps = PlotStyle()
 
 class Behavior:
     """Load behavior data from csv file as class attributes
@@ -31,7 +34,7 @@ class Behavior:
     """
 
     def __init__(self, folder_path: str) -> None:
-        
+        print(f'{folder_path}')
         LED_on_time_BORIS = np.load(os.path.join(folder_path, 'LED_on_time.npy'), allow_pickle=True)
         self.time = np.load(os.path.join(folder_path, "times.npy"), allow_pickle=True)
         csv_filename = [f for f in os.listdir(folder_path) if f.endswith('.csv')][0] # check if there are more than one csv file
@@ -137,11 +140,16 @@ def event_triggered_chirps(
             continue
         else: 
             centered_chirps.append(chirps_around_event - event_timestamp)
-    centered_chirps = np.concatenate(centered_chirps, axis=0)   # convert list of arrays to one array for plotting
-
-    # Kernel density estimation
+    
     time = np.arange(-time_before_event, time_after_event, dt)
-    centered_chirps_convolved = (acausal_kde1d(centered_chirps, time, width)) / len(event)
+    
+    # Kernel density estimation with some if's
+    if len(centered_chirps) == 0:
+        centered_chirps = np.array([])
+        centered_chirps_convolved = np.zeros(len(time))
+    else:
+        centered_chirps = np.concatenate(centered_chirps, axis=0)   # convert list of arrays to one array for plotting
+        centered_chirps_convolved = (acausal_kde1d(centered_chirps, time, width)) / len(event)
 
     return event_chirps, centered_chirps, centered_chirps_convolved
 
@@ -150,12 +158,13 @@ def main(datapath: str):
 
     foldernames = [datapath + x + '/' for x in os.listdir(datapath) if os.path.isdir(datapath + x)]
 
-    all_chirps = []
-    all_chirps_fish_ids = []
-    all_chasing_onsets = []
-    all_chasing_offsets = []
-    all_physicals = []
+    nrecording_chirps = []
+    nrecording_chirps_fish_ids = []
+    nrecording_chasing_onsets = []
+    nrecording_chasing_offsets = []
+    nrecording_physicals = []
 
+    # Iterate over all recordings and save chirp- and event-timestamps
     for folder in foldernames:
         # exclude folder with empty LED_on_time.npy
         if folder == '../data/mount_data/2020-05-12-10_00/':
@@ -167,9 +176,9 @@ def main(datapath: str):
         category = bh.behavior
         timestamps = bh.start_s
         chirps = bh.chirps
-        all_chirps.append(chirps)
+        nrecording_chirps.append(chirps)
         chirps_fish_ids = bh.chirps_ids
-        all_chirps_fish_ids.append(chirps_fish_ids)
+        nrecording_chirps_fish_ids.append(chirps_fish_ids)
         fish_ids = np.unique(chirps_fish_ids)
 
         # Correct for doubles in chasing on- and offsets to get the right on-/offset pairs
@@ -178,16 +187,153 @@ def main(datapath: str):
 
         # Split categories
         chasing_onsets = timestamps[category == 0]
-        all_chasing_onsets.append(chasing_onsets)
+        nrecording_chasing_onsets.append(chasing_onsets)
         chasing_offsets = timestamps[category == 1]
-        all_chasing_offsets.append(chasing_offsets)
+        nrecording_chasing_offsets.append(chasing_offsets)
         physical_contacts = timestamps[category == 2]
-        all_physicals.append(physical_contacts)
+        nrecording_physicals.append(physical_contacts)
     
 
+    # Define time window for chirps around event analysis
+    time_before_event = 30
+    time_after_event = 60
+    dt = 0.01
+    width = 1.5   # width of kernel, currently gaussian kernel
+    time = np.arange(-time_before_event, time_after_event, dt)
+
+    ##### Chirps around events, all fish, all recordings #####
+    # Centered chirps per event type
+    nrecording_centered_onset_chirps = []
+    nrecording_centered_offset_chirps = []
+    nrecording_centered_physical_chirps = []
+    # Bootstrapped chirps per recording and per event: 27[1000[n]] 27 recs, 1000 shuffles, n chirps
+    nrecording_shuffled_convolved_onset_chirps = []
+    nrecording_shuffled_convolved_offset_chirps = []
+    nrecording_shuffled_convolved_physical_chirps = []
+
+    nbootstrapping = 10
+
+    for i in range(len(nrecording_chirps)):
+        chirps = nrecording_chirps[i]
+        chasing_onsets = nrecording_chasing_onsets[i]
+        chasing_offsets = nrecording_chasing_offsets[i]
+        physical_contacts = nrecording_physicals[i]
+
+        # Chirps around chasing onsets
+        _, centered_chasing_onset_chirps, _ = event_triggered_chirps(chasing_onsets, chirps, time_before_event, time_after_event, dt, width)
+        # Chirps around chasing offsets
+        _, centered_chasing_offset_chirps, _ = event_triggered_chirps(chasing_offsets, chirps, time_before_event, time_after_event, dt, width)
+        # Chirps around physical contacts
+        _, centered_physical_chirps, _ = event_triggered_chirps(physical_contacts, chirps, time_before_event, time_after_event, dt, width)
+
+        nrecording_centered_onset_chirps.append(centered_chasing_onset_chirps)
+        nrecording_centered_offset_chirps.append(centered_chasing_offset_chirps)
+        nrecording_centered_physical_chirps.append(centered_physical_chirps)
+
+        ## Shuffled chirps ##
+        nshuffled_onset_chirps = []
+        nshuffled_offset_chirps = []
+        nshuffled_physical_chirps = []
+
+        for i in tqdm(range(nbootstrapping)):
+        # Calculate interchirp intervals; add first chirp timestamp in beginning to get equal lengths
+            interchirp_intervals = np.append(np.array([chirps[0]]), np.diff(chirps))
+            np.random.shuffle(interchirp_intervals)
+            shuffled_chirps = np.cumsum(interchirp_intervals)
+            # Shuffled chasing onset chirps
+            _, _, cc_shuffled_onset_chirps = event_triggered_chirps(chasing_onsets, shuffled_chirps, time_before_event, time_after_event, dt, width)
+            nshuffled_onset_chirps.append(cc_shuffled_onset_chirps)
+            # Shuffled chasing offset chirps
+            _, _, cc_shuffled_offset_chirps = event_triggered_chirps(chasing_offsets, shuffled_chirps, time_before_event, time_after_event, dt, width)
+            nshuffled_offset_chirps.append(cc_shuffled_offset_chirps)
+            # Shuffled physical contact chirps
+            _, _, cc_shuffled_physical_chirps = event_triggered_chirps(physical_contacts, shuffled_chirps, time_before_event, time_after_event, dt, width)
+            nshuffled_physical_chirps.append(cc_shuffled_physical_chirps)
+        
+        nrecording_shuffled_convolved_onset_chirps.append(nshuffled_onset_chirps)
+        nrecording_shuffled_convolved_offset_chirps.append(nshuffled_offset_chirps)
+        nrecording_shuffled_convolved_physical_chirps.append(nshuffled_physical_chirps)
+
+    #  vstack um 1. Dim zu cutten
+    nrecording_shuffled_convolved_onset_chirps = np.vstack(nrecording_shuffled_convolved_onset_chirps)
+    nrecording_shuffled_convolved_offset_chirps = np.vstack(nrecording_shuffled_convolved_offset_chirps)
+    nrecording_shuffled_convolved_physical_chirps = np.vstack(nrecording_shuffled_convolved_physical_chirps)
+    
+    shuffled_q5_onset, shuffled_median_onset, shuffled_q95_onset = np.percentile(
+        nrecording_shuffled_convolved_onset_chirps, (5, 50, 95), axis=0)
+    shuffled_q5_offset, shuffled_median_offset, shuffled_q95_offset = np.percentile(
+        nrecording_shuffled_convolved_offset_chirps, (5, 50, 95), axis=0)
+    shuffled_q5_physical, shuffled_median_physical, shuffled_q95_physical = np.percentile(
+        nrecording_shuffled_convolved_physical_chirps, (5, 50, 95), axis=0)
+
+    # Flatten all chirps 
+    all_chirps = np.concatenate(nrecording_chirps).ravel()  # not centered
+
+    # Flatten event timestamps
+    all_onsets = np.concatenate(nrecording_chasing_onsets).ravel() # not centered
+    all_offsets = np.concatenate(nrecording_chasing_offsets).ravel() # not centered
+    all_physicals = np.concatenate(nrecording_physicals).ravel() # not centered
+
+    # Flatten all chirps around events
+    all_onset_chirps = np.concatenate(nrecording_centered_onset_chirps).ravel()   # centered
+    all_offset_chirps = np.concatenate(nrecording_centered_offset_chirps).ravel() # centered
+    all_physical_chirps = np.concatenate(nrecording_centered_physical_chirps).ravel() # centered
+
+    # Convolute all chirps
+    # Divide by total number of each event over all recordings
+    all_onset_chirps_convolved = (acausal_kde1d(all_onset_chirps, time, width)) / len(all_onsets)
+    all_offset_chirps_convolved = (acausal_kde1d(all_offset_chirps, time, width)) / len(all_offsets)
+    all_physical_chirps_convolved = (acausal_kde1d(all_physical_chirps, time, width)) / len(all_physicals)
+
+
+    # Plot all events with all shuffled
+    fig, ax = plt.subplots(1, 3, figsize=(28*ps.cm, 16*ps.cm, ), constrained_layout=True, sharey='all')
+    # offsets = np.arange(1,28,1)
+    ax[0].set_xlabel('Time[s]')
+    # Plot chasing onsets
+    ax[0].set_ylabel('Chirp rate [Hz]')
+    ax[0].plot(time, all_onset_chirps_convolved, color=ps.yellow, zorder=2)
+    ax0 = ax[0].twinx()
+    nrecording_centered_onset_chirps = np.asarray(nrecording_centered_onset_chirps, dtype=object)
+    ax0.eventplot(np.array(nrecording_centered_onset_chirps), linelengths=0.5, colors=ps.gray, alpha=0.25, zorder=1)
+    ax0.vlines(0, 0, 1.5, ps.black, 'dashed')
+    ax[0].set_zorder(ax0.get_zorder()+1)
+    ax[0].patch.set_visible(False)
+    ax0.set_yticklabels([])
+    ax0.set_yticks([])
+    ax[0].fill_between(time, shuffled_q5_onset, shuffled_q95_onset, color=ps.gray, alpha=0.5)
+    ax[0].plot(time, shuffled_median_onset, color=ps.black)
+    # Plot chasing offets
+    ax[1].set_xlabel('Time[s]')
+    ax[1].plot(time, all_offset_chirps_convolved, color=ps.orange, zorder=2)
+    ax1 = ax[1].twinx()
+    nrecording_centered_offset_chirps = np.asarray(nrecording_centered_offset_chirps, dtype=object)
+    ax1.eventplot(np.array(nrecording_centered_offset_chirps), linelengths=0.5, colors=ps.gray, alpha=0.25, zorder=1)
+    ax1.vlines(0, 0, 1.5, ps.black, 'dashed')
+    ax[1].set_zorder(ax1.get_zorder()+1)
+    ax[1].patch.set_visible(False)
+    ax1.set_yticklabels([])
+    ax1.set_yticks([])
+    ax[1].fill_between(time, shuffled_q5_offset, shuffled_q95_offset, color=ps.gray, alpha=0.5)
+    ax[1].plot(time, shuffled_median_offset, color=ps.black)
+    # Plot physical contacts
+    ax[2].set_xlabel('Time[s]')
+    ax[2].plot(time, all_physical_chirps_convolved, color=ps.maroon, zorder=2)
+    ax2 = ax[2].twinx()
+    nrecording_centered_physical_chirps = np.asarray(nrecording_centered_physical_chirps, dtype=object)
+    ax2.eventplot(np.array(nrecording_centered_physical_chirps), linelengths=0.5, colors=ps.gray, alpha=0.25, zorder=1)
+    ax2.vlines(0, 0, 1.5, ps.black, 'dashed')
+    ax[2].set_zorder(ax2.get_zorder()+1)
+    ax[2].patch.set_visible(False)
+    ax2.set_yticklabels([])
+    ax2.set_yticks([])
+    ax[2].fill_between(time, shuffled_q5_physical, shuffled_q95_physical, color=ps.gray, alpha=0.5)
+    ax[2].plot(time, shuffled_median_physical, ps.black)
+    plt.show()
+    # plt.close()
+
     embed()
-
-
+    
     # chasing_durations = []
     # # Calculate chasing duration to evaluate a nice time window for kernel density estimation
     # for onset, offset in zip(chasing_onsets, chasing_offsets):
@@ -207,91 +353,6 @@ def main(datapath: str):
 
     # Concolution over all recordings
     # Rasterplot for each recording
-
-    # Define time window for chirps around event analysis
-    time_before_event = 30
-    time_after_event = 60
-    dt = 0.01
-    width = 1
-    time = np.arange(-time_before_event, time_after_event, dt)
-
-
-    ##### Chirps around events, all fish, one recording #####
-    # Chirps around chasing onsets
-    _, centered_chasing_onset_chirps, cc_chasing_onset_chirps = event_triggered_chirps(chasing_onsets, chirps, time_before_event, time_after_event, dt, width)
-    # Chirps around chasing offsets
-    _, centered_chasing_offset_chirps, cc_chasing_offset_chirps = event_triggered_chirps(chasing_offsets, chirps, time_before_event, time_after_event, dt, width)
-    # Chirps around physical contacts
-    _, centered_physical_chirps, cc_physical_chirps = event_triggered_chirps(physical_contacts, chirps, time_before_event, time_after_event, dt, width)
-
-    ## Shuffled chirps ##
-    nbootstrapping = 1000
-    nshuffled_chirps_onset = []
-    nshuffled_chirps_offset = []
-    nshuffled_chirps_physical = []
-
-    for i in range(nbootstrapping):
-    # Calculate interchirp intervals; add first chirp timestamp in beginning to get equal lengths
-        interchirp_intervals = np.append(np.array([chirps[0]]), np.diff(chirps))
-        np.random.shuffle(interchirp_intervals)
-        shuffled_chirps = np.cumsum(interchirp_intervals)
-        # Shuffled chasing onset chirps
-        _, _, cc_shuffled_onset_chirps = event_triggered_chirps(chasing_onsets, shuffled_chirps, time_before_event, time_after_event, dt, width)
-        nshuffled_chirps_onset.append(cc_shuffled_onset_chirps)
-        # Shuffled chasing offset chirps
-        _, _, cc_shuffled_offset_chirps = event_triggered_chirps(chasing_offsets, shuffled_chirps, time_before_event, time_after_event, dt, width)
-        nshuffled_chirps_offset.append(cc_shuffled_offset_chirps)
-        # Shuffled physical contact chirps
-        _, _, cc_shuffled_physical_chirps = event_triggered_chirps(physical_contacts, shuffled_chirps, time_before_event, time_after_event, dt, width)
-        nshuffled_chirps_physical.append(cc_shuffled_physical_chirps)
-    
-    shuffled_q5_onset, shuffled_median_onset, shuffled_q95_onset = np.percentile(nshuffled_chirps_onset, (5, 50, 95), axis=0)
-    shuffled_q5_offset, shuffled_median_offset, shuffled_q95_offset = np.percentile(nshuffled_chirps_offset, (5, 50, 95), axis=0)
-    shuffled_q5_physical, shuffled_median_physical, shuffled_q95_physical = np.percentile(nshuffled_chirps_physical, (5, 50, 95), axis=0)
-
-    # Plot all events with all shuffled
-    fig, ax = plt.subplots(1, 3, figsize=(50 / 2.54, 15 / 2.54), constrained_layout=True, sharey='all')
-    offset = [1.35]
-    ax[0].set_xlabel('Time[s]')
-    # Plot chasing onsets
-    ax[0].set_ylabel('Chirp rate [Hz]')
-    ax[0].plot(time, cc_chasing_onset_chirps, color='tab:blue', zorder=2)
-    ax0 = ax[0].twinx()
-    ax0.eventplot(np.array([centered_chasing_onset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=1)
-    ax0.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    ax[0].set_zorder(ax0.get_zorder()+1)
-    ax[0].patch.set_visible(False)
-    ax0.set_yticklabels([])
-    ax0.set_yticks([])
-    ax[0].fill_between(time, shuffled_q5_onset, shuffled_q95_onset, color='tab:gray', alpha=0.5)
-    ax[0].plot(time, shuffled_median_onset, color='k')
-    # Plot chasing offets
-    ax[1].set_xlabel('Time[s]')
-    ax[1].plot(time, cc_chasing_offset_chirps, color='tab:blue', zorder=2)
-    ax1 = ax[1].twinx()
-    ax1.eventplot(np.array([centered_chasing_offset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=1)
-    ax1.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    ax[1].set_zorder(ax1.get_zorder()+1)
-    ax[1].patch.set_visible(False)
-    ax1.set_yticklabels([])
-    ax1.set_yticks([])
-    ax[1].fill_between(time, shuffled_q5_offset, shuffled_q95_offset, color='tab:gray', alpha=0.5)
-    ax[1].plot(time, shuffled_median_offset, color='k')
-    # Plot physical contacts
-    ax[2].set_xlabel('Time[s]')
-    ax[2].plot(time, cc_physical_chirps, color='tab:blue', zorder=2)
-    ax2 = ax[2].twinx()
-    ax2.eventplot(np.array([centered_physical_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=1)
-    ax2.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    ax[2].set_zorder(ax2.get_zorder()+1)
-    ax[2].patch.set_visible(False)
-    ax2.set_yticklabels([])
-    ax2.set_yticks([])
-    ax[2].fill_between(time, shuffled_q5_physical, shuffled_q95_physical, color='tab:gray', alpha=0.5)
-    ax[2].plot(time, shuffled_median_physical, color='k')
-    plt.show()
-    # plt.close()
-    
 
 
     # #### Chirps around events, winner VS loser, one recording ####
@@ -386,17 +447,12 @@ def main(datapath: str):
     # ax5.set_yticks([])
     # plt.show()
     # plt.close()
-
-    
-    embed()
-    exit()
-
     
 
-    for i in range(len(fish_ids)):
-        fish = fish_ids[i]
-        chirps_temp = chirps[chirps_fish_ids == fish]
-        print(fish)
+    # for i in range(len(fish_ids)):
+    #     fish = fish_ids[i]
+    #     chirps_temp = chirps[chirps_fish_ids == fish]
+    #     print(fish)
 
     #### Chirps around events, only losers, one recording ####
 
