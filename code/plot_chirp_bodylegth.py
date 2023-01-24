@@ -124,13 +124,20 @@ def main(datapath: str):
     timestamps = bh.start_s
     # Correct for doubles in chasing on- and offsets to get the right on-/offset pairs
     # Get rid of tracking faults (two onsets or two offsets after another)
+
     category, timestamps = correct_chasing_events(category, timestamps)
 
-    
+
+    path_to_csv = ('/').join(datapath.split('/')[:-2]) + '/order_meta.csv'
+    folder_name = datapath.split('/')[-2]
+    meta_id = read_csv(path_to_csv)
+    meta_id['recording'] = meta_id['recording'].str[1:-1]
+    winner_id = meta_id[meta_id['recording'] == folder_name]['winner'].values[0]
 
     
-    pass
 
+    embed()
+    exit()
 
 
 
@@ -138,4 +145,5 @@ if __name__ == '__main__':
 
     # Path to the data
     datapath = '../data/mount_data/2020-05-13-10_00/'
+    
     main(datapath)
