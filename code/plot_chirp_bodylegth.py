@@ -31,7 +31,9 @@ def main(datapath: str):
 
     chirps_winner = []
     size_diff = []
+    chirps_diff = []
     chirps_loser = []
+    freq_diff = []
 
 
     for foldername in foldernames:
@@ -91,25 +93,32 @@ def main(datapath: str):
                 size_loser = size_rows[size_rows['fish']== winner_fish1][l].values[0]
                 size_losers.append(size_loser)
             mean_size_loser = np.nanmean(size_losers)
-            
-            size_diff.append(mean_size_winner - mean_size_loser)
 
+            size_diff.append(mean_size_winner - mean_size_loser)
         else:
             continue
 
         print(foldername)
         all_fish_ids = np.unique(bh.chirps_ids)
-        chirp_loser = len(bh.chirps[bh.chirps_ids == loser_fish_id])
         chirp_winner = len(bh.chirps[bh.chirps_ids == winner_fish_id])
+        chirp_loser = len(bh.chirps[bh.chirps_ids == loser_fish_id])
+
+        freq_winner  = np.nanmedian(bh.freq[bh.ident==winner_fish_id])
+        freq_loser  = np.nanmedian(bh.freq[bh.ident==loser_fish_id])
+        
+        
         chirps_winner.append(chirp_winner)
         chirps_loser.append(chirp_loser)
+
+        chirps_diff.append(chirp_winner - chirp_loser)
+        freq_diff.append(freq_winner - freq_loser)
 
         fish1_id = all_fish_ids[0]
         fish2_id = all_fish_ids[1]
         print(winner_fish_id)
         print(all_fish_ids)
 
-    fig, (ax1, ax2) = plt.subplots(1,2, figsize=(10,5))
+    fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize=(10,5))
     scatterwinner = 1.15
     scatterloser = 1.85
     bplot1 = ax1.boxplot(chirps_winner, positions=[
@@ -130,10 +139,15 @@ def main(datapath: str):
     ps.set_boxplot_color(bplot2, colors1)
     ax1.set_ylabel('Chirpscounts [n]')
 
-    ax2.scatter(size_w, chirps_winner, color='r')
-    ax2.scatter(size_l, chirps_loser, color='green')
+    ax2.scatter(size_diff, chirps_diff, color='r')
+    ax2.set_xlabel('Size difference [mm]')
+    ax2.set_ylabel('Chirps difference [n]')
 
-    
+    ax3.scatter(freq_diff, chirps_diff, color='r')
+    ax3.set_xlabel('Frequency difference [Hz]')
+    ax3.set_yticklabels([])
+    ax3.set
+
     plt.savefig('../poster/figs/chirps_winner_loser.pdf')
     plt.show()
 
