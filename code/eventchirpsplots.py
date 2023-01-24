@@ -32,13 +32,12 @@ class Behavior:
 
     def __init__(self, folder_path: str) -> None:
         
-
         LED_on_time_BORIS = np.load(os.path.join(folder_path, 'LED_on_time.npy'), allow_pickle=True)
         self.time = np.load(os.path.join(folder_path, "times.npy"), allow_pickle=True)
         csv_filename = [f for f in os.listdir(folder_path) if f.endswith('.csv')][0] # check if there are more than one csv file
         self.dataframe = read_csv(os.path.join(folder_path, csv_filename))
         self.chirps = np.load(os.path.join(folder_path, 'chirps.npy'), allow_pickle=True)
-        self.chirps_ids = np.load(os.path.join(folder_path, 'chirps_ids.npy'), allow_pickle=True)
+        self.chirps_ids = np.load(os.path.join(folder_path, 'chirp_ids.npy'), allow_pickle=True)
 
         for k, key in enumerate(self.dataframe.keys()):
             key = key.lower() 
@@ -48,14 +47,13 @@ class Behavior:
                     key = key.replace('(', '')
                     key = key.replace(')', '')
             setattr(self, key, np.array(self.dataframe[self.dataframe.keys()[k]]))
-        
+
         last_LED_t_BORIS = LED_on_time_BORIS[-1]
         real_time_range = self.time[-1] - self.time[0]
         factor = 1.034141
         shift = last_LED_t_BORIS - real_time_range * factor
         self.start_s = (self.start_s - shift) / factor
         self.stop_s = (self.stop_s - shift) / factor
-  
 
 """
 1 - chasing onset
@@ -95,34 +93,26 @@ def correct_chasing_events(
     offset_ids = np.arange(
         len(category))[category == 1]
 
+    wrong_bh = np.arange(len(category))[category!=2][:-1][np.diff(category[category!=2])==0]
+    if onset_ids[0] > offset_ids[0]:
+        offset_ids = np.delete(offset_ids, 0)
+        help_index = offset_ids[0]
+        wrong_bh = np.append(wrong_bh[help_index])
+
+    category = np.delete(category, wrong_bh)
+    timestamps = np.delete(timestamps, wrong_bh)
+
+
     # Check whether on- or offset is longer and calculate length difference
     if len(onset_ids) > len(offset_ids):
         len_diff = len(onset_ids) - len(offset_ids)
-        longer_array = onset_ids
-        shorter_array = offset_ids
         logger.info(f'Onsets are greater than offsets by {len_diff}')
     elif len(onset_ids) < len(offset_ids):
         len_diff = len(offset_ids) - len(onset_ids)
-        longer_array = offset_ids
-        shorter_array = onset_ids
-        logger.info(f'Offsets are greater than offsets by {len_diff}')
+        logger.info(f'Offsets are greater than onsets by {len_diff}')
     elif len(onset_ids) == len(offset_ids):
         logger.info('Chasing events are equal')
-        return category, timestamps
-
-    # Correct the wrong chasing events; delete double events
-    wrong_ids = []
-    for i in range(len(longer_array)-(len_diff+1)):
-        if (shorter_array[i] > longer_array[i]) & (shorter_array[i] < longer_array[i+1]):
-            pass
-        else:
-            wrong_ids.append(longer_array[i])
-            longer_array = np.delete(longer_array, i)
-        
-    category = np.delete(
-        category, wrong_ids)
-    timestamps = np.delete(
-        timestamps, wrong_ids)
+    
     return category, timestamps
 
 
@@ -158,43 +148,65 @@ def event_triggered_chirps(
 
 def main(datapath: str):
 
-    # behavior is pandas dataframe with all the data
-    bh = Behavior(datapath)
+    foldernames = [datapath + x + '/' for x in os.listdir(datapath) if os.path.isdir(datapath + x)]
+
+    all_chirps = []
+    all_chirps_fish_ids = []
+    all_chasing_onsets = []
+    all_chasing_offsets = []
+    all_physicals = []
+
+    for folder in foldernames:
+        # exclude folder with empty LED_on_time.npy
+        if folder == '../data/mount_data/2020-05-12-10_00/':
+            continue
+
+        bh = Behavior(folder)
+        
+        # Chirps are already sorted
+        category = bh.behavior
+        timestamps = bh.start_s
+        chirps = bh.chirps
+        all_chirps.append(chirps)
+        chirps_fish_ids = bh.chirps_ids
+        all_chirps_fish_ids.append(chirps_fish_ids)
+        fish_ids = np.unique(chirps_fish_ids)
+
+        # Correct for doubles in chasing on- and offsets to get the right on-/offset pairs
+        # Get rid of tracking faults (two onsets or two offsets after another)
+        category, timestamps = correct_chasing_events(category, timestamps)
+
+        # Split categories
+        chasing_onsets = timestamps[category == 0]
+        all_chasing_onsets.append(chasing_onsets)
+        chasing_offsets = timestamps[category == 1]
+        all_chasing_offsets.append(chasing_offsets)
+        physical_contacts = timestamps[category == 2]
+        all_physicals.append(physical_contacts)
     
-    # chirps are not sorted in time (presumably due to prior groupings)
-    # get and sort chirps and corresponding fish_ids of the chirps
-    chirps = bh.chirps[np.argsort(bh.chirps)]
-    chirps_fish_ids = bh.chirps_ids[np.argsort(bh.chirps)]
-    category = bh.behavior
-    timestamps = bh.start_s
 
-    # Correct for doubles in chasing on- and offsets to get the right on-/offset pairs
-    # Get rid of tracking faults (two onsets or two offsets after another)
-    category, timestamps = correct_chasing_events(category, timestamps)
+    embed()
 
-    # split categories
-    chasing_onsets = timestamps[category == 0]
-    chasing_offsets = timestamps[category == 1]
-    physical_contacts = timestamps[category == 2]
 
-    chasing_durations = []
-    # Calculate chasing duration to evaluate a nice time window for kernel density estimation
-    for onset, offset in zip(chasing_onsets, chasing_offsets):
-        duration = offset - onset
-        chasing_durations.append(duration)
+    # chasing_durations = []
+    # # Calculate chasing duration to evaluate a nice time window for kernel density estimation
+    # for onset, offset in zip(chasing_onsets, chasing_offsets):
+    #     duration = offset - onset
+    #     chasing_durations.append(duration)
 
     # fig, ax = plt.subplots()
     # ax.boxplot(chasing_durations)
     # plt.show()
     # plt.close()
 
-    # Get fish ids
-    fish_ids = np.unique(chirps_fish_ids)
 
     # # Associate chirps to individual fish
     # fish1 = chirps[chirps_fish_ids == fish_ids[0]]
     # fish2 = chirps[chirps_fish_ids == fish_ids[1]]
     # fish = [len(fish1), len(fish2)]
+
+    # Concolution over all recordings
+    # Rasterplot for each recording
 
     # Define time window for chirps around event analysis
     time_before_event = 30
@@ -282,97 +294,97 @@ def main(datapath: str):
     
 
 
-    #### Chirps around events, winner VS loser, one recording ####
-    # Load file with fish ids and winner/loser info
-    meta = pd.read_csv('../data/mount_data/order_meta.csv')
-    current_recording = meta[meta.index == 43]
-    fish1 = current_recording['rec_id1'].values
-    fish2 = current_recording['rec_id2'].values
-    # Implement check if fish_ids from meta and chirp detection are the same???
-    winner = current_recording['winner'].values
+    # #### Chirps around events, winner VS loser, one recording ####
+    # # Load file with fish ids and winner/loser info
+    # meta = pd.read_csv('../data/mount_data/order_meta.csv')
+    # current_recording = meta[meta.index == 43]
+    # fish1 = current_recording['rec_id1'].values
+    # fish2 = current_recording['rec_id2'].values
+    # # Implement check if fish_ids from meta and chirp detection are the same???
+    # winner = current_recording['winner'].values
     
-    if winner == fish1:
-        loser = fish2
-    elif winner == fish2:
-        loser = fish1
+    # if winner == fish1:
+    #     loser = fish2
+    # elif winner == fish2:
+    #     loser = fish1
 
-    winner_chirps = chirps[chirps_fish_ids == winner]
-    loser_chirps = chirps[chirps_fish_ids == loser]
+    # winner_chirps = chirps[chirps_fish_ids == winner]
+    # loser_chirps = chirps[chirps_fish_ids == loser]
 
-    # Event triggered winner chirps
-    _, winner_centered_onset, winner_cc_onset = event_triggered_chirps(chasing_onsets, winner_chirps, time_before_event, time_after_event, dt, width)
-    _, winner_centered_offset, winner_cc_offset = event_triggered_chirps(chasing_offsets, winner_chirps, time_before_event, time_after_event, dt, width)
-    _, winner_centered_physical, winner_cc_physical = event_triggered_chirps(physical_contacts, winner_chirps, time_before_event, time_after_event, dt, width)
+    # # Event triggered winner chirps
+    # _, winner_centered_onset, winner_cc_onset = event_triggered_chirps(chasing_onsets, winner_chirps, time_before_event, time_after_event, dt, width)
+    # _, winner_centered_offset, winner_cc_offset = event_triggered_chirps(chasing_offsets, winner_chirps, time_before_event, time_after_event, dt, width)
+    # _, winner_centered_physical, winner_cc_physical = event_triggered_chirps(physical_contacts, winner_chirps, time_before_event, time_after_event, dt, width)
 
-    # Event triggered loser chirps
-    _, loser_centered_onset, loser_cc_onset = event_triggered_chirps(chasing_onsets, loser_chirps, time_before_event, time_after_event, dt, width)
-    _, loser_centered_offset, loser_cc_offset = event_triggered_chirps(chasing_offsets, loser_chirps, time_before_event, time_after_event, dt, width)
-    _, loser_centered_physical, loser_cc_physical = event_triggered_chirps(physical_contacts, loser_chirps, time_before_event, time_after_event, dt, width)
+    # # Event triggered loser chirps
+    # _, loser_centered_onset, loser_cc_onset = event_triggered_chirps(chasing_onsets, loser_chirps, time_before_event, time_after_event, dt, width)
+    # _, loser_centered_offset, loser_cc_offset = event_triggered_chirps(chasing_offsets, loser_chirps, time_before_event, time_after_event, dt, width)
+    # _, loser_centered_physical, loser_cc_physical = event_triggered_chirps(physical_contacts, loser_chirps, time_before_event, time_after_event, dt, width)
 
-    ########## Winner VS Loser plot ##########
-    fig, ax = plt.subplots(2, 3, figsize=(50 / 2.54, 15 / 2.54), constrained_layout=True, sharey='row')
-    offset = [1.35]
-    ax[1][0].set_xlabel('Time[s]')
-    ax[1][1].set_xlabel('Time[s]')
-    ax[1][2].set_xlabel('Time[s]')
-    # Plot winner chasing onsets
-    ax[0][0].set_ylabel('Chirp rate [Hz]')
-    ax[0][0].plot(time, winner_cc_onset, color='tab:blue', zorder=100)
-    ax0 = ax[0][0].twinx()
-    ax0.eventplot(np.array([winner_centered_onset]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=-100)
-    ax0.set_ylabel('Event')
-    ax0.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    ax[0][0].set_zorder(ax0.get_zorder()+1)
-    ax[0][0].patch.set_visible(False)
-    ax0.set_yticklabels([])
-    ax0.set_yticks([])
-    # Plot winner chasing offets
-    ax[0][1].plot(time, winner_cc_offset, color='tab:blue', zorder=100)
-    ax1 = ax[0][1].twinx()
-    ax1.eventplot(np.array([winner_centered_offset]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=-100)
-    ax1.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    ax[0][1].set_zorder(ax1.get_zorder()+1)
-    ax[0][1].patch.set_visible(False)
-    ax1.set_yticklabels([])
-    ax1.set_yticks([])
-    # Plot winner physical contacts
-    ax[0][2].plot(time, winner_cc_physical, color='tab:blue', zorder=100)
-    ax2 = ax[0][2].twinx()
-    ax2.eventplot(np.array([winner_centered_physical]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=-100)
-    ax2.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    ax[0][2].set_zorder(ax2.get_zorder()+1)
-    ax[0][2].patch.set_visible(False)
-    ax2.set_yticklabels([])
-    ax2.set_yticks([])
-    # Plot loser chasing onsets
-    ax[1][0].set_ylabel('Chirp rate [Hz]')
-    ax[1][0].plot(time, loser_cc_onset, color='tab:blue', zorder=100)
-    ax3 = ax[1][0].twinx()
-    ax3.eventplot(np.array([loser_centered_onset]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=-100)
-    ax3.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    ax[1][0].set_zorder(ax3.get_zorder()+1)
-    ax[1][0].patch.set_visible(False)
-    ax3.set_yticklabels([])
-    ax3.set_yticks([])
-    # Plot loser chasing offsets
-    ax[1][1].plot(time, loser_cc_offset, color='tab:blue', zorder=100)
-    ax4 = ax[1][1].twinx()
-    ax4.eventplot(np.array([loser_centered_offset]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=-100)
-    ax4.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    ax[1][1].set_zorder(ax4.get_zorder()+1)
-    ax[1][1].patch.set_visible(False)
-    ax4.set_yticklabels([])
-    ax4.set_yticks([])
-    # Plot loser physical contacts
-    ax[1][2].plot(time, loser_cc_physical, color='tab:blue', zorder=100)
-    ax5 = ax[1][2].twinx()
-    ax5.eventplot(np.array([loser_centered_physical]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=-100)
-    ax5.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
-    ax[1][2].set_zorder(ax5.get_zorder()+1)
-    ax[1][2].patch.set_visible(False)
-    ax5.set_yticklabels([])
-    ax5.set_yticks([])
-    plt.show()
+    # ########## Winner VS Loser plot ##########
+    # fig, ax = plt.subplots(2, 3, figsize=(50 / 2.54, 15 / 2.54), constrained_layout=True, sharey='row')
+    # offset = [1.35]
+    # ax[1][0].set_xlabel('Time[s]')
+    # ax[1][1].set_xlabel('Time[s]')
+    # ax[1][2].set_xlabel('Time[s]')
+    # # Plot winner chasing onsets
+    # ax[0][0].set_ylabel('Chirp rate [Hz]')
+    # ax[0][0].plot(time, winner_cc_onset, color='tab:blue', zorder=100)
+    # ax0 = ax[0][0].twinx()
+    # ax0.eventplot(np.array([winner_centered_onset]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=-100)
+    # ax0.set_ylabel('Event')
+    # ax0.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    # ax[0][0].set_zorder(ax0.get_zorder()+1)
+    # ax[0][0].patch.set_visible(False)
+    # ax0.set_yticklabels([])
+    # ax0.set_yticks([])
+    # # Plot winner chasing offets
+    # ax[0][1].plot(time, winner_cc_offset, color='tab:blue', zorder=100)
+    # ax1 = ax[0][1].twinx()
+    # ax1.eventplot(np.array([winner_centered_offset]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=-100)
+    # ax1.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    # ax[0][1].set_zorder(ax1.get_zorder()+1)
+    # ax[0][1].patch.set_visible(False)
+    # ax1.set_yticklabels([])
+    # ax1.set_yticks([])
+    # # Plot winner physical contacts
+    # ax[0][2].plot(time, winner_cc_physical, color='tab:blue', zorder=100)
+    # ax2 = ax[0][2].twinx()
+    # ax2.eventplot(np.array([winner_centered_physical]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=-100)
+    # ax2.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    # ax[0][2].set_zorder(ax2.get_zorder()+1)
+    # ax[0][2].patch.set_visible(False)
+    # ax2.set_yticklabels([])
+    # ax2.set_yticks([])
+    # # Plot loser chasing onsets
+    # ax[1][0].set_ylabel('Chirp rate [Hz]')
+    # ax[1][0].plot(time, loser_cc_onset, color='tab:blue', zorder=100)
+    # ax3 = ax[1][0].twinx()
+    # ax3.eventplot(np.array([loser_centered_onset]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=-100)
+    # ax3.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    # ax[1][0].set_zorder(ax3.get_zorder()+1)
+    # ax[1][0].patch.set_visible(False)
+    # ax3.set_yticklabels([])
+    # ax3.set_yticks([])
+    # # Plot loser chasing offsets
+    # ax[1][1].plot(time, loser_cc_offset, color='tab:blue', zorder=100)
+    # ax4 = ax[1][1].twinx()
+    # ax4.eventplot(np.array([loser_centered_offset]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=-100)
+    # ax4.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    # ax[1][1].set_zorder(ax4.get_zorder()+1)
+    # ax[1][1].patch.set_visible(False)
+    # ax4.set_yticklabels([])
+    # ax4.set_yticks([])
+    # # Plot loser physical contacts
+    # ax[1][2].plot(time, loser_cc_physical, color='tab:blue', zorder=100)
+    # ax5 = ax[1][2].twinx()
+    # ax5.eventplot(np.array([loser_centered_physical]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=-100)
+    # ax5.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    # ax[1][2].set_zorder(ax5.get_zorder()+1)
+    # ax[1][2].patch.set_visible(False)
+    # ax5.set_yticklabels([])
+    # ax5.set_yticks([])
+    # plt.show()
     # plt.close()
 
     
@@ -392,5 +404,5 @@ def main(datapath: str):
 
 if __name__ == '__main__':
     # Path to the data
-    datapath = '../data/mount_data/2020-05-13-10_00/'
+    datapath = '../data/mount_data/'
     main(datapath)
