@@ -1,4 +1,4 @@
-\documentclass[25pt, a0paper, landscape, margin=0mm, innermargin=20mm,
+\documentclass[25pt, a0paper, portrait, margin=0mm, innermargin=20mm,
 blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default values for poster format options.
 
 \input{packages}
@@ -7,113 +7,86 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \begin{document}
 
 \renewcommand{\baselinestretch}{1}
-\title{\parbox{1900pt}{Pushing the limits of time-frequency uncertainty in the
-detection of transient communication signals in weakly electric fish}}
-\author{Sina Prause, Alexander Wendt, Patrick Weygoldt}
-\institute{Supervised by Till Raab \& Jan Benda, Neurothology Group,
-University of Tübingen}
+\title{\parbox{1500pt}{Poster}}
+\author{Sina Prause, Alexander Wendt, and Patrick Weygoldt}
+\institute{Supervised by Till Raab \& Jan Benda, Neuroethology Lab, University of Tuebingen}
 \usetitlestyle[]{sampletitle}
 \maketitle
 \renewcommand{\baselinestretch}{1.4}
 
 \begin{columns}
-\column{0.5}
+\column{0.4}
 \myblock[TranspBlock]{Introduction}{
-    \begin{minipage}[t]{0.55\linewidth}
-        The time-frequency tradeoff makes reliable signal detecion and simultaneous
-        sender identification of freely interacting individuals impossible.
-        This profoundly limits our current understanding of chirps to experiments
-        with single - or physically separated - individuals.
-    \end{minipage} \hfill
-    \begin{minipage}[t]{0.40\linewidth}
-    \vspace{-1.5cm}
+    The time-frequency tradeoff makes reliable signal detecion and simultaneous
+    sender identification of freely interacting individuals impossible.
+    This profoundly limits our current understanding of chirps to experiments
+    with single - or physically separated - individuals.
+    \vspace{0.6cm}
     \begin{tikzfigure}[]
-        \label{tradeoff}
-        \includegraphics[width=\linewidth]{figs/introplot}
+        \label{griddrawing}
+        \includegraphics[width=0.5\linewidth]{example-image-a}
     \end{tikzfigure}
-    \end{minipage}
 }
 
-\myblock[TranspBlock]{A chirp detection algorithm}{
-        \begin{tikzfigure}[]
-            \label{modulations}
-            \includegraphics[width=\linewidth]{figs/algorithm}
-        \end{tikzfigure}
+\myblock[TranspBlock]{Chirp detection}{
+    \begin{tikzfigure}[]
+        \label{fig:example_a}
+        \includegraphics[width=0.5\linewidth]{example-image-a}
+    \end{tikzfigure}
+    \vspace{0cm}
 }
 
-\column{0.5}
-\myblock[TranspBlock]{Chirps and diadic competitions}{
-    \begin{minipage}[t]{0.7\linewidth}
+\column{0.6}
+\myblock[TranspBlock]{Chirps during competition}{
     \begin{tikzfigure}[]
-        \label{modulations}
-        \includegraphics[width=\linewidth]{figs/placeholder1}
+        \label{fig:example_b}
+        \includegraphics[width=0.5\linewidth]{example-image-b}
     \end{tikzfigure}
-    \end{minipage} \hfill
-    \begin{minipage}[t]{0.25\linewidth}
-        \lipsum[3][1-3]
-    \end{minipage}
+    \noindent
+}
 
-    \begin{minipage}[t]{0.7\linewidth}
+\myblock[TranspBlock]{Interactions at modulations}{
+    \vspace{-1.2cm}
     \begin{tikzfigure}[]
-        \label{modulations}
-        \includegraphics[width=\linewidth]{figs/placeholder1}
+        \label{fig:example_c}
+        \includegraphics[width=0.5\linewidth]{example-image-c}
     \end{tikzfigure}
-    \end{minipage} \hfill
-    \begin{minipage}[t]{0.25\linewidth}
-        \lipsum[3][1-3]
-    \end{minipage}
 
-    \begin{minipage}[t]{0.7\linewidth}
-    \begin{tikzfigure}[]
-        \label{modulations}
-        \includegraphics[width=\linewidth]{figs/placeholder1}
-    \end{tikzfigure}
-    \end{minipage} \hfill
-    \begin{minipage}[t]{0.25\linewidth}
-        \lipsum[3][1-3]
-    \end{minipage}
-
-
+    \begin{multicols}{2}
+        \begin{itemize}
+            \setlength\itemsep{0.5em}
+            \item $\Delta$EOD$f$ does not appear to decrease during synchronous modulations ().
+            \item Individuals that rise their EOD$f$ first appear to rise their frequency higher compared to reactors (\textbf{B}).
+            \vfill
+            \null
+            \columnbreak
+            \item Synchronized fish keep distances below 1 m (\textbf{C}) but distances over 3 m also occur (see \textbf{movie}).
+            \item Spatial interactions increase \textbf{after} the start of a synchronous modulation (\textbf{D}).
+        \end{itemize}
+    \end{multicols}
+    \vspace{-1cm}
 }
 
 \myblock[TranspBlock]{Conclusion}{
-    \lipsum[3][1-9]
-}
+    \begin{itemize}
+        \setlength\itemsep{0.5em}
+        \item Our analysis is the first to indicate that \textit{A. leptorhynchus} uses long, diffuse and synchronized EOD$f$ signals to communicate in addition to chirps and rises.
+        \item The recorded fish do not exhibit jamming avoidance behavior while close during synchronous modulations.
+        \item Synchronous signals \textbf{initiate} spatio-temporal interactions.
+    \end{itemize}
+    \vspace{0.2cm}
+    }
+    \end{columns}
 
-% \column{0.3}
-% \myblock[TranspBlock]{More Results}{
-%     \begin{tikzfigure}[]
-%         \label{results}
-%         \includegraphics[width=\linewidth]{example-image-a}
-%     \end{tikzfigure}
-
-%     \begin{multicols}{2}
-%     \lipsum[5][1-8]
-%     \end{multicols}
-%     \vspace{-1cm}
-% }
-
-% \myblock[TranspBlock]{Conclusion}{
-%     \begin{itemize}
-%         \setlength\itemsep{0.5em}
-%         \item \lipsum[1][1]
-%         \item \lipsum[1][1]
-%         \item \lipsum[1][1]
-%     \end{itemize}
-%     \vspace{0.2cm}
-%     }
-\end{columns}
-
-\node[
-    above right,
+\node [above right,
     text=white,
     outer sep=45pt,
     minimum width=\paperwidth,
     align=center,
     draw,
     fill=boxes,
-    color=boxes,
-] at (-0.51\paperwidth,-43.5) {
-\textcolor{text}{\normalsize Contact: \{name\}.\{surname\}@student.uni-tuebingen.de}};
+    color=boxes] at (-43.6,-61) {
+        \textcolor{white}{
+    \normalsize Contact: \{name\}.\{surname\}@student.uni-tuebingen.de}};
 
 \end{document}

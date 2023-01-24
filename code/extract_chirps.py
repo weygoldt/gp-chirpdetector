@@ -4,11 +4,13 @@ import numpy as np
 from chirpdetection import chirpdetection
 from IPython import embed
 
+# check rec ../data/mount_data/2020-03-25-10_00/ starting at 3175
+
 
 def main(datapaths):
 
     for path in datapaths:
-        chirpdetection(path, plot='show')
+        chirpdetection(path, plot='false')
 
 
 if __name__ == '__main__':
