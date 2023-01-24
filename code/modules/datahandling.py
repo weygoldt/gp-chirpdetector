@@ -4,7 +4,7 @@ from scipy.ndimage import gaussian_filter1d
 from scipy.stats import gamma, norm
 
 
-def scale01(data):
+def minmaxnorm(data):
     """
     Normalize data to [0, 1]
 
@@ -19,7 +19,7 @@ def scale01(data):
         Normalized data.
 
     """
-    return (2*((data - np.min(data)) / (np.max(data) - np.min(data)))) - 1
+    return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 
 def instantaneous_frequency(
@@ -167,6 +167,9 @@ def group_timestamps(
         timestamp for sublist in sublists if sublist for timestamp in sublist
     ]
     timestamps.sort()
+
+    if len(timestamps) == 0:
+        return []
 
     groups = []
     current_group = [timestamps[0]]

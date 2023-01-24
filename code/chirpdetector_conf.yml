@@ -19,29 +19,29 @@ baseline_frequency_smoothing: 5
 
 # Baseline processing parameters
 baseline_envelope_cutoff: 25
-baseline_envelope_bandpass_lowf: 4
+baseline_envelope_bandpass_lowf: 2
 baseline_envelope_bandpass_highf: 100
-baseline_envelope_envelope_cutoff: 4
+# baseline_envelope_envelope_cutoff: 4
 
 # search envelope processing parameters
-search_envelope_cutoff: 5
+search_envelope_cutoff: 10
 
 # Instantaneous frequency bandpass filter cutoff frequencies
-baseline_frequency_highpass_cutoff: 0.000005
-baseline_frequency_envelope_cutoff: 0.000005
+# baseline_frequency_highpass_cutoff: 0.000005
+# baseline_frequency_envelope_cutoff: 0.000005
 
 # peak detecion parameters
-prominence: 0.005
+prominence: 0.7
 
 # search freq parameter
 search_df_lower: 20
 search_df_upper: 100
 search_res: 1
-search_bandwidth: 10
-default_search_freq: 50
+search_bandwidth: 20
+default_search_freq: 60
 
 # Classify events as chirps if they are less than this time apart
-chirp_window_threshold: 0.05
+chirp_window_threshold: 0.015
 
 
 

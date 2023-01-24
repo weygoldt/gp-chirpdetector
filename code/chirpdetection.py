@@ -18,6 +18,7 @@ from modules.datahandling import (
     purge_duplicates,
     group_timestamps,
     instantaneous_frequency,
+    minmaxnorm
 )
 
 logger = makeLogger(__name__)
@@ -26,7 +27,7 @@ ps = PlotStyle()
 
 
 @dataclass
-class PlotBuffer:
+class ChirpPlotBuffer:
 
     """
     Buffer to save data that is created in the main detection loop
@@ -83,6 +84,7 @@ class PlotBuffer:
             q50 + self.search_frequency + self.config.minimal_bandwidth / 2,
             q50 + self.search_frequency - self.config.minimal_bandwidth / 2,
         )
+        print(search_upper, search_lower)
 
         # get indices on raw data
         start_idx = (self.t0 - 5) * self.data.raw_rate
@@ -94,7 +96,8 @@ class PlotBuffer:
 
         self.time = self.time - self.t0
         self.frequency_time = self.frequency_time - self.t0
-        chirps = np.asarray(chirps) - self.t0
+        if len(chirps) > 0:
+            chirps = np.asarray(chirps) - self.t0
         self.t0_old = self.t0
         self.t0 = 0
 
@@ -130,7 +133,7 @@ class PlotBuffer:
             data_oi,
             self.data.raw_rate,
             self.t0 - 5,
-            [np.min(self.frequency) - 200, np.max(self.frequency) + 200]
+            [np.min(self.frequency) - 100, np.max(self.frequency) + 200]
         )
 
         for track_id in self.data.ids:
@@ -181,10 +184,11 @@ class PlotBuffer:
         #             spec_times[0], spec_times[-1],
         #             color=ps.gblue2, lw=2, ls="dashed")
 
-        for chirp in chirps:
-            ax0.scatter(
-                chirp, np.median(self.frequency) + 150, c=ps.black, marker="v"
-            )
+        if len(chirps) > 0:
+            for chirp in chirps:
+                ax0.scatter(
+                    chirp, np.median(self.frequency) + 150, c=ps.black, marker="v"
+                )
 
         # plot waveform of filtered signal
         ax1.plot(self.time, self.baseline * waveform_scaler,
@@ -319,7 +323,7 @@ def plot_spectrogram(
         aspect="auto",
         origin="lower",
         interpolation="gaussian",
-        alpha=1,
+        alpha=0.6,
     )
     # axis.use_sticky_edges = False
     return spec_times
@@ -432,6 +436,28 @@ def window_median_all_track_ids(
     return frequency_percentiles, track_ids
 
 
+def array_center(array: np.ndarray) -> float:
+    """
+    Return the center value of an array.
+    If the array length is even, returns
+    the mean of the two center values.
+
+    Parameters
+    ----------
+    array : np.ndarray
+        Array to calculate the center from.
+
+    Returns
+    -------
+    float
+
+    """
+    if len(array) % 2 == 0:
+        return np.mean(array[int(len(array) / 2) - 1:int(len(array) / 2) + 1])
+    else:
+        return array[int(len(array) / 2)]
+
+
 def find_searchband(
     current_frequency: np.ndarray,
     percentiles_ids: np.ndarray,
@@ -465,10 +491,10 @@ def find_searchband(
     # frequency window where second filter filters is potentially allowed
     # to filter. This is the search window, in which we want to find
     # a gap in the other fish's EODs.
-
+    current_median = np.median(current_frequency)
     search_window = np.arange(
-        np.median(current_frequency) + config.search_df_lower,
-        np.median(current_frequency) + config.search_df_upper,
+        current_median + config.search_df_lower,
+        current_median + config.search_df_upper,
         config.search_res,
     )
 
@@ -483,7 +509,7 @@ def find_searchband(
 
     # get tracks that fall into search window
     check_track_ids = percentiles_ids[
-        (q25 > search_window[0]) & (
+        (q25 > current_median) & (
             q75 < search_window[-1])
     ]
 
@@ -510,6 +536,9 @@ def find_searchband(
         search_window_gaps = np.diff(search_window_bool, append=np.nan)
         nonzeros = search_window_gaps[np.nonzero(search_window_gaps)[0]]
         nonzeros = nonzeros[~np.isnan(nonzeros)]
+
+        if len(nonzeros) == 0:
+            return config.default_search_freq
 
         # if the first value is -1, the array starst with true, so a gap
         if nonzeros[0] == -1:
@@ -545,22 +574,29 @@ def find_searchband(
         # the center of the search frequency band is then the center of
         # the longest gap
 
-        search_freq = (
-            longest_search_window[-1] - longest_search_window[0]
-        ) / 2
+        search_freq = array_center(longest_search_window) - current_median
 
         return search_freq
 
     return config.default_search_freq
 
 
-def chirpdetection(datapath: str, plot: str) -> None:
+def chirpdetection(datapath: str, plot: str, debug: str = 'false') -> None:
 
     assert plot in [
         "save",
         "show",
         "false",
     ], "plot must be 'save', 'show' or 'false'"
+
+    assert debug in [
+        "false",
+        "electrode",
+        "fish",
+    ], "debug must be 'false', 'electrode' or 'fish'"
+
+    if debug != "false":
+        assert plot == "show", "debug mode only runs when plot is 'show'"
 
     # load raw file
     print('datapath', datapath)
@@ -592,8 +628,8 @@ def chirpdetection(datapath: str, plot: str) -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5 + 5) * data.raw_rate
-    window_duration_index = 60 * data.raw_rate
+    # window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5 + 5) * data.raw_rate
+    # window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
@@ -753,11 +789,11 @@ def chirpdetection(datapath: str, plot: str) -> None:
 
                 baseline_envelope = -baseline_envelope
 
-                baseline_envelope = envelope(
-                    signal=baseline_envelope,
-                    samplerate=data.raw_rate,
-                    cutoff_frequency=config.baseline_envelope_envelope_cutoff,
-                )
+                # baseline_envelope = envelope(
+                #     signal=baseline_envelope,
+                #     samplerate=data.raw_rate,
+                #     cutoff_frequency=config.baseline_envelope_envelope_cutoff,
+                # )
 
                 # compute the envelope of the search band. Peaks in the search
                 # band envelope correspond to troughs in the baseline envelope
@@ -791,25 +827,25 @@ def chirpdetection(datapath: str, plot: str) -> None:
                 # compute the envelope of the signal to remove the oscillations
                 # around the peaks
 
-                baseline_frequency_samplerate = np.mean(
-                    np.diff(baseline_frequency_time)
-                )
+                # baseline_frequency_samplerate = np.mean(
+                #     np.diff(baseline_frequency_time)
+                # )
 
                 baseline_frequency_filtered = np.abs(
                     baseline_frequency - np.median(baseline_frequency)
                 )
 
-                baseline_frequency_filtered = highpass_filter(
-                    signal=baseline_frequency_filtered,
-                    samplerate=baseline_frequency_samplerate,
-                    cutoff=config.baseline_frequency_highpass_cutoff,
-                )
+                # baseline_frequency_filtered = highpass_filter(
+                #     signal=baseline_frequency_filtered,
+                #     samplerate=baseline_frequency_samplerate,
+                #     cutoff=config.baseline_frequency_highpass_cutoff,
+                # )
 
-                baseline_frequency_filtered = envelope(
-                    signal=-baseline_frequency_filtered,
-                    samplerate=baseline_frequency_samplerate,
-                    cutoff_frequency=config.baseline_frequency_envelope_cutoff,
-                )
+                # baseline_frequency_filtered = envelope(
+                #     signal=-baseline_frequency_filtered,
+                #     samplerate=baseline_frequency_samplerate,
+                #     cutoff_frequency=config.baseline_frequency_envelope_cutoff,
+                # )
 
                 # CUT OFF OVERLAP ---------------------------------------------
 
@@ -850,9 +886,9 @@ def chirpdetection(datapath: str, plot: str) -> None:
                 # normalize all three feature arrays to the same range to make
                 # peak detection simpler
 
-                baseline_envelope = normalize([baseline_envelope])[0]
-                search_envelope = normalize([search_envelope])[0]
-                baseline_frequency_filtered = normalize(
+                baseline_envelope = minmaxnorm([baseline_envelope])[0]
+                search_envelope = minmaxnorm([search_envelope])[0]
+                baseline_frequency_filtered = minmaxnorm(
                     [baseline_frequency_filtered]
                 )[0]
 
@@ -893,7 +929,7 @@ def chirpdetection(datapath: str, plot: str) -> None:
                     or len(frequency_peak_timestamps) == 0
                 )
 
-                if one_feature_empty:
+                if one_feature_empty and (debug == 'false'):
                     continue
 
                 # group peak across feature arrays but only if they
@@ -914,7 +950,7 @@ def chirpdetection(datapath: str, plot: str) -> None:
                 # check it there are chirps detected after grouping, continue
                 # with the loop if not
 
-                if len(singleelectrode_chirps) == 0:
+                if (len(singleelectrode_chirps) == 0) and (debug == 'false'):
                     continue
 
                 # append chirps from this electrode to the multilectrode list
@@ -925,12 +961,12 @@ def chirpdetection(datapath: str, plot: str) -> None:
                                   & (plot in ["show", "save"])
                                   )
 
-                if chirp_detected:
+                if chirp_detected or (debug != 'elecrode'):
 
                     logger.debug("Detected chirp, ititialize buffer ...")
 
                     # save data to Buffer
-                    buffer = PlotBuffer(
+                    buffer = ChirpPlotBuffer(
                         config=config,
                         t0=window_start_seconds,
                         dt=window_duration_seconds,
@@ -955,6 +991,11 @@ def chirpdetection(datapath: str, plot: str) -> None:
 
                     logger.debug("Buffer initialized!")
 
+                if debug == "electrode":
+                    logger.info(f'Plotting electrode {el} ...')
+                    buffer.plot_buffer(
+                        chirps=singleelectrode_chirps, plot=plot)
+
             logger.debug(
                 f"Processed all electrodes for fish {track_id} for this"
                 "window, sorting chirps ..."
@@ -963,7 +1004,7 @@ def chirpdetection(datapath: str, plot: str) -> None:
             # check if there are chirps detected in multiple electrodes and
             # continue the loop if not
 
-            if len(multielectrode_chirps) == 0:
+            if (len(multielectrode_chirps) == 0) and (debug == 'false'):
                 continue
 
             # validate multielectrode chirps, i.e. check if they are
@@ -988,12 +1029,17 @@ def chirpdetection(datapath: str, plot: str) -> None:
             # if chirps are detected and the plot flag is set, plot the
             # chirps, otheswise try to delete the buffer if it exists
 
-            if ((len(multielectrode_chirps_validated) > 0) & (plot in ["show", "save"])):
+            if debug == "fish":
+                logger.info(f'Plotting fish {track_id} ...')
+                buffer.plot_buffer(multielectrode_chirps_validated, plot)
+
+            if ((len(multielectrode_chirps_validated) > 0) &
+                    (plot in ["show", "save"]) & (debug == 'false')):
                 try:
                     buffer.plot_buffer(multielectrode_chirps_validated, plot)
                     del buffer
                 except NameError:
-                    embed()
+                    pass
             else:
                 try:
                     del buffer
@@ -1051,4 +1097,4 @@ if __name__ == "__main__":
     datapath = "../data/2022-06-02-10_00/"
     # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
-    chirpdetection(datapath, plot="show")
+    chirpdetection(datapath, plot="show", debug="fish")

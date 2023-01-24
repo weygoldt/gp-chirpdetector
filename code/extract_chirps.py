@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 import numpy as np
 from chirpdetection import chirpdetection
 from IPython import embed
@@ -7,7 +8,7 @@ from IPython import embed
 def main(datapaths):
 
     for path in datapaths:
-        chirpdetection(path, plot='show')
+        chirpdetection(path, plot='show', debug='electrode')
 
 
 if __name__ == '__main__':
@@ -39,6 +40,9 @@ if __name__ == '__main__':
 
     datapaths = [os.path.join(dataroot, dataset) +
                  '/' for dataset in valid_datasets]
-    embed()
 
-    main(datapaths[3])
+    recs = pd.DataFrame(columns=['recording'], data=valid_datasets)
+    recs.to_csv('../recs.csv', index=False)
+    # main(datapaths)
+
+# window 1524 + 244 in dataset index 4 is nice example
