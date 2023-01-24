@@ -199,7 +199,7 @@ def main(datapath: str):
     time_after_event = 60
     dt = 0.01
     width = 1.5   # width of kernel for all recordings, currently gaussian kernel
-    recording_width = 1 # width of kernel for each recording
+    recording_width = 2 # width of kernel for each recording
     time = np.arange(-time_before_event, time_after_event, dt)
 
     ##### Chirps around events, all fish, all recordings #####
