@@ -9,7 +9,7 @@ from IPython import embed
 from pandas import read_csv
 from modules.logger import makeLogger
 from modules.plotstyle import PlotStyle
-from modules.datahandling import causal_kde1d, acausal_kde1d
+from modules.datahandling import causal_kde1d, acausal_kde1d, flatten
 
 logger = makeLogger(__name__)
 ps = PlotStyle()
@@ -192,6 +192,7 @@ def main(datapath: str):
         nrecording_chasing_offsets.append(chasing_offsets)
         physical_contacts = timestamps[category == 2]
         nrecording_physicals.append(physical_contacts)
+
     
 
     # Define time window for chirps around event analysis
@@ -212,7 +213,7 @@ def main(datapath: str):
     nrecording_shuffled_convolved_offset_chirps = []
     nrecording_shuffled_convolved_physical_chirps = []
 
-    nbootstrapping = 10
+    nbootstrapping = 100
 
     for i in range(len(nrecording_chirps)):
         chirps = nrecording_chirps[i]
@@ -236,89 +237,124 @@ def main(datapath: str):
         nshuffled_offset_chirps = []
         nshuffled_physical_chirps = []
 
-        for j in tqdm(range(nbootstrapping)):
-        # Calculate interchirp intervals; add first chirp timestamp in beginning to get equal lengths
-            interchirp_intervals = np.append(np.array([chirps[0]]), np.diff(chirps))
-            np.random.shuffle(interchirp_intervals)
-            shuffled_chirps = np.cumsum(interchirp_intervals)
-            # Shuffled chasing onset chirps
-            _, _, cc_shuffled_onset_chirps = event_triggered_chirps(chasing_onsets, shuffled_chirps, time_before_event, time_after_event, dt, recording_width)
-            nshuffled_onset_chirps.append(cc_shuffled_onset_chirps)
-            # Shuffled chasing offset chirps
-            _, _, cc_shuffled_offset_chirps = event_triggered_chirps(chasing_offsets, shuffled_chirps, time_before_event, time_after_event, dt, recording_width)
-            nshuffled_offset_chirps.append(cc_shuffled_offset_chirps)
-            # Shuffled physical contact chirps
-            _, _, cc_shuffled_physical_chirps = event_triggered_chirps(physical_contacts, shuffled_chirps, time_before_event, time_after_event, dt, recording_width)
-            nshuffled_physical_chirps.append(cc_shuffled_physical_chirps)
+        # for j in tqdm(range(nbootstrapping)):
+        # # Calculate interchirp intervals; add first chirp timestamp in beginning to get equal lengths
+        #     interchirp_intervals = np.append(np.array([chirps[0]]), np.diff(chirps))
+        #     np.random.shuffle(interchirp_intervals)
+        #     shuffled_chirps = np.cumsum(interchirp_intervals)
+        #     # Shuffled chasing onset chirps
+        #     _, _, cc_shuffled_onset_chirps = event_triggered_chirps(chasing_onsets, shuffled_chirps, time_before_event, time_after_event, dt, recording_width)
+        #     nshuffled_onset_chirps.append(cc_shuffled_onset_chirps)
+        #     # Shuffled chasing offset chirps
+        #     _, _, cc_shuffled_offset_chirps = event_triggered_chirps(chasing_offsets, shuffled_chirps, time_before_event, time_after_event, dt, recording_width)
+        #     nshuffled_offset_chirps.append(cc_shuffled_offset_chirps)
+        #     # Shuffled physical contact chirps
+        #     _, _, cc_shuffled_physical_chirps = event_triggered_chirps(physical_contacts, shuffled_chirps, time_before_event, time_after_event, dt, recording_width)
+        #     nshuffled_physical_chirps.append(cc_shuffled_physical_chirps)
 
-        rec_shuffled_q5_onset, rec_shuffled_median_onset, rec_shuffled_q95_onset = np.percentile(
-        nshuffled_onset_chirps, (5, 50, 95), axis=0)
-        rec_shuffled_q5_offset, rec_shuffled_median_offset, rec_shuffled_q95_offset = np.percentile(
-        nshuffled_offset_chirps, (5, 50, 95), axis=0)
-        rec_shuffled_q5_physical, rec_shuffled_median_physical, rec_shuffled_q95_physical = np.percentile(
-        nshuffled_physical_chirps, (5, 50, 95), axis=0)
 
-        #### Recording plots ####
-        fig, ax = plt.subplots(1, 3, figsize=(28*ps.cm, 16*ps.cm, ), constrained_layout=True, sharey='all')
-        ax[0].set_xlabel('Time[s]')
+        # rec_shuffled_q5_onset, rec_shuffled_median_onset, rec_shuffled_q95_onset = np.percentile(
+        # nshuffled_onset_chirps, (5, 50, 95), axis=0)
+        # rec_shuffled_q5_offset, rec_shuffled_median_offset, rec_shuffled_q95_offset = np.percentile(
+        # nshuffled_offset_chirps, (5, 50, 95), axis=0)
+        # rec_shuffled_q5_physical, rec_shuffled_median_physical, rec_shuffled_q95_physical = np.percentile(
+        # nshuffled_physical_chirps, (5, 50, 95), axis=0)
 
-        # Plot chasing onsets
-        ax[0].set_ylabel('Chirp rate [Hz]')
-        ax[0].plot(time, cc_chasing_onset_chirps, color=ps.yellow, zorder=2)
-        ax0 = ax[0].twinx()
-        ax0.eventplot(centered_chasing_onset_chirps, linelengths=0.2, colors=ps.gray, alpha=0.25, zorder=1)
-        ax0.vlines(0, 0, 1.5, ps.white, 'dashed')
-        ax[0].set_zorder(ax0.get_zorder()+1)
-        ax[0].patch.set_visible(False)
-        ax0.set_yticklabels([])
-        ax0.set_yticks([])
-        ax[0].fill_between(time, rec_shuffled_q5_onset, rec_shuffled_q95_onset, color=ps.gray, alpha=0.5)
-        ax[0].plot(time, rec_shuffled_median_onset, color=ps.black)
 
-        # Plot chasing offets
-        ax[1].set_xlabel('Time[s]')
-        ax[1].plot(time, cc_chasing_offset_chirps, color=ps.orange, zorder=2)
-        ax1 = ax[1].twinx()
-        ax1.eventplot(centered_chasing_offset_chirps, linelengths=0.2, colors=ps.gray, alpha=0.25, zorder=1)
-        ax1.vlines(0, 0, 1.5, ps.white, 'dashed')
-        ax[1].set_zorder(ax1.get_zorder()+1)
-        ax[1].patch.set_visible(False)
-        ax1.set_yticklabels([])
-        ax1.set_yticks([])
-        ax[1].fill_between(time, rec_shuffled_q5_offset, rec_shuffled_q95_offset, color=ps.gray, alpha=0.5)
-        ax[1].plot(time, rec_shuffled_median_offset, color=ps.black)
+        # #### Recording plots ####
+        # fig, ax = plt.subplots(1, 3, figsize=(28*ps.cm, 16*ps.cm, ), constrained_layout=True, sharey='all')
+        # ax[0].set_xlabel('Time[s]')
 
-        # Plot physical contacts
-        ax[2].set_xlabel('Time[s]')
-        ax[2].plot(time, cc_physical_chirps, color=ps.maroon, zorder=2)
-        ax2 = ax[2].twinx()
-        ax2.eventplot(centered_physical_chirps, linelengths=0.2, colors=ps.gray, alpha=0.25, zorder=1)
-        ax2.vlines(0, 0, 1.5, ps.white, 'dashed')
-        ax[2].set_zorder(ax2.get_zorder()+1)
-        ax[2].patch.set_visible(False)
-        ax2.set_yticklabels([])
-        ax2.set_yticks([])
-        ax[2].fill_between(time, rec_shuffled_q5_physical, rec_shuffled_q95_physical, color=ps.gray, alpha=0.5)
-        ax[2].plot(time, rec_shuffled_median_physical, ps.black)
-        fig.suptitle(f'Recording: {i}')
-        plt.show()
+        # # Plot chasing onsets
+        # ax[0].set_ylabel('Chirp rate [Hz]')
+        # ax[0].plot(time, cc_chasing_onset_chirps, color=ps.yellow, zorder=2)
+        # ax0 = ax[0].twinx()
+        # ax0.eventplot(centered_chasing_onset_chirps, linelengths=0.2, colors=ps.gray, alpha=0.25, zorder=1)
+        # ax0.vlines(0, 0, 1.5, ps.white, 'dashed')
+        # ax[0].set_zorder(ax0.get_zorder()+1)
+        # ax[0].patch.set_visible(False)
+        # ax0.set_yticklabels([])
+        # ax0.set_yticks([])
+        # ######## median - q5, median + q95
+        # ax[0].fill_between(time, rec_shuffled_q5_onset, rec_shuffled_q95_onset, color=ps.gray, alpha=0.5)
+        # ax[0].plot(time, rec_shuffled_median_onset, color=ps.black)
+
+        # # Plot chasing offets
+        # ax[1].set_xlabel('Time[s]')
+        # ax[1].plot(time, cc_chasing_offset_chirps, color=ps.orange, zorder=2)
+        # ax1 = ax[1].twinx()
+        # ax1.eventplot(centered_chasing_offset_chirps, linelengths=0.2, colors=ps.gray, alpha=0.25, zorder=1)
+        # ax1.vlines(0, 0, 1.5, ps.white, 'dashed')
+        # ax[1].set_zorder(ax1.get_zorder()+1)
+        # ax[1].patch.set_visible(False)
+        # ax1.set_yticklabels([])
+        # ax1.set_yticks([])
+        # ax[1].fill_between(time, rec_shuffled_q5_offset, rec_shuffled_q95_offset, color=ps.gray, alpha=0.5)
+        # ax[1].plot(time, rec_shuffled_median_offset, color=ps.black)
+
+        # # Plot physical contacts
+        # ax[2].set_xlabel('Time[s]')
+        # ax[2].plot(time, cc_physical_chirps, color=ps.maroon, zorder=2)
+        # ax2 = ax[2].twinx()
+        # ax2.eventplot(centered_physical_chirps, linelengths=0.2, colors=ps.gray, alpha=0.25, zorder=1)
+        # ax2.vlines(0, 0, 1.5, ps.white, 'dashed')
+        # ax[2].set_zorder(ax2.get_zorder()+1)
+        # ax[2].patch.set_visible(False)
+        # ax2.set_yticklabels([])
+        # ax2.set_yticks([])
+        # ax[2].fill_between(time, rec_shuffled_q5_physical, rec_shuffled_q95_physical, color=ps.gray, alpha=0.5)
+        # ax[2].plot(time, rec_shuffled_median_physical, ps.black)
+        # fig.suptitle(f'Recording: {i}')
+        # # plt.show()
         # plt.close()
         
-        nrecording_shuffled_convolved_onset_chirps.append(nshuffled_onset_chirps)
-        nrecording_shuffled_convolved_offset_chirps.append(nshuffled_offset_chirps)
-        nrecording_shuffled_convolved_physical_chirps.append(nshuffled_physical_chirps)
+        # nrecording_shuffled_convolved_onset_chirps.append(nshuffled_onset_chirps)
+        # nrecording_shuffled_convolved_offset_chirps.append(nshuffled_offset_chirps)
+        # nrecording_shuffled_convolved_physical_chirps.append(nshuffled_physical_chirps)
+
+    #### New shuffle approach ####
+    bootstrap_onset = []
+    bootstrap_offset = []
+    bootstrap_physical = []
+
+    # New bootstrapping approach
+    for n in range(nbootstrapping):
+        diff_onset = np.diff(np.sort(flatten(nrecording_centered_onset_chirps)))
+        diff_offset = np.diff(np.sort(flatten(nrecording_centered_offset_chirps)))
+        diff_physical = np.diff(np.sort(flatten(nrecording_centered_physical_chirps)))
+
+        np.random.shuffle(diff_onset)
+        shuffled_onset = np.cumsum(diff_onset)
+        np.random.shuffle(diff_offset)
+        shuffled_offset = np.cumsum(diff_offset)
+        np.random.shuffle(diff_physical)
+        shuffled_physical = np.cumsum(diff_physical)
+
+        kde_onset = (acausal_kde1d(shuffled_onset, time, width))/(27*100)
+        kde_offset = (acausal_kde1d(shuffled_offset, time, width))/(27*100)
+        kde_physical = (acausal_kde1d(shuffled_physical, time, width))/(27*100)
+
+        bootstrap_onset.append(kde_onset)
+        bootstrap_offset.append(kde_offset)
+        bootstrap_physical.append(kde_physical)
+
+    # New shuffle approach q5, q50, q95
+    onset_q5, onset_median, onset_q95 = np.percentile(bootstrap_onset, [5, 50, 95], axis=0)
+    offset_q5, offset_median, offset_q95 = np.percentile(bootstrap_offset, [5, 50, 95], axis=0)
+    physical_q5, physical_median, physical_q95 = np.percentile(bootstrap_physical, [5, 50, 95], axis=0)
+        
 
     #  vstack um 1. Dim zu cutten
-    nrecording_shuffled_convolved_onset_chirps = np.vstack(nrecording_shuffled_convolved_onset_chirps)
-    nrecording_shuffled_convolved_offset_chirps = np.vstack(nrecording_shuffled_convolved_offset_chirps)
-    nrecording_shuffled_convolved_physical_chirps = np.vstack(nrecording_shuffled_convolved_physical_chirps)
+    # nrecording_shuffled_convolved_onset_chirps = np.vstack(nrecording_shuffled_convolved_onset_chirps)
+    # nrecording_shuffled_convolved_offset_chirps = np.vstack(nrecording_shuffled_convolved_offset_chirps)
+    # nrecording_shuffled_convolved_physical_chirps = np.vstack(nrecording_shuffled_convolved_physical_chirps)
     
-    shuffled_q5_onset, shuffled_median_onset, shuffled_q95_onset = np.percentile(
-        nrecording_shuffled_convolved_onset_chirps, (5, 50, 95), axis=0)
-    shuffled_q5_offset, shuffled_median_offset, shuffled_q95_offset = np.percentile(
-        nrecording_shuffled_convolved_offset_chirps, (5, 50, 95), axis=0)
-    shuffled_q5_physical, shuffled_median_physical, shuffled_q95_physical = np.percentile(
-        nrecording_shuffled_convolved_physical_chirps, (5, 50, 95), axis=0)
+    # shuffled_q5_onset, shuffled_median_onset, shuffled_q95_onset = np.percentile(
+    #     nrecording_shuffled_convolved_onset_chirps, (5, 50, 95), axis=0)
+    # shuffled_q5_offset, shuffled_median_offset, shuffled_q95_offset = np.percentile(
+    #     nrecording_shuffled_convolved_offset_chirps, (5, 50, 95), axis=0)
+    # shuffled_q5_physical, shuffled_median_physical, shuffled_q95_physical = np.percentile(
+    #     nrecording_shuffled_convolved_physical_chirps, (5, 50, 95), axis=0)
 
     # Flatten all chirps 
     all_chirps = np.concatenate(nrecording_chirps).ravel()  # not centered
@@ -339,7 +375,6 @@ def main(datapath: str):
     all_offset_chirps_convolved = (acausal_kde1d(all_offset_chirps, time, width)) / len(all_offsets)
     all_physical_chirps_convolved = (acausal_kde1d(all_physical_chirps, time, width)) / len(all_physicals)
 
-
     # Plot all events with all shuffled
     fig, ax = plt.subplots(1, 3, figsize=(28*ps.cm, 16*ps.cm, ), constrained_layout=True, sharey='all')
     # offsets = np.arange(1,28,1)
@@ -356,8 +391,10 @@ def main(datapath: str):
     ax[0].patch.set_visible(False)
     ax0.set_yticklabels([])
     ax0.set_yticks([])
-    ax[0].fill_between(time, shuffled_q5_onset, shuffled_q95_onset, color=ps.gray, alpha=0.5)
-    ax[0].plot(time, shuffled_median_onset, color=ps.black)
+    # ax[0].fill_between(time, shuffled_q5_onset, shuffled_q95_onset, color=ps.gray, alpha=0.5)
+    # ax[0].plot(time, shuffled_median_onset, color=ps.black)
+    ax[0].fill_between(time, onset_q5, onset_q95, color=ps.gray, alpha=0.5)
+    ax[0].plot(time, onset_median, color=ps.black)
 
     # Plot chasing offets
     ax[1].set_xlabel('Time[s]')
@@ -370,8 +407,10 @@ def main(datapath: str):
     ax[1].patch.set_visible(False)
     ax1.set_yticklabels([])
     ax1.set_yticks([])
-    ax[1].fill_between(time, shuffled_q5_offset, shuffled_q95_offset, color=ps.gray, alpha=0.5)
-    ax[1].plot(time, shuffled_median_offset, color=ps.black)
+    # ax[1].fill_between(time, shuffled_q5_offset, shuffled_q95_offset, color=ps.gray, alpha=0.5)
+    # ax[1].plot(time, shuffled_median_offset, color=ps.black)
+    ax[1].fill_between(time, offset_q5, offset_q95, color=ps.gray, alpha=0.5)
+    ax[1].plot(time, offset_median, color=ps.black)
 
     # Plot physical contacts
     ax[2].set_xlabel('Time[s]')
@@ -384,11 +423,13 @@ def main(datapath: str):
     ax[2].patch.set_visible(False)
     ax2.set_yticklabels([])
     ax2.set_yticks([])
-    ax[2].fill_between(time, shuffled_q5_physical, shuffled_q95_physical, color=ps.gray, alpha=0.5)
-    ax[2].plot(time, shuffled_median_physical, ps.black)
+    # ax[2].fill_between(time, shuffled_q5_physical, shuffled_q95_physical, color=ps.gray, alpha=0.5)
+    # ax[2].plot(time, shuffled_median_physical, ps.black)
+    ax[2].fill_between(time, physical_q5, physical_q95, color=ps.gray, alpha=0.5)
+    ax[2].plot(time, physical_median, ps.black)
     fig.suptitle('All recordings')
     plt.show()
-    # plt.close()
+    plt.close()
 
     embed()
     
