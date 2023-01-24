@@ -87,7 +87,7 @@ def main(datapath: str):
 
 
 
-        ax[3].axvspan(0, 3, 0, 5, facecolor='grey', alpha=0.5)
+        ax[3].axvspan(3, 6, 0, 5, facecolor='grey', alpha=0.5)
         ax[3].set_xticks(np.arange(0, 6.1, 0.5))
 
         labelpad = 40
@@ -98,9 +98,9 @@ def main(datapath: str):
 
         ax[3].set_xlabel('Time [h]')
         ax[0].set_title(foldername.split('/')[-2])
-
+        # 2020-03-31-9_59
         plt.show()
-    embed()
+        embed()
 
     # plot chirps
 
