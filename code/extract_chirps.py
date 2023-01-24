@@ -8,7 +8,7 @@ from IPython import embed
 def main(datapaths):
 
     for path in datapaths:
-        chirpdetection(path, plot='show', debug='electrode')
+        chirpdetection(path, plot='show')
 
 
 if __name__ == '__main__':
@@ -43,6 +43,6 @@ if __name__ == '__main__':
 
     recs = pd.DataFrame(columns=['recording'], data=valid_datasets)
     recs.to_csv('../recs.csv', index=False)
-    # main(datapaths)
+    main(datapaths)
 
 # window 1524 + 244 in dataset index 4 is nice example

@@ -886,25 +886,25 @@ def chirpdetection(datapath: str, plot: str, debug: str = 'false') -> None:
                 # normalize all three feature arrays to the same range to make
                 # peak detection simpler
 
-                baseline_envelope = minmaxnorm([baseline_envelope])[0]
-                search_envelope = minmaxnorm([search_envelope])[0]
-                baseline_frequency_filtered = minmaxnorm(
-                    [baseline_frequency_filtered]
-                )[0]
+                # baseline_envelope = minmaxnorm([baseline_envelope])[0]
+                # search_envelope = minmaxnorm([search_envelope])[0]
+                # baseline_frequency_filtered = minmaxnorm(
+                #     [baseline_frequency_filtered]
+                # )[0]
 
                 # PEAK DETECTION ----------------------------------------------
 
                 # detect peaks baseline_enelope
                 baseline_peak_indices, _ = find_peaks(
-                    baseline_envelope, prominence=config.prominence
+                    baseline_envelope, prominence=config.baseline_prominence
                 )
                 # detect peaks search_envelope
                 search_peak_indices, _ = find_peaks(
-                    search_envelope, prominence=config.prominence
+                    search_envelope, prominence=config.search_prominence
                 )
                 # detect peaks inst_freq_filtered
                 frequency_peak_indices, _ = find_peaks(
-                    baseline_frequency_filtered, prominence=config.prominence
+                    baseline_frequency_filtered, prominence=config.frequency_prominence
                 )
 
                 # DETECT CHIRPS IN SEARCH WINDOW ------------------------------
@@ -1097,4 +1097,4 @@ if __name__ == "__main__":
     datapath = "../data/2022-06-02-10_00/"
     # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
-    chirpdetection(datapath, plot="show", debug="fish")
+    chirpdetection(datapath, plot="show", debug="false")
