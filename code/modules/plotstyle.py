@@ -23,16 +23,16 @@ def PlotStyle() -> None:
         sky = "#89dceb"
         teal = "#94e2d5"
         green = "#a6e3a1"
-        yellow = "#f9e2af"
-        orange = "#fab387"
-        maroon = "#eba0ac"
-        red = "#f38ba8"
-        purple = "#cba6f7"
-        pink = "#f5c2e7"
+        yellow = "#f9d67f"
+        orange = "#faa472"
+        maroon = "#eb8486"
+        red = "#f37588"
+        purple = "#d89bf7"
+        pink = "#f59edb"
         lavender = "#b4befe"
-        gblue1 = "#8cb8ff"
-        gblue2 = "#7cdcdc"
-        gblue3 = "#82e896"
+        gblue1 = "#89b4fa"
+        gblue2 = "#89dceb"
+        gblue3 = "#a6e3a1"
 
         @classmethod
         def lims(cls, track1, track2):
@@ -108,6 +108,9 @@ def PlotStyle() -> None:
         @classmethod
         def set_boxplot_color(cls, bp, color):
             plt.setp(bp["boxes"], color=color)
+            plt.setp(bp["whiskers"], color=color)
+            plt.setp(bp["caps"], color=color)
+            plt.setp(bp["medians"], color=color)
 
         @classmethod
         def label_subplots(cls, labels, axes, fig):
@@ -226,7 +229,7 @@ def PlotStyle() -> None:
     plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
     plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-    plt.rcParams["image.cmap"] = 'cmo.haline'
+    plt.rcParams["image.cmap"] = "cmo.haline"
     plt.rcParams["axes.xmargin"] = 0.05
     plt.rcParams["axes.ymargin"] = 0.1
     plt.rcParams["axes.titlelocation"] = "left"
@@ -247,42 +250,44 @@ def PlotStyle() -> None:
 
     # dark mode modifications
     plt.rcParams["boxplot.flierprops.color"] = white
-    plt.rcParams["boxplot.flierprops.markeredgecolor"] = white
+    plt.rcParams["boxplot.flierprops.markeredgecolor"] = gray
     plt.rcParams["boxplot.boxprops.color"] = gray
-    plt.rcParams["boxplot.whiskerprops.color"] = white
-    plt.rcParams["boxplot.capprops.color"] = white
-    plt.rcParams["boxplot.medianprops.color"] = white
+    plt.rcParams["boxplot.whiskerprops.color"] = gray
+    plt.rcParams["boxplot.capprops.color"] = gray
+    plt.rcParams["boxplot.medianprops.color"] = gray
     plt.rcParams["text.color"] = white
     plt.rcParams["axes.facecolor"] = black  # axes background color
     plt.rcParams["axes.edgecolor"] = gray  # axes edge color
     # plt.rcParams["axes.grid"] = True    # display grid or not
     # plt.rcParams["axes.grid.axis"] = "y"  # which axis the grid is applied to
     plt.rcParams["axes.labelcolor"] = white
-    plt.rcParams["axes.axisbelow"] = True    # draw axis gridlines and ticks:
+    plt.rcParams["axes.axisbelow"] = True  # draw axis gridlines and ticks:
     plt.rcParams["axes.spines.left"] = True  # display axis spines
     plt.rcParams["axes.spines.bottom"] = True
     plt.rcParams["axes.spines.top"] = False
     plt.rcParams["axes.spines.right"] = False
     plt.rcParams["axes.prop_cycle"] = cycler(
-        'color', [
-            '#b4befe',
-            '#89b4fa',
-            '#74c7ec',
-            '#89dceb',
-            '#94e2d5',
-            '#a6e3a1',
-            '#f9e2af',
-            '#fab387',
-            '#eba0ac',
-            '#f38ba8',
-            '#cba6f7',
-            '#f5c2e7',
-        ])
+        "color",
+        [
+            "#b4befe",
+            "#89b4fa",
+            "#74c7ec",
+            "#89dceb",
+            "#94e2d5",
+            "#a6e3a1",
+            "#f9e2af",
+            "#fab387",
+            "#eba0ac",
+            "#f38ba8",
+            "#cba6f7",
+            "#f5c2e7",
+        ],
+    )
     plt.rcParams["xtick.color"] = gray  # color of the ticks
     plt.rcParams["ytick.color"] = gray  # color of the ticks
     plt.rcParams["grid.color"] = dark_gray  # grid color
-    plt.rcParams["figure.facecolor"] = black    # figure face color
-    plt.rcParams["figure.edgecolor"] = black   # figure edge color
+    plt.rcParams["figure.facecolor"] = black  # figure face color
+    plt.rcParams["figure.edgecolor"] = black  # figure edge color
     plt.rcParams["savefig.facecolor"] = black  # figure face color when saving
 
     return style
@@ -292,12 +297,11 @@ if __name__ == "__main__":
 
     s = PlotStyle()
 
-    import matplotlib.pyplot as plt
+    import matplotlib.cbook as cbook
     import matplotlib.cm as cm
     import matplotlib.pyplot as plt
-    import matplotlib.cbook as cbook
-    from matplotlib.path import Path
     from matplotlib.patches import PathPatch
+    from matplotlib.path import Path
 
     # Fixing random state for reproducibility
     np.random.seed(19680801)
@@ -305,14 +309,20 @@ if __name__ == "__main__":
     delta = 0.025
     x = y = np.arange(-3.0, 3.0, delta)
     X, Y = np.meshgrid(x, y)
-    Z1 = np.exp(-X**2 - Y**2)
-    Z2 = np.exp(-(X - 1)**2 - (Y - 1)**2)
+    Z1 = np.exp(-(X**2) - Y**2)
+    Z2 = np.exp(-((X - 1) ** 2) - (Y - 1) ** 2)
     Z = (Z1 - Z2) * 2
 
     fig1, ax = plt.subplots()
-    im = ax.imshow(Z, interpolation='bilinear', cmap=cm.RdYlGn,
-                   origin='lower', extent=[-3, 3, -3, 3],
-                   vmax=abs(Z).max(), vmin=-abs(Z).max())
+    im = ax.imshow(
+        Z,
+        interpolation="bilinear",
+        cmap=cm.RdYlGn,
+        origin="lower",
+        extent=[-3, 3, -3, 3],
+        vmax=abs(Z).max(),
+        vmin=-abs(Z).max(),
+    )
 
     plt.show()
 
@@ -325,22 +335,21 @@ if __name__ == "__main__":
     all_data = [np.random.normal(0, std, 100) for std in range(6, 10)]
 
     # plot violin plot
-    axs[0].violinplot(all_data,
-                      showmeans=False,
-                      showmedians=True)
-    axs[0].set_title('Violin plot')
+    axs[0].violinplot(all_data, showmeans=False, showmedians=True)
+    axs[0].set_title("Violin plot")
 
     # plot box plot
     axs[1].boxplot(all_data)
-    axs[1].set_title('Box plot')
+    axs[1].set_title("Box plot")
 
     # adding horizontal grid lines
     for ax in axs:
         ax.yaxis.grid(True)
-        ax.set_xticks([y + 1 for y in range(len(all_data))],
-                      labels=['x1', 'x2', 'x3', 'x4'])
-        ax.set_xlabel('Four separate samples')
-        ax.set_ylabel('Observed values')
+        ax.set_xticks(
+            [y + 1 for y in range(len(all_data))], labels=["x1", "x2", "x3", "x4"]
+        )
+        ax.set_xlabel("Four separate samples")
+        ax.set_ylabel("Observed values")
 
     plt.show()
 
@@ -352,24 +361,42 @@ if __name__ == "__main__":
     theta = np.linspace(0.0, 2 * np.pi, N, endpoint=False)
     radii = 10 * np.random.rand(N)
     width = np.pi / 4 * np.random.rand(N)
-    colors = cmo.cm.haline(radii / 10.)
+    colors = cmo.cm.haline(radii / 10.0)
 
-    ax = plt.subplot(projection='polar')
+    ax = plt.subplot(projection="polar")
     ax.bar(theta, radii, width=width, bottom=0.0, color=colors, alpha=0.5)
 
     plt.show()
 
-    methods = [None, 'none', 'nearest', 'bilinear', 'bicubic', 'spline16',
-               'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric',
-               'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos']
+    methods = [
+        None,
+        "none",
+        "nearest",
+        "bilinear",
+        "bicubic",
+        "spline16",
+        "spline36",
+        "hanning",
+        "hamming",
+        "hermite",
+        "kaiser",
+        "quadric",
+        "catrom",
+        "gaussian",
+        "bessel",
+        "mitchell",
+        "sinc",
+        "lanczos",
+    ]
 
     # Fixing random state for reproducibility
     np.random.seed(19680801)
 
     grid = np.random.rand(4, 4)
 
-    fig, axs = plt.subplots(nrows=3, ncols=6, figsize=(9, 6),
-                            subplot_kw={'xticks': [], 'yticks': []})
+    fig, axs = plt.subplots(
+        nrows=3, ncols=6, figsize=(9, 6), subplot_kw={"xticks": [], "yticks": []}
+    )
 
     for ax, interp_method in zip(axs.flat, methods):
         ax.imshow(grid, interpolation=interp_method)

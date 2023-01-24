@@ -7,7 +7,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \begin{document}
 
 \renewcommand{\baselinestretch}{1}
-\title{\parbox{1500pt}{Poster}}
+\title{\parbox{1500pt}{Detection of transient communication signals in weakly electric fish}}
 \author{Sina Prause, Alexander Wendt, and Patrick Weygoldt}
 \institute{Supervised by Till Raab \& Jan Benda, Neuroethology Lab, University of Tuebingen}
 \usetitlestyle[]{sampletitle}
@@ -21,17 +21,15 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     sender identification of freely interacting individuals impossible.
     This profoundly limits our current understanding of chirps to experiments
     with single - or physically separated - individuals.
-    \vspace{0.6cm}
-    \begin{tikzfigure}[]
-        \label{griddrawing}
-        \includegraphics[width=0.5\linewidth]{example-image-a}
-    \end{tikzfigure}
+    % \begin{tikzfigure}[]
+    %     \label{griddrawing}
+    %     \includegraphics[width=1\linewidth]{figs/introplot}
+    % \end{tikzfigure}
 }
-
 \myblock[TranspBlock]{Chirp detection}{
     \begin{tikzfigure}[]
         \label{fig:example_a}
-        \includegraphics[width=0.5\linewidth]{example-image-a}
+        \includegraphics[width=1\linewidth]{figs/algorithm}
     \end{tikzfigure}
     \vspace{0cm}
 }
@@ -67,7 +65,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \vspace{-1cm}
 }
 
-\myblock[TranspBlock]{Conclusion}{
+\myblock[GrayBlock]{Conclusion}{
     \begin{itemize}
         \setlength\itemsep{0.5em}
         \item Our analysis is the first to indicate that \textit{A. leptorhynchus} uses long, diffuse and synchronized EOD$f$ signals to communicate in addition to chirps and rises.
