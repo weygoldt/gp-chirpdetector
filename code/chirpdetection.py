@@ -102,7 +102,7 @@ class ChirpPlotBuffer:
         self.t0 = 0
 
         fig = plt.figure(
-            figsize=(14 / 2.54, 20 / 2.54)
+            figsize=(14 * ps.cm, 18 * ps.cm)
         )
 
         gs0 = gr.GridSpec(
@@ -652,16 +652,16 @@ def chirpdetection(datapath: str, plot: str, debug: str = 'false') -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
-    window_duration_index = 60 * data.raw_rate
+    # window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    # window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
     # window_start_seconds = (23495 + ((28336-23495)/3)) * data.raw_rate
     # window_duration_seconds = (28336 - 23495) * data.raw_rate
 
-    # window_start_index = 0
-    # window_duration_index = data.raw.shape[0]
+    window_start_index = 0
+    window_duration_index = data.raw.shape[0]
 
     # generate starting points of rolling window
     window_start_indices = np.arange(
@@ -675,7 +675,7 @@ def chirpdetection(datapath: str, plot: str, debug: str = 'false') -> None:
     multiwindow_chirps = []
     multiwindow_ids = []
 
-    for st, window_start_index in enumerate(window_start_indices):
+    for st, window_start_index in enumerate(window_start_indices[3175:]):
 
         logger.info(f"Processing window {st+1} of {len(window_start_indices)}")
 
