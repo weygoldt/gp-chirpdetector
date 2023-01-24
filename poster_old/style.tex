@@ -16,11 +16,10 @@
 \colorlet{notefgcolor}{background}
 \colorlet{notebgcolor}{background}
 
-
 % Title setup
 \settitle{
 % Rearrange the order of the minipages to e.g. center the title between the logos
-\begin{minipage}[c]{0.8\paperwidth}
+\begin{minipage}[c]{0.6\paperwidth}
 %    \centering
     \vspace{2.5cm}\hspace{1.5cm}
     \color{text}{\Huge{\textbf{\@title}} \par}
@@ -31,28 +30,26 @@
     \vspace{2.5cm}
 \end{minipage}
 \begin{minipage}[c]{0.2\paperwidth}
+%    \centering
+    \vspace{1cm}\hspace{1cm}
+    \includegraphics[scale=1]{example-image-a}
+\end{minipage}
+\begin{minipage}[c]{0.2\paperwidth}
+%    \vspace{1cm}\hspace{1cm}
     \centering
-    % \vspace{1cm}
-    \hspace{-10cm}
-    \includegraphics[width=\linewidth]{example-image-a}
+    \includegraphics[scale=1]{example-image-a}
 \end{minipage}}
-% \begin{minipage}[c]{0.2\paperwidth}
-%     \vspace{1cm}\hspace{1cm}
-%     \centering
-%     \includegraphics[width=\linewidth]{example-image-a}
-% \end{minipage}}
 
-% define title style with background box (currently white)
+% definie title style with background box
 \definetitlestyle{sampletitle}{
-    width=841mm,
+    width=1189mm,
     roundedcorners=0,
     linewidth=0pt,
     innersep=15pt,
     titletotopverticalspace=0mm,
     titletoblockverticalspace=5pt
 }{
-    \begin{scope}[line width=\titlelinewidth,
-        rounded corners=\titleroundedcorners]
+    \begin{scope}[line width=\titlelinewidth, rounded corners=\titleroundedcorners]
     \draw[fill=text, color=boxes]
     (\titleposleft,\titleposbottom)
     rectangle

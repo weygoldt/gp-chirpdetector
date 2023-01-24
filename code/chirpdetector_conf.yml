@@ -1,47 +1,41 @@
-# directory setup
-dataroot: "../data/"
-outputdir: "../output/"
+# Path setup ------------------------------------------------------------------
 
-# Duration and overlap of the analysis window in seconds
-window: 5
-overlap: 1
-edge: 0.25
+dataroot: "../data/"      # path to data
+outputdir: "../output/"   # path to save plots to
 
-# Number of electrodes to go over
-number_electrodes: 3
-minimum_electrodes: 2
+# Rolling window parameters ---------------------------------------------------
 
-# Search window bandwidth and minimal baseline bandwidth
-minimal_bandwidth: 20
+window: 5   # rolling window length in seconds
+overlap: 1  # window overlap in seconds
+edge: 0.25  # window edge cufoffs to mitigate filter edge effects
 
-# Instantaneous frequency smoothing usint a gaussian kernel of this width
-baseline_frequency_smoothing: 5
+# Electrode iteration parameters ----------------------------------------------
 
-# Baseline processing parameters
-baseline_envelope_cutoff: 25
-baseline_envelope_bandpass_lowf: 2
-baseline_envelope_bandpass_highf: 100
-# baseline_envelope_envelope_cutoff: 4
+number_electrodes: 2    # number of electrodes to go over
+minimum_electrodes: 1   # mimumun number of electrodes a chirp must be on
 
-# search envelope processing parameters
-search_envelope_cutoff: 10
+# Feature extraction parameters -----------------------------------------------
 
-# Instantaneous frequency bandpass filter cutoff frequencies
-# baseline_frequency_highpass_cutoff: 0.000005
-# baseline_frequency_envelope_cutoff: 0.000005
+search_df_lower: 20     # start searching this far above the baseline
+search_df_upper: 100    # stop searching this far above the baseline
+search_res: 1           # search window resolution
+default_search_freq: 60 # search here if no need for a search frequency
+minimal_bandwidth: 10   # minimal bandpass filter width for baseline
+search_bandwidth: 10    # minimal bandpass filter width for search frequency
+baseline_frequency_smoothing: 10 # instantaneous frequency smoothing
 
-# peak detecion parameters
-prominence: 0.7
+# Feature processing parameters -----------------------------------------------
 
-# search freq parameter
-search_df_lower: 20
-search_df_upper: 100
-search_res: 1
-search_bandwidth: 20
-default_search_freq: 60
+baseline_envelope_cutoff: 25            # envelope estimation cutoff
+baseline_envelope_bandpass_lowf: 2      # envelope badpass lower cutoff
+baseline_envelope_bandpass_highf: 100   # envelope bandbass higher cutoff
+search_envelope_cutoff: 10              # search envelope estimation cufoff
+
+# Peak detecion parameters ----------------------------------------------------
+baseline_prominence: 0.00005  # peak prominence threshold for baseline envelope
+search_prominence: 0.000004   # peak prominence threshold for search envelope
+frequency_prominence: 2       # peak prominence threshold for baseline freq
 
 # Classify events as chirps if they are less than this time apart
-chirp_window_threshold: 0.015
-
-
+chirp_window_threshold: 0.02
 
