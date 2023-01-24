@@ -78,6 +78,7 @@ def main(datapath: str):
     ax.scatter(np.ones(len(chirps_winner))*scatterwinner, chirps_winner, color='r')
     ax.scatter(np.ones(len(chirps_loser))*scatterloser, chirps_loser, color='r')
     ax.set_xticklabels(['winner', 'loser'])
+    ax.text(0.9, 0.9, f'n = {len(chirps_winner)}', transform=ax.transAxes, color= ps.white)
 
     for w, l in zip(chirps_winner, chirps_loser):
         ax.plot([scatterwinner, scatterloser], [w, l], color='r', alpha=0.5, linewidth=0.5)
@@ -86,6 +87,7 @@ def main(datapath: str):
     ps.set_boxplot_color(bplot1, colors1)
     colors1 = ps.orange
     ps.set_boxplot_color(bplot2, colors1)
+
 
     ax.set_ylabel('Chirpscounts [n]')
     plt.savefig('../poster/figs/chirps_winner_loser.pdf')
