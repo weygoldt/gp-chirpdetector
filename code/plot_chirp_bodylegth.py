@@ -36,8 +36,6 @@ class Behavior:
     """
 
     def __init__(self, folder_path: str) -> None:
-        
-
         LED_on_time_BORIS = np.load(os.path.join(folder_path, 'LED_on_time.npy'), allow_pickle=True)
 
         csv_filename = [f for f in os.listdir(folder_path) if f.endswith('.csv')][0]
@@ -45,7 +43,7 @@ class Behavior:
         self.dataframe = read_csv(os.path.join(folder_path, csv_filename))
 
         self.chirps = np.load(os.path.join(folder_path, 'chirps.npy'), allow_pickle=True)
-        self.chirps_ids = np.load(os.path.join(folder_path, 'chirps_ids.npy'), allow_pickle=True)
+        self.chirps_ids = np.load(os.path.join(folder_path, 'chirp_ids.npy'), allow_pickle=True)
 
         self.ident = np.load(os.path.join(folder_path, 'ident_v.npy'), allow_pickle=True)
         self.idx = np.load(os.path.join(folder_path, 'idx_v.npy'), allow_pickle=True)
@@ -61,7 +59,7 @@ class Behavior:
                     key = key.replace('(', '')
                     key = key.replace(')', '')
             setattr(self, key, np.array(self.dataframe[self.dataframe.keys()[k]]))
-        
+
         last_LED_t_BORIS = LED_on_time_BORIS[-1]
         real_time_range = self.time[-1] - self.time[0]
         factor = 1.034141
@@ -69,6 +67,8 @@ class Behavior:
         self.start_s = (self.start_s - shift) / factor
         self.stop_s = (self.stop_s - shift) / factor
 
+
+        
 
 def correct_chasing_events(
     category: np.ndarray, 
@@ -80,59 +80,87 @@ def correct_chasing_events(
     offset_ids = np.arange(
         len(category))[category == 1]
 
+    woring_bh = np.arange(len(category))[category!=2][:-1][np.diff(category[category!=2])==0]
+    if onset_ids[0] > offset_ids[0]:
+        offset_ids = np.delete(offset_ids, 0)
+        help_index = offset_ids[0]
+        woring_bh = np.append(woring_bh, help_index)
+
+    category = np.delete(category, woring_bh)
+    timestamps = np.delete(timestamps, woring_bh)
+
     # Check whether on- or offset is longer and calculate length difference
     if len(onset_ids) > len(offset_ids):
         len_diff = len(onset_ids) - len(offset_ids)
-        longer_array = onset_ids
-        shorter_array = offset_ids
         logger.info(f'Onsets are greater than offsets by {len_diff}')
     elif len(onset_ids) < len(offset_ids):
         len_diff = len(offset_ids) - len(onset_ids)
-        longer_array = offset_ids
-        shorter_array = onset_ids
-        logger.info(f'Offsets are greater than offsets by {len_diff}')
+        logger.info(f'Offsets are greater than onsets by {len_diff}')
     elif len(onset_ids) == len(offset_ids):
         logger.info('Chasing events are equal')
-        return category, timestamps
 
 
-    # Correct the wrong chasing events; delete double events
-    wrong_ids = []
-    for i in range(len(longer_array)-(len_diff+1)):
-        if (shorter_array[i] > longer_array[i]) & (shorter_array[i] < longer_array[i+1]):
-            pass
-        else:
-            wrong_ids.append(longer_array[i])
-            longer_array = np.delete(longer_array, i)
-        
-    category = np.delete(
-        category, wrong_ids)
-    timestamps = np.delete(
-        timestamps, wrong_ids)
     return category, timestamps
 
 
 
 def main(datapath: str):
-    # behabvior is pandas dataframe with all the data
-    bh = Behavior(datapath)
-    # chirps are not sorted in time (presumably due to prior groupings)
-    # get and sort chirps and corresponding fish_ids of the chirps
-    chirps = bh.chirps[np.argsort(bh.chirps)]
-    chirps_fish_ids = bh.chirps_ids[np.argsort(bh.chirps)]
-    category = bh.behavior
-    timestamps = bh.start_s
-    # Correct for doubles in chasing on- and offsets to get the right on-/offset pairs
-    # Get rid of tracking faults (two onsets or two offsets after another)
 
-    category, timestamps = correct_chasing_events(category, timestamps)
-
-
-    path_to_csv = ('/').join(datapath.split('/')[:-2]) + '/order_meta.csv'
-    folder_name = datapath.split('/')[-2]
+    foldernames = [datapath + x + '/'  for x in os.listdir(datapath) if os.path.isdir(datapath+x)]
+    path_to_csv = ('/').join(foldernames[0].split('/')[:-2]) + '/order_meta.csv'
     meta_id = read_csv(path_to_csv)
     meta_id['recording'] = meta_id['recording'].str[1:-1]
-    winner_id = meta_id[meta_id['recording'] == folder_name]['winner'].values[0]
+    
+    chirps_winner = []
+    chirps_loser = []
+
+    for foldername in foldernames:
+        # behabvior is pandas dataframe with all the data
+        if foldername == '../data/mount_data/2020-05-12-10_00/':
+            continue
+        bh = Behavior(foldername)
+        # chirps are not sorted in time (presumably due to prior groupings)
+        # get and sort chirps and corresponding fish_ids of the chirps
+        category = bh.behavior
+        timestamps = bh.start_s
+        # Correct for doubles in chasing on- and offsets to get the right on-/offset pairs
+        # Get rid of tracking faults (two onsets or two offsets after another)
+        category, timestamps = correct_chasing_events(category, timestamps)
+
+        folder_name = foldername.split('/')[-2]
+        winner_row = meta_id[meta_id['recording'] == folder_name]
+        winner = winner_row['winner'].values[0].astype(int)
+        winner_fish1 = winner_row['fish1'].values[0].astype(int)
+        winner_fish2 = winner_row['fish2'].values[0].astype(int)
+        if winner == winner_fish1:
+            winner_fish_id = winner_row['rec_id1'].values[0]
+            loser_fish_id = winner_row['rec_id2'].values[0]
+        elif winner == winner_fish2:
+            winner_fish_id = winner_row['rec_id2'].values[0]
+            loser_fish_id = winner_row['rec_id1'].values[0]
+        else:
+            continue
+
+        print(foldername)
+        all_fish_ids = np.unique(bh.chirps_ids)
+        chirp_loser = len(bh.chirps[bh.chirps_ids == loser_fish_id])
+        chirp_winner = len(bh.chirps[bh.chirps_ids == winner_fish_id])
+        chirps_winner.append(chirp_winner)
+        chirps_loser.append(chirp_loser)
+
+
+        fish1_id = all_fish_ids[0]
+        fish2_id = all_fish_ids[1]
+        print(winner_fish_id)
+        print(all_fish_ids)
+
+
+    fig, ax = plt.subplots()
+    ax.boxplot([chirps_winner, chirps_loser])
+    
+    ax.set_xticklabels(['winner', 'loser'])
+    ax.set_ylabel('Chirpscount per trial')
+    plt.show()
 
     
 
@@ -144,6 +172,6 @@ def main(datapath: str):
 if __name__ == '__main__':
 
     # Path to the data
-    datapath = '../data/mount_data/2020-05-13-10_00/'
+    datapath = '../data/mount_data/'
     
     main(datapath)
