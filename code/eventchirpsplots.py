@@ -243,36 +243,42 @@ def main(datapath: str):
     ax[0].set_xlabel('Time[s]')
     # Plot chasing onsets
     ax[0].set_ylabel('Chirp rate [Hz]')
-    ax[0].plot(time, cc_chasing_onset_chirps, color='tab:blue', zorder=100)
+    ax[0].plot(time, cc_chasing_onset_chirps, color='tab:blue', zorder=2)
     ax0 = ax[0].twinx()
-    ax0.eventplot(np.array([centered_chasing_onset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=-100)
+    ax0.eventplot(np.array([centered_chasing_onset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=1)
     ax0.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax[0].set_zorder(ax0.get_zorder()+1)
+    ax[0].patch.set_visible(False)
     ax0.set_yticklabels([])
     ax0.set_yticks([])
     ax[0].fill_between(time, shuffled_q5_onset, shuffled_q95_onset, color='tab:gray', alpha=0.5)
     ax[0].plot(time, shuffled_median_onset, color='k')
     # Plot chasing offets
     ax[1].set_xlabel('Time[s]')
-    ax[1].plot(time, cc_chasing_offset_chirps, color='tab:blue', zorder=100)
+    ax[1].plot(time, cc_chasing_offset_chirps, color='tab:blue', zorder=2)
     ax1 = ax[1].twinx()
-    ax1.eventplot(np.array([centered_chasing_offset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=-100)
+    ax1.eventplot(np.array([centered_chasing_offset_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=1)
     ax1.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax[1].set_zorder(ax1.get_zorder()+1)
+    ax[1].patch.set_visible(False)
     ax1.set_yticklabels([])
     ax1.set_yticks([])
     ax[1].fill_between(time, shuffled_q5_offset, shuffled_q95_offset, color='tab:gray', alpha=0.5)
     ax[1].plot(time, shuffled_median_offset, color='k')
     # Plot physical contacts
     ax[2].set_xlabel('Time[s]')
-    ax[2].plot(time, cc_physical_chirps, color='tab:blue', zorder=100)
+    ax[2].plot(time, cc_physical_chirps, color='tab:blue', zorder=2)
     ax2 = ax[2].twinx()
-    ax2.eventplot(np.array([centered_physical_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=-100)
+    ax2.eventplot(np.array([centered_physical_chirps]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=1)
     ax2.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax[2].set_zorder(ax2.get_zorder()+1)
+    ax[2].patch.set_visible(False)
     ax2.set_yticklabels([])
     ax2.set_yticks([])
     ax[2].fill_between(time, shuffled_q5_physical, shuffled_q95_physical, color='tab:gray', alpha=0.5)
     ax[2].plot(time, shuffled_median_physical, color='k')
     plt.show()
-    plt.close()
+    # plt.close()
     
 
 
@@ -303,7 +309,7 @@ def main(datapath: str):
     _, loser_centered_offset, loser_cc_offset = event_triggered_chirps(chasing_offsets, loser_chirps, time_before_event, time_after_event, dt, width)
     _, loser_centered_physical, loser_cc_physical = event_triggered_chirps(physical_contacts, loser_chirps, time_before_event, time_after_event, dt, width)
 
-    ########## !Winner physical strange! ##########
+    ########## Winner VS Loser plot ##########
     fig, ax = plt.subplots(2, 3, figsize=(50 / 2.54, 15 / 2.54), constrained_layout=True, sharey='row')
     offset = [1.35]
     ax[1][0].set_xlabel('Time[s]')
@@ -316,6 +322,8 @@ def main(datapath: str):
     ax0.eventplot(np.array([winner_centered_onset]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=-100)
     ax0.set_ylabel('Event')
     ax0.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax[0][0].set_zorder(ax0.get_zorder()+1)
+    ax[0][0].patch.set_visible(False)
     ax0.set_yticklabels([])
     ax0.set_yticks([])
     # Plot winner chasing offets
@@ -323,6 +331,8 @@ def main(datapath: str):
     ax1 = ax[0][1].twinx()
     ax1.eventplot(np.array([winner_centered_offset]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=-100)
     ax1.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax[0][1].set_zorder(ax1.get_zorder()+1)
+    ax[0][1].patch.set_visible(False)
     ax1.set_yticklabels([])
     ax1.set_yticks([])
     # Plot winner physical contacts
@@ -330,6 +340,8 @@ def main(datapath: str):
     ax2 = ax[0][2].twinx()
     ax2.eventplot(np.array([winner_centered_physical]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=-100)
     ax2.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax[0][2].set_zorder(ax2.get_zorder()+1)
+    ax[0][2].patch.set_visible(False)
     ax2.set_yticklabels([])
     ax2.set_yticks([])
     # Plot loser chasing onsets
@@ -338,6 +350,8 @@ def main(datapath: str):
     ax3 = ax[1][0].twinx()
     ax3.eventplot(np.array([loser_centered_onset]), lineoffsets=offset, linelengths=0.1, colors=['tab:green'], alpha=0.25, zorder=-100)
     ax3.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax[1][0].set_zorder(ax3.get_zorder()+1)
+    ax[1][0].patch.set_visible(False)
     ax3.set_yticklabels([])
     ax3.set_yticks([])
     # Plot loser chasing offsets
@@ -345,6 +359,8 @@ def main(datapath: str):
     ax4 = ax[1][1].twinx()
     ax4.eventplot(np.array([loser_centered_offset]), lineoffsets=offset, linelengths=0.1, colors=['tab:purple'], alpha=0.25, zorder=-100)
     ax4.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax[1][1].set_zorder(ax4.get_zorder()+1)
+    ax[1][1].patch.set_visible(False)
     ax4.set_yticklabels([])
     ax4.set_yticks([])
     # Plot loser physical contacts
@@ -352,10 +368,12 @@ def main(datapath: str):
     ax5 = ax[1][2].twinx()
     ax5.eventplot(np.array([loser_centered_physical]), lineoffsets=offset, linelengths=0.1, colors=['tab:red'], alpha=0.25, zorder=-100)
     ax5.vlines(0, 0, 1.5, 'tab:grey', 'dashed')
+    ax[1][2].set_zorder(ax5.get_zorder()+1)
+    ax[1][2].patch.set_visible(False)
     ax5.set_yticklabels([])
     ax5.set_yticks([])
     plt.show()
-    plt.close()
+    # plt.close()
 
     
     embed()
