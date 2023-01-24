@@ -21,13 +21,18 @@ def main(datapath: str):
 
     foldernames = [
         datapath + x + '/' for x in os.listdir(datapath) if os.path.isdir(datapath+x)]
-    path_to_csv = (
+    path_order_meta  = (
         '/').join(foldernames[0].split('/')[:-2]) + '/order_meta.csv'
-    meta_id = read_csv(path_to_csv)
-    meta_id['recording'] = meta_id['recording'].str[1:-1]
+    order_meta_df = read_csv(path_order_meta)
+    order_meta_df['recording'] = order_meta_df['recording'].str[1:-1]
+    path_id_meta = (
+        '/').join(foldernames[0].split('/')[:-2]) + '/id_meta.csv'
+    id_meta_df = read_csv(path_id_meta)
 
     chirps_winner = []
+    size_diff = []
     chirps_loser = []
+
 
     for foldername in foldernames:
         # behabvior is pandas dataframe with all the data
@@ -43,16 +48,52 @@ def main(datapath: str):
         category, timestamps = correct_chasing_events(category, timestamps)
 
         folder_name = foldername.split('/')[-2]
-        winner_row = meta_id[meta_id['recording'] == folder_name]
+        winner_row = order_meta_df[order_meta_df['recording'] == folder_name]
         winner = winner_row['winner'].values[0].astype(int)
         winner_fish1 = winner_row['fish1'].values[0].astype(int)
         winner_fish2 = winner_row['fish2'].values[0].astype(int)
+
+        groub = winner_row['group'].values[0].astype(int)
+        size_rows = id_meta_df[id_meta_df['group'] == groub]
+
+
         if winner == winner_fish1:
             winner_fish_id = winner_row['rec_id1'].values[0]
             loser_fish_id = winner_row['rec_id2'].values[0]
+
+            size_winners = []
+            for l in ['l1', 'l2', 'l3']:
+                size_winner = size_rows[size_rows['fish']== winner_fish1][l].values[0]
+                size_winners.append(size_winner)
+            mean_size_winner = np.nanmean(size_winners)
+
+
+            size_losers = []
+            for l in ['l1', 'l2', 'l3']:
+                size_loser = size_rows[size_rows['fish']== winner_fish2][l].values[0]
+                size_losers.append(size_loser)
+            mean_size_loser = np.nanmean(size_losers)
+
+            size_diff.append(mean_size_winner - mean_size_loser)
+
         elif winner == winner_fish2:
             winner_fish_id = winner_row['rec_id2'].values[0]
             loser_fish_id = winner_row['rec_id1'].values[0]
+
+            size_winners = []
+            for l in ['l1', 'l2', 'l3']:
+                size_winner = size_rows[size_rows['fish']== winner_fish2][l].values[0]
+                size_winners.append(size_winner)
+            mean_size_winner = np.nanmean(size_winners)
+
+            size_losers = []
+            for l in ['l1', 'l2', 'l3']:
+                size_loser = size_rows[size_rows['fish']== winner_fish1][l].values[0]
+                size_losers.append(size_loser)
+            mean_size_loser = np.nanmean(size_losers)
+            
+            size_diff.append(mean_size_winner - mean_size_loser)
+
         else:
             continue
 
@@ -68,28 +109,31 @@ def main(datapath: str):
         print(winner_fish_id)
         print(all_fish_ids)
 
-    fig, ax = plt.subplots()
+    fig, (ax1, ax2) = plt.subplots(1,2, figsize=(10,5))
     scatterwinner = 1.15
     scatterloser = 1.85
-    bplot1 = ax.boxplot(chirps_winner, positions=[
+    bplot1 = ax1.boxplot(chirps_winner, positions=[
                         1], showfliers=False, patch_artist=True)
-    bplot2 = ax.boxplot(chirps_loser,  positions=[
+    bplot2 = ax1.boxplot(chirps_loser,  positions=[
                         2], showfliers=False, patch_artist=True)
-    ax.scatter(np.ones(len(chirps_winner))*scatterwinner, chirps_winner, color='r')
-    ax.scatter(np.ones(len(chirps_loser))*scatterloser, chirps_loser, color='r')
-    ax.set_xticklabels(['winner', 'loser'])
-    ax.text(0.9, 0.9, f'n = {len(chirps_winner)}', transform=ax.transAxes, color= ps.white)
+    ax1.scatter(np.ones(len(chirps_winner))*scatterwinner, chirps_winner, color='r')
+    ax1.scatter(np.ones(len(chirps_loser))*scatterloser, chirps_loser, color='r')
+    ax1.set_xticklabels(['winner', 'loser'])
+    ax1.text(0.9, 0.9, f'n = {len(chirps_winner)}', transform=ax1.transAxes, color= ps.white)
 
     for w, l in zip(chirps_winner, chirps_loser):
-        ax.plot([scatterwinner, scatterloser], [w, l], color='r', alpha=0.5, linewidth=0.5)
+        ax1.plot([scatterwinner, scatterloser], [w, l], color='r', alpha=0.5, linewidth=0.5)
 
     colors1 = ps.red
     ps.set_boxplot_color(bplot1, colors1)
     colors1 = ps.orange
     ps.set_boxplot_color(bplot2, colors1)
+    ax1.set_ylabel('Chirpscounts [n]')
 
+    ax2.scatter(size_w, chirps_winner, color='r')
+    ax2.scatter(size_l, chirps_loser, color='green')
 
-    ax.set_ylabel('Chirpscounts [n]')
+    
     plt.savefig('../poster/figs/chirps_winner_loser.pdf')
     plt.show()
 
