@@ -248,7 +248,7 @@ def main(datapath: str):
     size_loser_pearsonr = pearsonr(size_diffs_loser, size_chirps_loser )
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(
-        22*ps.cm, 12*ps.cm), width_ratios=[1.5, 1, 1], sharey=True)
+        22*ps.cm, 12*ps.cm), sharey=True)
     plt.subplots_adjust(left=0.098, right=0.945, top=0.94, wspace=0.343)
     scatterwinner = 1.15
     scatterloser = 1.85
