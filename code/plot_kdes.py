@@ -18,47 +18,62 @@ logger = makeLogger(__name__)
 ps = PlotStyle()
 
 
-def jackknife(data, nresamples, subsetsize, kde_time, kernel_width):
-
-    if len(data) == 0:
-        return []
-
-    jackknifed_kdes = []
-    data = np.sort(data)
-    subsetsize = int(np.round(len(data)*subsetsize))
-
-    for n in range(nresamples):
-
-        subset = np.random.choice(data, subsetsize, replace=False)
-        subset_kde = acausal_kde1d(subset, time=kde_time, width=kernel_width)
-        jackknifed_kdes.append(subset_kde)
-
-    return jackknifed_kdes
-
-
 def bootstrap(data, nresamples, kde_time, kernel_width, event_times, time_before, time_after):
 
     bootstrapped_kdes = []
     data = data[data <= 3*60*60]  # only night time
 
-    if len(data) == 0:
-        logger.info('No data for bootstrap, added zeros')
-        return [np.zeros_like(kde_time) for i in range(nresamples)]
-
-    diff_data = np.diff(np.sort(data), prepend=np.sort(data)[0])
+    # diff_data = np.diff(np.sort(data), prepend=0)
+    # if len(data) != 0:
+    #     mean_chirprate = (len(data) - 1) / (data[-1] - data[0])
 
     for i in tqdm(range(nresamples)):
 
-        np.random.shuffle(diff_data)
-        bootstrapped_data = np.cumsum(diff_data)
+        # np.random.shuffle(diff_data)
+
+        # bootstrapped_data = np.cumsum(diff_data)
+        bootstrapped_data = data + np.random.randn(len(data)) * 10
+
         bootstrap_data_centered = center_chirps(
             bootstrapped_data, event_times, time_before, time_after)
+
         bootstrapped_kde = acausal_kde1d(
             bootstrap_data_centered, time=kde_time, width=kernel_width)
+
+        # bootstrapped_kdes = list(np.asarray(
+        #     bootstrapped_kdes) / len(event_times))
 
         bootstrapped_kdes.append(bootstrapped_kde)
 
     return bootstrapped_kdes
+
+
+def jackknife(data, nresamples, subsetsize, kde_time, kernel_width, event_times, time_before, time_after):
+
+    jackknife_kdes = []
+    data = data[data <= 3*60*60]  # only night time
+    subsetsize = int(len(data) * subsetsize)
+
+    diff_data = np.diff(np.sort(data), prepend=0)
+
+    for i in tqdm(range(nresamples)):
+
+        bootstrapped_data = np.random.sample(data, subsetsize, replace=False)
+
+        bootstrapped_data = np.cumsum(diff_data)
+
+        bootstrap_data_centered = center_chirps(
+            bootstrapped_data, event_times, time_before, time_after)
+
+        bootstrapped_kde = acausal_kde1d(
+            bootstrap_data_centered, time=kde_time, width=kernel_width)
+
+        # bootstrapped_kdes = list(np.asarray(
+        #     bootstrapped_kdes) / len(event_times))
+
+        jackknife_kdes.append(bootstrapped_kde)
+
+    return jackknife_kdes
 
 
 def get_chirp_winner_loser(folder_name, Behavior, order_meta_df):
@@ -88,7 +103,7 @@ def get_chirp_winner_loser(folder_name, Behavior, order_meta_df):
 def main(dataroot):
 
     foldernames, _ = get_valid_datasets(dataroot)
-    plot_all = False
+    plot_all = True
     time_before = 60
     time_after = 60
     dt = 0.001
@@ -134,6 +149,9 @@ def main(dataroot):
         bh = Behavior(folder)
         category, timestamps = correct_chasing_events(bh.behavior, bh.start_s)
 
+        category = category[timestamps < 3*60*60]  # only night time
+        timestamps = timestamps[timestamps < 3*60*60]  # only night time
+
         winner, loser = get_chirp_winner_loser(folder, bh, meta)
 
         if winner is None:
@@ -162,6 +180,8 @@ def main(dataroot):
             loser, physicals, time_before, time_after))
 
         # bootstrap
+        # chirps = [winner, winner, winner, loser, loser, loser]
+
         winner_onsets_boot.append(bootstrap(
             winner,
             nresamples=nbootstraps,
@@ -240,80 +260,80 @@ def main(dataroot):
             ax[1, 2].plot(kde_time, loser_physicals_conv/len(physicals))
 
             # # plot bootstrap lines
-            # for kde in winner_onsets_boot[-1]:
-            #     ax[0, 0].plot(kde_time, kde/len(offsets),
-            #                   color='gray')
-            # for kde in winner_offsets_boot[-1]:
-            #     ax[0, 1].plot(kde_time, kde/len(offsets),
-            #                   color='gray')
-            # for kde in winner_physicals_boot[-1]:
-            #     ax[0, 2].plot(kde_time, kde/len(offsets),
-            #                   color='gray')
-            # for kde in loser_onsets_boot[-1]:
-            #     ax[1, 0].plot(kde_time, kde/len(offsets),
-            #                   color='gray')
-            # for kde in loser_offsets_boot[-1]:
-            #     ax[1, 1].plot(kde_time, kde/len(offsets),
-            #                   color='gray')
-            # for kde in loser_physicals_boot[-1]:
-            #     ax[1, 2].plot(kde_time, kde/len(offsets),
-            #                   color='gray')
+            for kde in winner_onsets_boot[-1]:
+                ax[0, 0].plot(kde_time, kde/len(onsets),
+                              color='gray')
+            for kde in winner_offsets_boot[-1]:
+                ax[0, 1].plot(kde_time, kde/len(offsets),
+                              color='gray')
+            for kde in winner_physicals_boot[-1]:
+                ax[0, 2].plot(kde_time, kde/len(physicals),
+                              color='gray')
+            for kde in loser_onsets_boot[-1]:
+                ax[1, 0].plot(kde_time, kde/len(onsets),
+                              color='gray')
+            for kde in loser_offsets_boot[-1]:
+                ax[1, 1].plot(kde_time, kde/len(offsets),
+                              color='gray')
+            for kde in loser_physicals_boot[-1]:
+                ax[1, 2].plot(kde_time, kde/len(physicals),
+                              color='gray')
 
             # plot bootstrap percentiles
-            ax[0, 0].fill_between(
-                kde_time,
-                np.percentile(winner_onsets_boot[-1], 5, axis=0)/len(onsets),
-                np.percentile(winner_onsets_boot[-1], 95, axis=0)/len(onsets),
-                color='gray',
-                alpha=0.5)
-            ax[0, 1].fill_between(
-                kde_time,
-                np.percentile(winner_offsets_boot[-1], 5, axis=0)/len(offsets),
-                np.percentile(
-                    winner_offsets_boot[-1], 95, axis=0)/len(offsets),
-                color='gray',
-                alpha=0.5)
-            ax[0, 2].fill_between(
-                kde_time,
-                np.percentile(
-                    winner_physicals_boot[-1], 5, axis=0)/len(physicals),
-                np.percentile(
-                    winner_physicals_boot[-1], 95, axis=0)/len(physicals),
-                color='gray',
-                alpha=0.5)
-            ax[1, 0].fill_between(
-                kde_time,
-                np.percentile(loser_onsets_boot[-1], 5, axis=0)/len(onsets),
-                np.percentile(loser_onsets_boot[-1], 95, axis=0)/len(onsets),
-                color='gray',
-                alpha=0.5)
-            ax[1, 1].fill_between(
-                kde_time,
-                np.percentile(loser_offsets_boot[-1], 5, axis=0)/len(offsets),
-                np.percentile(loser_offsets_boot[-1], 95, axis=0)/len(offsets),
-                color='gray',
-                alpha=0.5)
-            ax[1, 2].fill_between(
-                kde_time,
-                np.percentile(
-                    loser_physicals_boot[-1], 5, axis=0)/len(physicals),
-                np.percentile(
-                    loser_physicals_boot[-1], 95, axis=0)/len(physicals),
-                color='gray',
-                alpha=0.5)
+            # ax[0, 0].fill_between(
+            #     kde_time,
+            #     np.percentile(winner_onsets_boot[-1], 5, axis=0),
+            #     np.percentile(winner_onsets_boot[-1], 95, axis=0),
+            #     color='gray',
+            #     alpha=0.5)
+            # ax[0, 1].fill_between(
+            #     kde_time,
+            #     np.percentile(winner_offsets_boot[-1], 5, axis=0),
+            #     np.percentile(
+            #         winner_offsets_boot[-1], 95, axis=0),
+            #     color='gray',
+            #     alpha=0.5)
+            # ax[0, 2].fill_between(
+            #     kde_time,
+            #     np.percentile(
+            #         winner_physicals_boot[-1], 5, axis=0),
+            #     np.percentile(
+            #         winner_physicals_boot[-1], 95, axis=0),
+            #     color='gray',
+            #     alpha=0.5)
+            # ax[1, 0].fill_between(
+            #     kde_time,
+            #     np.percentile(loser_onsets_boot[-1], 5, axis=0),
+            #     np.percentile(loser_onsets_boot[-1], 95, axis=0),
+            #     color='gray',
+            #     alpha=0.5)
+            # ax[1, 1].fill_between(
+            #     kde_time,
+            #     np.percentile(loser_offsets_boot[-1], 5, axis=0),
+            #     np.percentile(loser_offsets_boot[-1], 95, axis=0),
+            #     color='gray',
+            #     alpha=0.5)
+            # ax[1, 2].fill_between(
+            #     kde_time,
+            #     np.percentile(
+            #         loser_physicals_boot[-1], 5, axis=0),
+            #     np.percentile(
+            #         loser_physicals_boot[-1], 95, axis=0),
+            #     color='gray',
+            #     alpha=0.5)
 
-            ax[0, 0].plot(kde_time, np.median(winner_onsets_boot[-1], axis=0)/len(onsets),
-                          color='black', linewidth=2)
-            ax[0, 1].plot(kde_time, np.median(winner_offsets_boot[-1], axis=0)/len(offsets),
-                          color='black', linewidth=2)
-            ax[0, 2].plot(kde_time, np.median(winner_physicals_boot[-1], axis=0)/len(physicals),
-                          color='black', linewidth=2)
-            ax[1, 0].plot(kde_time, np.median(loser_onsets_boot[-1], axis=0)/len(onsets),
-                          color='black', linewidth=2)
-            ax[1, 1].plot(kde_time, np.median(loser_offsets_boot[-1], axis=0)/len(offsets),
-                          color='black', linewidth=2)
-            ax[1, 2].plot(kde_time, np.median(loser_physicals_boot[-1], axis=0)/len(physicals),
-                          color='black', linewidth=2)
+            # ax[0, 0].plot(kde_time, np.median(winner_onsets_boot[-1], axis=0),
+            #               color='black', linewidth=2)
+            # ax[0, 1].plot(kde_time, np.median(winner_offsets_boot[-1], axis=0),
+            #               color='black', linewidth=2)
+            # ax[0, 2].plot(kde_time, np.median(winner_physicals_boot[-1], axis=0),
+            #               color='black', linewidth=2)
+            # ax[1, 0].plot(kde_time, np.median(loser_onsets_boot[-1], axis=0),
+            #               color='black', linewidth=2)
+            # ax[1, 1].plot(kde_time, np.median(loser_offsets_boot[-1], axis=0),
+            #               color='black', linewidth=2)
+            # ax[1, 2].plot(kde_time, np.median(loser_physicals_boot[-1], axis=0),
+            #               color='black', linewidth=2)
 
             ax[0, 0].set_xlim(-30, 30)
             plt.show()
@@ -345,20 +365,18 @@ def main(dataroot):
     loser_offsets_conv = loser_offsets_conv / offset_count
     loser_physicals_conv = loser_physicals_conv / physical_count
 
-    embed()
-
     winner_onsets_boot = np.concatenate(
-        winner_onsets_boot) / onset_count
+        winner_onsets_boot)
     winner_offsets_boot = np.concatenate(
-        winner_offsets_boot) / offset_count
+        winner_offsets_boot)
     winner_physicals_boot = np.concatenate(
-        winner_physicals_boot) / physical_count
+        winner_physicals_boot)
     loser_onsets_boot = np.concatenate(
-        loser_onsets_boot) / onset_count
+        loser_onsets_boot)
     loser_offsets_boot = np.concatenate(
-        loser_offsets_boot) / offset_count
+        loser_offsets_boot)
     loser_physicals_boot = np.concatenate(
-        loser_physicals_boot) / physical_count
+        loser_physicals_boot)
 
     percs = [5, 50, 95]
     winner_onsets_boot_quarts = np.percentile(
@@ -378,52 +396,73 @@ def main(dataroot):
         21*ps.cm, 10*ps.cm), sharey=True, sharex=True)
 
     ax[0, 0].plot(kde_time, winner_onsets_conv)
+    ax[0, 1].plot(kde_time, winner_offsets_conv)
+    ax[0, 2].plot(kde_time, winner_physicals_conv)
+    ax[1, 0].plot(kde_time, loser_onsets_conv)
+    ax[1, 1].plot(kde_time, loser_offsets_conv)
+    ax[1, 2].plot(kde_time, loser_physicals_conv)
+
+    ax[0, 0].plot(kde_time, winner_onsets_boot_quarts[1], c=ps.black)
+    ax[0, 1].plot(kde_time, winner_offsets_boot_quarts[1], c=ps.black)
+    ax[0, 2].plot(kde_time, winner_physicals_boot_quarts[1], c=ps.black)
+    ax[1, 0].plot(kde_time, loser_onsets_boot_quarts[1], c=ps.black)
+    ax[1, 1].plot(kde_time, loser_offsets_boot_quarts[1], c=ps.black)
+    ax[1, 2].plot(kde_time, loser_physicals_boot_quarts[1], c=ps.black)
+
+    # for kde in winner_onsets_boot:
+    #     ax[0, 0].plot(kde_time, kde,
+    #                   color='gray')
+    # for kde in winner_offsets_boot:
+    #     ax[0, 1].plot(kde_time, kde,
+    #                   color='gray')
+    # for kde in winner_physicals_boot:
+    #     ax[0, 2].plot(kde_time, kde,
+    #                   color='gray')
+    # for kde in loser_onsets_boot:
+    #     ax[1, 0].plot(kde_time, kde,
+    #                   color='gray')
+    # for kde in loser_offsets_boot:
+    #     ax[1, 1].plot(kde_time, kde,
+    #                   color='gray')
+    # for kde in loser_physicals_boot:
+    #     ax[1, 2].plot(kde_time, kde,
+    #                   color='gray')
+
     ax[0, 0].fill_between(kde_time,
                           winner_onsets_boot_quarts[0],
                           winner_onsets_boot_quarts[2],
                           color=ps.gray,
                           alpha=0.5)
-    ax[0, 0].plot(kde_time, winner_onsets_boot_quarts[1], c=ps.black)
 
-    ax[0, 1].plot(kde_time, winner_offsets_conv)
     ax[0, 1].fill_between(kde_time,
                           winner_offsets_boot_quarts[0],
                           winner_offsets_boot_quarts[2],
                           color=ps.gray,
                           alpha=0.5)
-    ax[0, 1].plot(kde_time, winner_offsets_boot_quarts[1], c=ps.black)
 
-    ax[0, 2].plot(kde_time, winner_physicals_conv)
     ax[0, 2].fill_between(kde_time,
                           loser_physicals_boot_quarts[0],
                           loser_physicals_boot_quarts[2],
                           color=ps.gray,
                           alpha=0.5)
-    ax[0, 2].plot(kde_time, winner_physicals_boot_quarts[1], c=ps.black)
 
-    ax[1, 0].plot(kde_time, loser_onsets_conv)
     ax[1, 0].fill_between(kde_time,
                           loser_onsets_boot_quarts[0],
                           loser_onsets_boot_quarts[2],
                           color=ps.gray,
                           alpha=0.5)
-    ax[1, 0].plot(kde_time, loser_onsets_boot_quarts[1], c=ps.black)
 
-    ax[1, 1].plot(kde_time, loser_offsets_conv)
     ax[1, 1].fill_between(kde_time,
                           loser_offsets_boot_quarts[0],
                           loser_offsets_boot_quarts[2],
                           color=ps.gray,
                           alpha=0.5)
-    ax[1, 1].plot(kde_time, loser_offsets_boot_quarts[1], c=ps.black)
 
-    ax[1, 2].plot(kde_time, loser_physicals_conv)
     ax[1, 2].fill_between(kde_time,
                           loser_physicals_boot_quarts[0],
                           loser_physicals_boot_quarts[2],
                           color=ps.gray,
                           alpha=0.5)
-    ax[1, 2].plot(kde_time, loser_physicals_boot_quarts[1], c=ps.black)
 
     plt.show()
 

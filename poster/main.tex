@@ -7,7 +7,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \begin{document}
 
 \renewcommand{\baselinestretch}{1}
-\title{\parbox{1500pt}{Detection of transient communication signals in weakly electric fish}}
+\title{\parbox{1500pt}{Bypassing time-frequency uncertainty in the detection of transient communication signals in weakly electric fish}}
 \author{Sina Prause, Alexander Wendt, and Patrick Weygoldt}
 \institute{Supervised by Till Raab \& Jan Benda, Neuroethology Lab, University of Tuebingen}
 \usetitlestyle[]{sampletitle}
@@ -16,22 +16,25 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 
 \begin{columns}
 \column{0.4}
-\myblock[TranspBlock]{Introduction}{
+\myblock[GrayBlock]{Introduction}{
     The time-frequency tradeoff makes reliable signal detecion and simultaneous
-    sender identification of freely interacting individuals impossible.
-    This profoundly limits our current understanding of chirps to experiments
+    sender identification by simple Fourier decomposition in freely interacting
+    weakly electric fish impossible. This profoundly limits our current
+    understanding of chirps to experiments
     with single - or physically separated - individuals.
-    \begin{tikzfigure}[]
-        \label{griddrawing}
-<<<<<<< HEAD
-=======
-        \includegraphics[width=0.8\linewidth]{figs/introplot}
->>>>>>> cdcf9564df07914cf57225de5a8bdaa642fbad0e
-    \end{tikzfigure}
+    % \begin{tikzfigure}[]
+    %     \label{griddrawing}
+    %     \includegraphics[width=0.8\linewidth]{figs/introplot}
+    % \end{tikzfigure}
 }
 \myblock[TranspBlock]{Chirp detection}{
     \begin{tikzfigure}[]
-        \label{fig:example_a}
+        \label{fig:alg1}
+        \includegraphics[width=0.9\linewidth]{figs/algorithm1}
+    \end{tikzfigure}
+    \vspace{2cm}
+    \begin{tikzfigure}[]
+        \label{fig:alg2}
         \includegraphics[width=1\linewidth]{figs/algorithm}
     \end{tikzfigure}
     \vspace{0cm}
