@@ -105,7 +105,7 @@ def get_chirp_freq(folder_name, Behavior, order_meta_df):
         freq_diff = chirp_freq_fish2 - chirp_freq_fish1
         winner_fish_id = folder_row['rec_id2'].values[0]
         loser_fish_id = folder_row['rec_id1'].values[0]
-        
+
     chirp_diff = len(Behavior.chirps[Behavior.chirps_ids == winner_fish_id]) - len(
         Behavior.chirps[Behavior.chirps_ids == loser_fish_id])
 
@@ -144,80 +144,80 @@ def main(datapath: str):
         # Get rid of tracking faults (two onsets or two offsets after another)
         category, timestamps = correct_chasing_events(category, timestamps)
 
-        winner_chirp, loser_chirp = get_chirp_winner_loser(
-            foldername,  bh, order_meta_df)
-        chirps_winner.append(winner_chirp)
-        chirps_loser.append(loser_chirp)
-        size_diff, chirp_diff = get_chirp_size(
-            foldername, bh, order_meta_df, id_meta_df)
-        size_diffs.append(size_diff)
-        size_chirps_diffs.append(chirp_diff)
+        # winner_chirp, loser_chirp = get_chirp_winner_loser(
+        #     foldername,  bh, order_meta_df)
+        # chirps_winner.append(winner_chirp)
+        # chirps_loser.append(loser_chirp)
+        # size_diff, chirp_diff = get_chirp_size(
+        #     foldername, bh, order_meta_df, id_meta_df)
+        # size_diffs.append(size_diff)
+        # size_chirps_diffs.append(chirp_diff)
 
-        freq_diff, freq_chirps_diff = get_chirp_freq(
-            foldername, bh, order_meta_df)
-        freq_diffs.append(freq_diff)
-        freq_chirps_diffs.append(freq_chirps_diff)
+        # freq_diff, freq_chirps_diff = get_chirp_freq(
+        #     foldername, bh, order_meta_df)
+        # freq_diffs.append(freq_diff)
+        # freq_chirps_diffs.append(freq_chirps_diff)
 
-        # folder_name = foldername.split('/')[-2]
-        # winner_row = order_meta_df[order_meta_df['recording'] == folder_name]
-        # winner = winner_row['winner'].values[0].astype(int)
-        # winner_fish1 = winner_row['fish1'].values[0].astype(int)
-        # winner_fish2 = winner_row['fish2'].values[0].astype(int)
+        folder_name = foldername.split('/')[-2]
+        winner_row = order_meta_df[order_meta_df['recording'] == folder_name]
+        winner = winner_row['winner'].values[0].astype(int)
+        winner_fish1 = winner_row['fish1'].values[0].astype(int)
+        winner_fish2 = winner_row['fish2'].values[0].astype(int)
 
-        # groub = winner_row['group'].values[0].astype(int)
-        # size_rows = id_meta_df[id_meta_df['group'] == groub]
+        groub = winner_row['group'].values[0].astype(int)
+        size_rows = id_meta_df[id_meta_df['group'] == groub]
 
-        # if winner == winner_fish1:
-        #     winner_fish_id = winner_row['rec_id1'].values[0]
-        #     loser_fish_id = winner_row['rec_id2'].values[0]
+        if winner == winner_fish1:
+            winner_fish_id = winner_row['rec_id1'].values[0]
+            loser_fish_id = winner_row['rec_id2'].values[0]
 
-        #     size_winners = []
-        #     for l in ['l1', 'l2', 'l3']:
-        #         size_winner = size_rows[size_rows['fish']== winner_fish1][l].values[0]
-        #         size_winners.append(size_winner)
-        #     mean_size_winner = np.nanmean(size_winners)
+            size_winners = []
+            for l in ['l1', 'l2', 'l3']:
+                size_winner = size_rows[size_rows['fish']== winner_fish1][l].values[0]
+                size_winners.append(size_winner)
+            mean_size_winner = np.nanmean(size_winners)
 
-        #     size_losers = []
-        #     for l in ['l1', 'l2', 'l3']:
-        #         size_loser = size_rows[size_rows['fish']== winner_fish2][l].values[0]
-        #         size_losers.append(size_loser)
-        #     mean_size_loser = np.nanmean(size_losers)
+            size_losers = []
+            for l in ['l1', 'l2', 'l3']:
+                size_loser = size_rows[size_rows['fish']== winner_fish2][l].values[0]
+                size_losers.append(size_loser)
+            mean_size_loser = np.nanmean(size_losers)
 
-        #     size_diffs.append(mean_size_winner - mean_size_loser)
+            size_diffs.append(mean_size_winner - mean_size_loser)
 
-        # elif winner == winner_fish2:
-        #     winner_fish_id = winner_row['rec_id2'].values[0]
-        #     loser_fish_id = winner_row['rec_id1'].values[0]
+        elif winner == winner_fish2:
+            winner_fish_id = winner_row['rec_id2'].values[0]
+            loser_fish_id = winner_row['rec_id1'].values[0]
 
-        #     size_winners = []
-        #     for l in ['l1', 'l2', 'l3']:
-        #         size_winner = size_rows[size_rows['fish']== winner_fish2][l].values[0]
-        #         size_winners.append(size_winner)
-        #     mean_size_winner = np.nanmean(size_winners)
+            size_winners = []
+            for l in ['l1', 'l2', 'l3']:
+                size_winner = size_rows[size_rows['fish']== winner_fish2][l].values[0]
+                size_winners.append(size_winner)
+            mean_size_winner = np.nanmean(size_winners)
 
-        #     size_losers = []
-        #     for l in ['l1', 'l2', 'l3']:
-        #         size_loser = size_rows[size_rows['fish']== winner_fish1][l].values[0]
-        #         size_losers.append(size_loser)
-        #     mean_size_loser = np.nanmean(size_losers)
+            size_losers = []
+            for l in ['l1', 'l2', 'l3']:
+                size_loser = size_rows[size_rows['fish']== winner_fish1][l].values[0]
+                size_losers.append(size_loser)
+            mean_size_loser = np.nanmean(size_losers)
 
-        #     size_diffs.append(mean_size_winner - mean_size_loser)
-        # else:
-        #     pass
+            size_diffs.append(mean_size_winner - mean_size_loser)
+        else:
+            continue
 
-        # print(foldername)
-        # all_fish_ids = np.unique(bh.chirps_ids)
-        # chirp_winner = len(bh.chirps[bh.chirps_ids == winner_fish_id])
-        # chirp_loser = len(bh.chirps[bh.chirps_ids == loser_fish_id])
+        print(foldername)
+        all_fish_ids = np.unique(bh.chirps_ids)
+        chirp_winner = len(bh.chirps[bh.chirps_ids == winner_fish_id])
+        chirp_loser = len(bh.chirps[bh.chirps_ids == loser_fish_id])
 
-        # freq_winner  = np.nanmedian(bh.freq[bh.ident==winner_fish_id])
-        # freq_loser  = np.nanmedian(bh.freq[bh.ident==loser_fish_id])
+        freq_winner  = np.nanmedian(bh.freq[bh.ident==winner_fish_id])
+        freq_loser  = np.nanmedian(bh.freq[bh.ident==loser_fish_id])
 
-        # chirps_winner.append(chirp_winner)
-        # chirps_loser.append(chirp_loser)
+        chirps_winner.append(chirp_winner)
+        chirps_loser.append(chirp_loser)
 
-        # chirps_diffs.append(chirp_winner - chirp_loser)
-        # freq_diffs.append(freq_winner - freq_loser)
+        size_chirps_diffs.append(chirp_winner - chirp_loser)
+        freq_diffs.append(freq_winner - freq_loser)
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 5))
     scatterwinner = 1.15
@@ -246,7 +246,7 @@ def main(datapath: str):
     colors1 = ps.orange
     ps.set_boxplot_color(bplot2, colors1)
     ax1.set_ylabel('Chirpscounts [n]')
-
+    embed()
     ax2.scatter(size_diffs, size_chirps_diffs, color='r')
     ax2.set_xlabel('Size difference [mm]')
     ax2.set_ylabel('Chirps difference [n]')
