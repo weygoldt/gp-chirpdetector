@@ -108,9 +108,10 @@ def PlotStyle() -> None:
         @classmethod
         def set_boxplot_color(cls, bp, color):
             plt.setp(bp["boxes"], color=color)
-            plt.setp(bp["whiskers"], color=color)
-            plt.setp(bp["caps"], color=color)
-            plt.setp(bp["medians"], color=color)
+            plt.setp(bp["whiskers"], color=white)
+            plt.setp(bp["caps"], color=white)
+            plt.setp(bp["medians"], color=white)
+
 
         @classmethod
         def label_subplots(cls, labels, axes, fig):

@@ -243,7 +243,6 @@ def main(datapath: str):
         size_chirps_loser.append(chirp_loser)
 
 
-    embed()
     size_winner_pearsonr = pearsonr(size_diffs_winner, size_chirps_winner )
     size_loser_pearsonr = pearsonr(size_diffs_loser, size_chirps_loser )
 
@@ -254,9 +253,11 @@ def main(datapath: str):
     scatterloser = 1.85
     chirps_winner = np.asarray(chirps_winner)[~np.isnan(chirps_winner)]
     chirps_loser = np.asarray(chirps_loser)[~np.isnan(chirps_loser)]
+    
 
     bplot1 = ax1.boxplot(chirps_winner, positions=[
         1], showfliers=False, patch_artist=True)
+
     bplot2 = ax1.boxplot(chirps_loser,  positions=[
         2], showfliers=False, patch_artist=True)
     ax1.scatter(np.ones(len(chirps_winner)) *
@@ -276,11 +277,12 @@ def main(datapath: str):
     ps.set_boxplot_color(bplot1, colors1)
     colors1 = ps.orange
     ps.set_boxplot_color(bplot2, colors1)
+
     ax2.scatter(size_diffs_winner, size_chirps_winner, color=ps.red)
     ax2.scatter(size_diffs_loser, size_chirps_loser, color=ps.orange)
 
     ax2.set_xlabel('Size difference [cm]')
-
+    ax2.set_xticks(np.arange(-10, 10.1, 2))
     # pearson r
     plt.savefig('../poster/figs/chirps_winner_loser.pdf')
     plt.show()
