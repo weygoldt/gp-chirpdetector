@@ -65,24 +65,27 @@ def get_chirp_size(folder_name, Behavior, order_meta_df, id_meta_df):
     mean_size_loser = np.nanmean(size_losers)
 
     if mean_size_winner > mean_size_loser:
-        size_diff = mean_size_winner - mean_size_loser
+        size_diff_bigger = mean_size_winner - mean_size_loser
+        size_diff_smaller = mean_size_loser - mean_size_winner
         winner_fish_id = folder_row['rec_id1'].values[0]
         loser_fish_id = folder_row['rec_id2'].values[0]
 
     elif mean_size_winner < mean_size_loser:
-        size_diff = mean_size_loser - mean_size_winner
+        size_diff_bigger = mean_size_loser - mean_size_winner
+        size_diff_smaller = mean_size_winner - mean_size_loser
         winner_fish_id = folder_row['rec_id2'].values[0]
         loser_fish_id = folder_row['rec_id1'].values[0]
-
     else:
         size_diff = np.nan
         winner_fish_id = np.nan
         loser_fish_id = np.nan
 
-    chirp_diff = len(Behavior.chirps[Behavior.chirps_ids == winner_fish_id]) - len(
+    chirp_winner = len(
+        Behavior.chirps[Behavior.chirps_ids == winner_fish_id])
+    chirp_loser = len(
         Behavior.chirps[Behavior.chirps_ids == loser_fish_id])
-
-    return size_diff, chirp_diff
+    
+    return size_diff_bigger, chirp_winner,  size_diff_smaller, chirp_loser
 
 
 def get_chirp_freq(folder_name, Behavior, order_meta_df):
@@ -190,7 +193,7 @@ def main(datapath: str):
     ax2.set_xlabel('Size difference [mm]')
     ax2.set_ylabel('Chirps difference [n]')
 
-    ax3.scatter(freq_diffs, size_chirps_diffs, color='r')
+    #ax3.scatter(freq_diffs, size_chirps_diffs, color='r')
     # ax3.scatter(freq_diffs, freq_chirps_diffs, color='r')
     ax3.set_xlabel('Frequency difference [Hz]')
     ax3.set_yticklabels([])
