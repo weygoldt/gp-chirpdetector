@@ -86,14 +86,19 @@ def correct_chasing_events(
     category = np.delete(category, wrong_bh)
     timestamps = np.delete(timestamps, wrong_bh)
 
+    new_onset_ids = np.arange(
+        len(category))[category == 0]
+    new_offset_ids = np.arange(
+        len(category))[category == 1]
+
     # Check whether on- or offset is longer and calculate length difference
-    if len(onset_ids) > len(offset_ids):
+    if len(new_onset_ids) > len(new_offset_ids):
         len_diff = len(onset_ids) - len(offset_ids)
         logger.info(f'Onsets are greater than offsets by {len_diff}')
-    elif len(onset_ids) < len(offset_ids):
+    elif len(new_onset_ids) < len(new_offset_ids):
         len_diff = len(offset_ids) - len(onset_ids)
         logger.info(f'Offsets are greater than onsets by {len_diff}')
-    elif len(onset_ids) == len(offset_ids):
+    elif len(new_onset_ids) == len(new_offset_ids):
         logger.info('Chasing events are equal')
     
     return category, timestamps
