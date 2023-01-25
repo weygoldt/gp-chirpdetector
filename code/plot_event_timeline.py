@@ -23,8 +23,8 @@ def main(datapath: str):
     foldernames = [
         datapath + x + '/' for x in os.listdir(datapath) if os.path.isdir(datapath+x)]
     foldernames, _ = get_valid_datasets(datapath)
-    for foldername in foldernames:
-        #foldername = foldernames[0]
+    for foldername in foldernames[1:2]:
+        # foldername = foldernames[0]
         if foldername == '../data/mount_data/2020-05-12-10_00/':
             continue
         # behabvior is pandas dataframe with all the data
@@ -47,17 +47,17 @@ def main(datapath: str):
         # Associate chirps to inidividual fish
         fish1 = (bh.chirps[bh.chirps_ids == fish1_id] / 60) / 60
         fish2 = (bh.chirps[bh.chirps_ids == fish2_id] / 60) / 60
-        fish1_color = ps.red
-        fish2_color = ps.orange
+        fish1_color = ps.purple
+        fish2_color = ps.lavender
 
-        fig, ax = plt.subplots(4, 1, figsize=(
-            21*ps.cm, 13*ps.cm), height_ratios=[0.5, 0.5, 0.5, 6], sharex=True)
+        fig, ax = plt.subplots(5, 1, figsize=(
+            21*ps.cm, 10*ps.cm), height_ratios=[0.5, 0.5, 0.5, 0.2, 6], sharex=True)
         # marker size
-        s = 200
+        s = 80
         ax[0].scatter(physical_contact, np.ones(
-            len(physical_contact)), color='firebrick', marker='|', s=s)
+            len(physical_contact)), color=ps.maroon, marker='|', s=s)
         ax[1].scatter(chasing_onset, np.ones(len(chasing_onset)),
-                      color='green', marker='|', s=s)
+                      color=ps.orange, marker='|', s=s)
         ax[2].scatter(fish1, np.ones(len(fish1))-0.25,
                       color=fish1_color, marker='|', s=s)
         ax[2].scatter(fish2, np.zeros(len(fish2))+0.25,
@@ -65,13 +65,13 @@ def main(datapath: str):
 
         freq_temp = bh.freq[bh.ident == fish1_id]
         time_temp = bh.time[bh.idx[bh.ident == fish1_id]]
-        ax[3].plot((time_temp / 60) / 60, freq_temp, color=fish1_color)
+        ax[4].plot((time_temp / 60) / 60, freq_temp, color=fish1_color)
 
         freq_temp = bh.freq[bh.ident == fish2_id]
         time_temp = bh.time[bh.idx[bh.ident == fish2_id]]
-        ax[3].plot((time_temp / 60) / 60, freq_temp, color=fish2_color)
+        ax[4].plot((time_temp / 60) / 60, freq_temp, color=fish2_color)
 
-        #ax[3].imshow(decibel(bh.spec), extent=[bh.time[0]/60/60, bh.time[-1]/60/60, 0, 2000], aspect='auto', origin='lower')
+        # ax[3].imshow(decibel(bh.spec), extent=[bh.time[0]/60/60, bh.time[-1]/60/60, 0, 2000], aspect='auto', origin='lower')
 
         # Hide grid lines
         ax[0].grid(False)
@@ -79,6 +79,7 @@ def main(datapath: str):
         ax[0].set_xticks([])
         ax[0].set_yticks([])
         ps.hide_ax(ax[0])
+        ax[0].yaxis.set_label_coords(-0.1, 0.5)
 
         ax[1].grid(False)
         ax[1].set_frame_on(False)
@@ -92,21 +93,22 @@ def main(datapath: str):
         ax[2].set_xticks([])
         ps.hide_ax(ax[2])
 
-        ax[3].axvspan(3, 6, 0, 5, facecolor='grey', alpha=0.5)
-        ax[3].set_xticks(np.arange(0, 6.1, 0.5))
+        ax[4].axvspan(3, 6, 0, 5, facecolor='grey', alpha=0.5)
+        ax[4].set_xticks(np.arange(0, 6.1, 0.5))
+        ps.hide_ax(ax[3])
 
-        labelpad = 40
+        labelpad = 30
         fsize = 12
-        ax[0].set_ylabel('Physical contact', rotation=0,
+        ax[0].set_ylabel('contact', rotation=0,
                          labelpad=labelpad, fontsize=fsize)
-        ax[1].set_ylabel('Chasing events', rotation=0,
+        ax[1].set_ylabel('chasing', rotation=0,
                          labelpad=labelpad, fontsize=fsize)
-        ax[2].set_ylabel('Chirps', rotation=0,
+        ax[2].set_ylabel('chirps', rotation=0,
                          labelpad=labelpad, fontsize=fsize)
-        ax[3].set_ylabel('EODf')
+        ax[4].set_ylabel('EODf')
 
-        ax[3].set_xlabel('Time [h]')
-        ax[0].set_title(foldername.split('/')[-2])
+        ax[4].set_xlabel('time [h]')
+        # ax[0].set_title(foldername.split('/')[-2])
         # 2020-03-31-9_59
         plt.subplots_adjust(left=0.158, right=0.987, top=0.918)
         # plt.savefig('../poster/figs/timeline.pdf')
