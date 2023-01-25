@@ -1,10 +1,11 @@
 import numpy as np
+from extract_chirps import get_valid_datasets
 
 import os
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import pearsonr, spearmanr
+from scipy.stats import pearsonr, spearmanr, wilcoxon
 from thunderfish.powerspectrum import decibel
 
 from IPython import embed
@@ -75,10 +76,10 @@ def get_chirp_size(folder_name, Behavior, order_meta_df, id_meta_df):
             size_diff_bigger = size_fish1 - size_fish2
             size_diff_smaller = size_fish2 - size_fish1
         else:
-            size_diff_bigger =  np.nan
+            size_diff_bigger = np.nan
             size_diff_smaller = np.nan
-            winner_fish_id =    np.nan
-            loser_fish_id =     np.nan
+            winner_fish_id = np.nan
+            loser_fish_id = np.nan
             return size_diff_bigger, size_diff_smaller, winner_fish_id, loser_fish_id
 
         winner_fish_id = folder_row['rec_id1'].values[0]
@@ -93,19 +94,19 @@ def get_chirp_size(folder_name, Behavior, order_meta_df, id_meta_df):
             size_diff_bigger = size_fish2 - size_fish1
             size_diff_smaller = size_fish1 - size_fish2
         else:
-            size_diff_bigger =  np.nan
+            size_diff_bigger = np.nan
             size_diff_smaller = np.nan
-            winner_fish_id =    np.nan
-            loser_fish_id =     np.nan
+            winner_fish_id = np.nan
+            loser_fish_id = np.nan
             return size_diff_bigger, size_diff_smaller, winner_fish_id, loser_fish_id
 
         winner_fish_id = folder_row['rec_id2'].values[0]
         loser_fish_id = folder_row['rec_id1'].values[0]
     else:
-        size_diff_bigger =  np.nan
+        size_diff_bigger = np.nan
         size_diff_smaller = np.nan
-        winner_fish_id =    np.nan
-        loser_fish_id =     np.nan
+        winner_fish_id = np.nan
+        loser_fish_id = np.nan
         return size_diff_bigger, size_diff_smaller, winner_fish_id, loser_fish_id
 
     chirp_winner = len(
@@ -182,6 +183,7 @@ def main(datapath: str):
 
     foldernames = [
         datapath + x + '/' for x in os.listdir(datapath) if os.path.isdir(datapath+x)]
+    foldernames, _ = get_valid_datasets(datapath)
     path_order_meta = (
         '/').join(foldernames[0].split('/')[:-2]) + '/order_meta.csv'
     order_meta_df = read_csv(path_order_meta)
@@ -229,7 +231,7 @@ def main(datapath: str):
 
         freq_diff_higher, chirp_freq_winner, freq_diff_lower, chirp_freq_loser = get_chirp_freq(
             foldername, bh, order_meta_df)
-        
+
         freq_diffs_higher.append(freq_diff_higher)
         freq_diffs_lower.append(freq_diff_lower)
         freq_chirps_winner.append(chirp_freq_winner)
@@ -242,24 +244,25 @@ def main(datapath: str):
         size_chirps_winner.append(chirp_winner)
         size_chirps_loser.append(chirp_loser)
 
-
-    size_winner_pearsonr = pearsonr(size_diffs_winner, size_chirps_winner )
-    size_loser_pearsonr = pearsonr(size_diffs_loser, size_chirps_loser )
+    size_winner_pearsonr = pearsonr(size_diffs_winner, size_chirps_winner)
+    size_loser_pearsonr = pearsonr(size_diffs_loser, size_chirps_loser)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(
-        22*ps.cm, 12*ps.cm), sharey=True)
+        13*ps.cm, 10*ps.cm), sharey=True)
     plt.subplots_adjust(left=0.098, right=0.945, top=0.94, wspace=0.343)
     scatterwinner = 1.15
     scatterloser = 1.85
     chirps_winner = np.asarray(chirps_winner)[~np.isnan(chirps_winner)]
     chirps_loser = np.asarray(chirps_loser)[~np.isnan(chirps_loser)]
-    
+
+    stat = wilcoxon(chirps_winner, chirps_loser)
+    print(stat)
 
     bplot1 = ax1.boxplot(chirps_winner, positions=[
-        1], showfliers=False, patch_artist=True)
+        0.9], showfliers=False, patch_artist=True)
 
     bplot2 = ax1.boxplot(chirps_loser,  positions=[
-        2], showfliers=False, patch_artist=True)
+        2.1], showfliers=False, patch_artist=True)
     ax1.scatter(np.ones(len(chirps_winner)) *
                 scatterwinner, chirps_winner, color=ps.red)
     ax1.scatter(np.ones(len(chirps_loser)) *
@@ -270,19 +273,27 @@ def main(datapath: str):
 
     for w, l in zip(chirps_winner, chirps_loser):
         ax1.plot([scatterwinner, scatterloser], [w, l],
-                 color='r', alpha=0.5, linewidth=0.5)
-    ax1.set_ylabel('Chirps [n]', color=ps.white)
+                 color=ps.white, alpha=1, linewidth=0.5)
+    ax1.set_ylabel('chirps [n]', color=ps.white)
+    ax1.set_xlabel('outcome', color=ps.white)
 
     colors1 = ps.red
     ps.set_boxplot_color(bplot1, colors1)
     colors1 = ps.orange
     ps.set_boxplot_color(bplot2, colors1)
 
-    ax2.scatter(size_diffs_winner, size_chirps_winner, color=ps.red)
-    ax2.scatter(size_diffs_loser, size_chirps_loser, color=ps.orange)
+    ax2.scatter(size_diffs_winner, size_chirps_winner,
+                color=ps.red, label='winner')
+    ax2.scatter(size_diffs_loser, size_chirps_loser,
+                color=ps.orange, label='loser')
 
-    ax2.set_xlabel('Size difference [cm]')
-    ax2.set_xticks(np.arange(-10, 10.1, 2))
+    ax2.set_xlabel('size difference [cm]')
+    # ax2.set_xticks(np.arange(-10, 10.1, 2))
+
+    handles, labels = ax2.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center', ncol=2)
+    plt.subplots_adjust(left=0.162, right=0.97, top=0.85, bottom=0.176)
+
     # pearson r
     plt.savefig('../poster/figs/chirps_winner_loser.pdf')
     plt.show()

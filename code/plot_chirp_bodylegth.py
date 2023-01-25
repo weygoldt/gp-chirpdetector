@@ -1,4 +1,5 @@
 import numpy as np
+from extract_chirps import get_valid_datasets
 
 import os
 
@@ -116,6 +117,8 @@ def main(datapath: str):
 
     foldernames = [
         datapath + x + '/' for x in os.listdir(datapath) if os.path.isdir(datapath+x)]
+
+    foldernames, _ = get_valid_datasets(datapath)
     path_order_meta = (
         '/').join(foldernames[0].split('/')[:-2]) + '/order_meta.csv'
     order_meta_df = read_csv(path_order_meta)
@@ -223,7 +226,8 @@ def main(datapath: str):
         size_chirps_diffs.append(chirp_winner - chirp_loser)
         freq_diffs.append(freq_winner - freq_loser)
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(22*ps.cm, 12*ps.cm), width_ratios=[1.5, 1,1])
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(
+        22*ps.cm, 12*ps.cm), width_ratios=[1.5, 1, 1])
     plt.subplots_adjust(left=0.098, right=0.945, top=0.94, wspace=0.343)
     scatterwinner = 1.15
     scatterloser = 1.85
