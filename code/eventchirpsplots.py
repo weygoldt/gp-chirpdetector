@@ -345,7 +345,7 @@ def main(datapath: str):
         np.random.shuffle(diff_physical)
         shuffled_physical = np.cumsum(diff_physical)
 
-        kde_onset = (acausal_kde1d(shuffled_onset, time, width))/(27*100)
+        kde_onset (acausal_kde1d(shuffled_onset, time, width))/(27*100)
         kde_offset = (acausal_kde1d(shuffled_offset, time, width))/(27*100)
         kde_physical = (acausal_kde1d(shuffled_physical, time, width))/(27*100)
 
