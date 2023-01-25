@@ -21,10 +21,10 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     sender identification of freely interacting individuals impossible.
     This profoundly limits our current understanding of chirps to experiments
     with single - or physically separated - individuals.
-    % \begin{tikzfigure}[]
-    %     \label{griddrawing}
-    %     \includegraphics[width=1\linewidth]{figs/introplot}
-    % \end{tikzfigure}
+    \begin{tikzfigure}[]
+        \label{griddrawing}
+        \includegraphics[width=0.8\linewidth]{figs/introplot}
+    \end{tikzfigure}
 }
 \myblock[TranspBlock]{Chirp detection}{
     \begin{tikzfigure}[]
@@ -41,11 +41,26 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \includegraphics[width=\linewidth]{figs/timeline.pdf}
     \end{tikzfigure}
     \noindent
-    \begin{tikzfigure}[]
-        \label{fig:example_b}
-        \includegraphics[width=\linewidth]{figs/chirps_winner_loser.pdf}
-    \end{tikzfigure}
+    \begin{itemize}
+        \setlength\itemsep{0.5em}
+        \item Two fish compete for one hidding place in one tank, 
+        \item Experiment had a 3 hour long darkphase and a 3 hour long light phase.
+    \end{itemize}
+    
     \noindent
+    \begin{minipage}[c]{0.7\linewidth}
+        \begin{tikzfigure}[]
+            \label{fig:example_b}
+            \includegraphics[width=\linewidth]{figs/chirps_winner_loser.pdf}
+        \end{tikzfigure}
+    \end{minipage} % no space if you would like to put them side by side
+    \begin{minipage}[c]{0.2\linewidth}
+        \begin{itemize}
+            \setlength\itemsep{0.5em}
+            \item Fish who won the competition chirped more often than the fish who lost. 
+            \item 
+        \end{itemize}
+    \end{minipage}
 }
 
 \myblock[TranspBlock]{Interactions at modulations}{
@@ -55,19 +70,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \includegraphics[width=0.5\linewidth]{example-image-c}
     \end{tikzfigure}
 
-    \begin{multicols}{2}
-        \begin{itemize}
-            \setlength\itemsep{0.5em}
-            \item $\Delta$EOD$f$ does not appear to decrease during synchronous modulations ().
-            \item Individuals that rise their EOD$f$ first appear to rise their frequency higher compared to reactors (\textbf{B}).
-            \vfill
-            \null
-            \columnbreak
-            \item Synchronized fish keep distances below 1 m (\textbf{C}) but distances over 3 m also occur (see \textbf{movie}).
-            \item Spatial interactions increase \textbf{after} the start of a synchronous modulation (\textbf{D}).
-        \end{itemize}
-    \end{multicols}
-    \vspace{-1cm}
+
 }
 
 \myblock[GrayBlock]{Conclusion}{

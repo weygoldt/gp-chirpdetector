@@ -173,13 +173,15 @@ def main(datapath: str):
 
             size_winners = []
             for l in ['l1', 'l2', 'l3']:
-                size_winner = size_rows[size_rows['fish']== winner_fish1][l].values[0]
+                size_winner = size_rows[size_rows['fish']
+                                        == winner_fish1][l].values[0]
                 size_winners.append(size_winner)
             mean_size_winner = np.nanmean(size_winners)
 
             size_losers = []
             for l in ['l1', 'l2', 'l3']:
-                size_loser = size_rows[size_rows['fish']== winner_fish2][l].values[0]
+                size_loser = size_rows[size_rows['fish']
+                                       == winner_fish2][l].values[0]
                 size_losers.append(size_loser)
             mean_size_loser = np.nanmean(size_losers)
 
@@ -191,13 +193,15 @@ def main(datapath: str):
 
             size_winners = []
             for l in ['l1', 'l2', 'l3']:
-                size_winner = size_rows[size_rows['fish']== winner_fish2][l].values[0]
+                size_winner = size_rows[size_rows['fish']
+                                        == winner_fish2][l].values[0]
                 size_winners.append(size_winner)
             mean_size_winner = np.nanmean(size_winners)
 
             size_losers = []
             for l in ['l1', 'l2', 'l3']:
-                size_loser = size_rows[size_rows['fish']== winner_fish1][l].values[0]
+                size_loser = size_rows[size_rows['fish']
+                                       == winner_fish1][l].values[0]
                 size_losers.append(size_loser)
             mean_size_loser = np.nanmean(size_losers)
 
@@ -210,8 +214,8 @@ def main(datapath: str):
         chirp_winner = len(bh.chirps[bh.chirps_ids == winner_fish_id])
         chirp_loser = len(bh.chirps[bh.chirps_ids == loser_fish_id])
 
-        freq_winner  = np.nanmedian(bh.freq[bh.ident==winner_fish_id])
-        freq_loser  = np.nanmedian(bh.freq[bh.ident==loser_fish_id])
+        freq_winner = np.nanmedian(bh.freq[bh.ident == winner_fish_id])
+        freq_loser = np.nanmedian(bh.freq[bh.ident == loser_fish_id])
 
         chirps_winner.append(chirp_winner)
         chirps_loser.append(chirp_loser)
@@ -219,7 +223,8 @@ def main(datapath: str):
         size_chirps_diffs.append(chirp_winner - chirp_loser)
         freq_diffs.append(freq_winner - freq_loser)
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 5))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(22*ps.cm, 12*ps.cm), width_ratios=[1.5, 1,1])
+    plt.subplots_adjust(left=0.098, right=0.945, top=0.94, wspace=0.343)
     scatterwinner = 1.15
     scatterloser = 1.85
     chirps_winner = np.asarray(chirps_winner)[~np.isnan(chirps_winner)]
@@ -234,24 +239,24 @@ def main(datapath: str):
     ax1.scatter(np.ones(len(chirps_loser)) *
                 scatterloser, chirps_loser, color='r')
     ax1.set_xticklabels(['winner', 'loser'])
-    ax1.text(0.9, 0.9, f'n = {len(chirps_winner)}',
+    ax1.text(0.1, 0.9, f'n = {len(chirps_winner)}',
              transform=ax1.transAxes, color=ps.white)
 
     for w, l in zip(chirps_winner, chirps_loser):
         ax1.plot([scatterwinner, scatterloser], [w, l],
                  color='r', alpha=0.5, linewidth=0.5)
+    ax1.set_ylabel('Chirps [n]', color=ps.white)
 
     colors1 = ps.red
     ps.set_boxplot_color(bplot1, colors1)
     colors1 = ps.orange
     ps.set_boxplot_color(bplot2, colors1)
-    ax1.set_ylabel('Chirpscounts [n]')
-    embed()
     ax2.scatter(size_diffs, size_chirps_diffs, color='r')
     ax2.set_xlabel('Size difference [mm]')
     ax2.set_ylabel('Chirps difference [n]')
 
-    ax3.scatter(freq_diffs, freq_chirps_diffs, color='r')
+    ax3.scatter(freq_diffs, size_chirps_diffs, color='r')
+    # ax3.scatter(freq_diffs, freq_chirps_diffs, color='r')
     ax3.set_xlabel('Frequency difference [Hz]')
     ax3.set_yticklabels([])
     ax3.set
