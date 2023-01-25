@@ -255,7 +255,7 @@ def main(datapath: str):
     chirps_winner = np.asarray(chirps_winner)[~np.isnan(chirps_winner)]
     chirps_loser = np.asarray(chirps_loser)[~np.isnan(chirps_loser)]
 
-    stat = wilcoxon(chirps_winner, chirps_loser)
+    stat = wilcoxon(chirps_winner, chirps_loser) 
     print(stat)
 
     bplot1 = ax1.boxplot(chirps_winner, positions=[
