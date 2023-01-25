@@ -260,9 +260,9 @@ def main(datapath: str):
     bplot2 = ax1.boxplot(chirps_loser,  positions=[
         2], showfliers=False, patch_artist=True)
     ax1.scatter(np.ones(len(chirps_winner)) *
-                scatterwinner, chirps_winner, color='r')
+                scatterwinner, chirps_winner, color=ps.red)
     ax1.scatter(np.ones(len(chirps_loser)) *
-                scatterloser, chirps_loser, color='r')
+                scatterloser, chirps_loser, color=ps.orange)
     ax1.set_xticklabels(['winner', 'loser'])
     ax1.text(0.1, 0.9, f'n = {len(chirps_winner)}',
              transform=ax1.transAxes, color=ps.white)
