@@ -281,11 +281,6 @@ def main(datapath: str):
 
     ax2.set_xlabel('Size difference [cm]')
 
-    ax3.scatter(freq_diffs_higher, freq_chirps_winner, color=ps.red)
-    ax3.scatter(freq_diffs_lower, freq_chirps_loser, color=ps.orange)
-
-    ax3.set_xlabel('Frequency difference [Hz]')
-    ax3.set_yticklabels([])
     # pearson r
     plt.savefig('../poster/figs/chirps_winner_loser.pdf')
     plt.show()
