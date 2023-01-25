@@ -67,8 +67,8 @@ def main(datapath: str):
     ax.boxplot([time_precents, chirps_percents])
     ax.set_xticklabels(['Time Chasing', 'Chirps in Chasing'])
     ax.set_ylabel('Percent')
-    ax.scatter(np.ones(len(time_precents)), time_precents, color=ps.white)
-    ax.scatter(np.ones(len(chirps_percents))*2, chirps_percents, color=ps.white)
+    ax.scatter(np.ones(len(time_precents))*1.25, time_precents, color=ps.white)
+    ax.scatter(np.ones(len(chirps_percents))*1.75, chirps_percents, color=ps.white)
     plt.savefig('../poster/figs/chirps_in_chasing.pdf')
     plt.show()
 
