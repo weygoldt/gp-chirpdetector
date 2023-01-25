@@ -1,42 +1,41 @@
-# Duration and overlap of the analysis window in seconds
-window: 5
-overlap: 1
-edge: 0.25
+# Path setup ------------------------------------------------------------------
 
-# Number of electrodes to go over
-electrodes: 3
+dataroot: "../data/"      # path to data
+outputdir: "../output/"   # path to save plots to
 
-# Boundary for search frequency in Hz
-search_boundary: 100
+# Rolling window parameters ---------------------------------------------------
 
-# Cutoff frequency for envelope estimation by lowpass filter
-envelope_cutoff: 25
+window: 5   # rolling window length in seconds
+overlap: 1  # window overlap in seconds
+edge: 0.25  # window edge cufoffs to mitigate filter edge effects
 
-# Cutoff frequency for envelope highpass filter
-envelope_highpass_cutoff: 3
+# Electrode iteration parameters ----------------------------------------------
 
-# Cutoff frequency for envelope of envelope
-envelope_envelope_cutoff: 5
+number_electrodes: 2    # number of electrodes to go over
+minimum_electrodes: 1   # mimumun number of electrodes a chirp must be on
 
-# Instantaneous frequency bandpass filter cutoff frequencies
-instantaneous_lowf: 15
-instantaneous_highf: 8000
+# Feature extraction parameters -----------------------------------------------
 
-# Baseline envelope peak detection parameters
-baseline_prominence_percentile: 90
+search_df_lower: 20     # start searching this far above the baseline
+search_df_upper: 100    # stop searching this far above the baseline
+search_res: 1           # search window resolution
+default_search_freq: 60 # search here if no need for a search frequency
+minimal_bandwidth: 10   # minimal bandpass filter width for baseline
+search_bandwidth: 10    # minimal bandpass filter width for search frequency
+baseline_frequency_smoothing: 10 # instantaneous frequency smoothing
 
-# Search envelope peak detection parameters
-search_prominence_percentile: 75
+# Feature processing parameters -----------------------------------------------
 
-# Instantaneous frequency peak detection parameters
-instantaneous_prominence_percentile: 90
+baseline_envelope_cutoff: 25            # envelope estimation cutoff
+baseline_envelope_bandpass_lowf: 2      # envelope badpass lower cutoff
+baseline_envelope_bandpass_highf: 100   # envelope bandbass higher cutoff
+search_envelope_cutoff: 10              # search envelope estimation cufoff
 
-# search freq parameter
-search_df_lower: 25
-search_df_upper: 100
-search_res: 1
-search_freq_percentiles:
-  - 5
-  - 95
-default_search_freq: 50
+# Peak detecion parameters ----------------------------------------------------
+baseline_prominence: 0.00005  # peak prominence threshold for baseline envelope
+search_prominence: 0.000004   # peak prominence threshold for search envelope
+frequency_prominence: 2       # peak prominence threshold for baseline freq
+
+# Classify events as chirps if they are less than this time apart
+chirp_window_threshold: 0.02
 

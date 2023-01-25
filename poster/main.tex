@@ -1,4 +1,4 @@
-\documentclass[25pt, a0paper, landscape, margin=0mm, innermargin=20mm,
+\documentclass[25pt, a0paper, portrait, margin=0mm, innermargin=20mm,
 blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default values for poster format options.
 
 \input{packages}
@@ -7,77 +7,98 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \begin{document}
 
 \renewcommand{\baselinestretch}{1}
-\title{\parbox{1900pt}{A dark template to make colorful figures pop}}
-\author{Sina Prause, Alexander Wendt, Patrick Weygoldt}
-\institute{Supervised by Till Raab \& Jan Benda}
+\title{\parbox{1500pt}{Bypassing time-frequency uncertainty in the detection of transient communication signals in weakly electric fish}}
+\author{Sina Prause, Alexander Wendt, and Patrick Weygoldt}
+\institute{Supervised by Till Raab \& Jan Benda, Neuroethology Lab, University of Tuebingen}
 \usetitlestyle[]{sampletitle}
 \maketitle
 \renewcommand{\baselinestretch}{1.4}
 
 \begin{columns}
-\column{0.3}
-\myblock[TranspBlock]{Introduction}{
-    \lipsum[1][1-5]
-    \begin{tikzfigure}[]
-        \label{griddrawing}
-        \includegraphics[width=\linewidth]{example-image-a}
-    \end{tikzfigure}
-}
-
-\myblock[TranspBlock]{Methods}{
-    \begin{tikzfigure}[]
-        \label{detector}
-        \includegraphics[width=\linewidth]{example-image-b}
-    \end{tikzfigure}
-}
-
 \column{0.4}
-\myblock[TranspBlock]{Results}{
-    \lipsum[3][1-5]
+\myblock[GrayBlock]{Introduction}{
+    The time-frequency tradeoff makes reliable signal detecion and simultaneous
+    sender identification by simple Fourier decomposition in freely interacting
+    weakly electric fish impossible. This profoundly limits our current
+    understanding of chirps to experiments
+    with single - or physically separated - individuals.
+    % \begin{tikzfigure}[]
+    %     \label{griddrawing}
+    %     \includegraphics[width=0.8\linewidth]{figs/introplot}
+    % \end{tikzfigure}
+}
+\myblock[TranspBlock]{Chirp detection}{
     \begin{tikzfigure}[]
-        \label{modulations}
-        \includegraphics[width=\linewidth]{example-image-c}
+        \label{fig:alg1}
+        \includegraphics[width=0.9\linewidth]{figs/algorithm1}
     \end{tikzfigure}
-}
-
-\myblock[TranspBlock]{More Stuff}{
-    \lipsum[3][1-9]
-}
-
-\column{0.3}
-\myblock[TranspBlock]{More Results}{
+    \vspace{2cm}
     \begin{tikzfigure}[]
-        \label{results}
-        \includegraphics[width=\linewidth]{example-image-a}
+        \label{fig:alg2}
+        \includegraphics[width=1\linewidth]{figs/algorithm}
     \end{tikzfigure}
-
-    \begin{multicols}{2}
-    \lipsum[5][1-8]
-    \end{multicols}
-    \vspace{-1cm}
+    \vspace{0cm}
 }
 
-\myblock[TranspBlock]{Conclusion}{
+\column{0.6}
+\myblock[TranspBlock]{Chirps during competition}{
+    \begin{tikzfigure}[]
+        \label{fig:example_b}
+        \includegraphics[width=\linewidth]{figs/timeline.pdf}
+    \end{tikzfigure}
+    \noindent
     \begin{itemize}
         \setlength\itemsep{0.5em}
-        \item \lipsum[1][1]
-        \item \lipsum[1][1]
-        \item \lipsum[1][1]
+        \item Two fish compete for one hidding place in one tank,
+        \item Experiment had a 3 hour long darkphase and a 3 hour long light phase.
+    \end{itemize}
+
+    \noindent
+    \begin{minipage}[c]{0.7\linewidth}
+        \begin{tikzfigure}[]
+            \label{fig:example_b}
+            \includegraphics[width=\linewidth]{figs/chirps_winner_loser.pdf}
+        \end{tikzfigure}
+    \end{minipage} % no space if you would like to put them side by side
+    \begin{minipage}[c]{0.2\linewidth}
+        \begin{itemize}
+            \setlength\itemsep{0.5em}
+            \item Fish who won the competition chirped more often than the fish who lost.
+            \item
+        \end{itemize}
+    \end{minipage}
+}
+
+\myblock[TranspBlock]{Interactions at modulations}{
+    \vspace{-1.2cm}
+    \begin{tikzfigure}[]
+        \label{fig:example_c}
+        \includegraphics[width=0.5\linewidth]{example-image-c}
+    \end{tikzfigure}
+
+
+}
+
+\myblock[GrayBlock]{Conclusion}{
+    \begin{itemize}
+        \setlength\itemsep{0.5em}
+        \item Our analysis is the first to indicate that \textit{A. leptorhynchus} uses long, diffuse and synchronized EOD$f$ signals to communicate in addition to chirps and rises.
+        \item The recorded fish do not exhibit jamming avoidance behavior while close during synchronous modulations.
+        \item Synchronous signals \textbf{initiate} spatio-temporal interactions.
     \end{itemize}
     \vspace{0.2cm}
     }
-\end{columns}
+    \end{columns}
 
-\node[
-    above right,
+\node [above right,
     text=white,
     outer sep=45pt,
     minimum width=\paperwidth,
     align=center,
     draw,
     fill=boxes,
-    color=boxes,
-] at (-0.51\paperwidth,-43.5) {
-    \textcolor{text}{\normalsize Contact: name.surname@student.uni-tuebingen.de}};
+    color=boxes] at (-43.6,-61) {
+        \textcolor{white}{
+    \normalsize Contact: \{name\}.\{surname\}@student.uni-tuebingen.de}};
 
 \end{document}

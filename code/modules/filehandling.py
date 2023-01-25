@@ -3,6 +3,7 @@ import os
 import yaml
 import numpy as np
 from thunderfish.dataloader import DataLoader
+import matplotlib.pyplot as plt
 
 
 class ConfLoader:
@@ -36,6 +37,7 @@ class LoadData:
     def __init__(self, datapath: str) -> None:
 
         # load raw data
+        self.datapath = datapath
         self.file = os.path.join(datapath, "traces-grid1.raw")
         self.raw = DataLoader(self.file, 60.0, 0, channel=-1)
         self.raw_rate = self.raw.samplerate
@@ -53,3 +55,23 @@ class LoadData:
 
     def __str__(self) -> str:
         return f"LoadData({self.file})"
+
+
+def make_outputdir(path: str) -> str:
+    """
+    Creates a new directory where the path leads if it does not already exist.
+
+    Parameters
+    ----------
+    path : string
+        path to the new output directory
+
+    Returns
+    -------
+    string
+        path of the newly created output directory
+    """
+
+    if os.path.isdir(path) == False:
+        os.mkdir(path)
+    return path
