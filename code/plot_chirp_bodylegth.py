@@ -253,7 +253,7 @@ def main(datapath: str):
     ps.set_boxplot_color(bplot2, colors1)
     ax2.scatter(size_diffs, size_chirps_diffs, color='r')
     ax2.set_xlabel('Size difference [mm]')
-    ax2.set_ylabel('Chirps difference [n]')
+    ax2.set_ylabel('Chirps [n]')
 
     ax3.scatter(freq_diffs, size_chirps_diffs, color='r')
     # ax3.scatter(freq_diffs, freq_chirps_diffs, color='r')

@@ -280,7 +280,6 @@ def main(datapath: str):
     ax2.scatter(size_diffs_loser, size_chirps_loser, color=ps.orange)
 
     ax2.set_xlabel('Size difference [cm]')
-    ax2.set_ylabel('Chirps difference [n]')
 
     ax3.scatter(freq_diffs_higher, freq_chirps_winner, color=ps.red)
     ax3.scatter(freq_diffs_lower, freq_chirps_loser, color=ps.orange)
