@@ -33,6 +33,7 @@ def PlotStyle() -> None:
         gblue1 = "#89b4fa"
         gblue2 = "#89dceb"
         gblue3 = "#a6e3a1"
+        g = "#76a0fa"
 
         @classmethod
         def lims(cls, track1, track2):
@@ -111,7 +112,6 @@ def PlotStyle() -> None:
             plt.setp(bp["whiskers"], color=white)
             plt.setp(bp["caps"], color=white)
             plt.setp(bp["medians"], color=black)
-
 
         @classmethod
         def label_subplots(cls, labels, axes, fig):

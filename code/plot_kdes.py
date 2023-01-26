@@ -287,14 +287,14 @@ def main(dataroot):
             ax[i].plot(kde_time, np.median(loser_offsets_boot[-1], axis=0),
                        color=ps.black, linewidth=2)
 
-            ax[i].fill_between(
-                kde_time,
-                np.percentile(loser_offsets_jackknife, 5, axis=0),
-                np.percentile(loser_offsets_jackknife, 95, axis=0),
-                color=ps.blue,
-                alpha=0.5)
-            ax[i].plot(kde_time, np.median(loser_offsets_jackknife, axis=0),
-                       color=ps.white, linewidth=2)
+            # ax[i].fill_between(
+            #     kde_time,
+            #     np.percentile(loser_offsets_jackknife, 5, axis=0),
+            #     np.percentile(loser_offsets_jackknife, 95, axis=0),
+            #     color=ps.blue,
+            #     alpha=0.5)
+            # ax[i].plot(kde_time, np.median(loser_offsets_jackknife, axis=0),
+            #            color=ps.white, linewidth=2)
 
             ax[i].set_xlim(-60, 60)
 

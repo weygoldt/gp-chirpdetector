@@ -41,10 +41,10 @@ def main():
     freqtime2, freq2 = instantaneous_frequency(
         filtered2, data.raw_rate, smoothing_window=3)
 
-    ax.plot(freqtime1*timescaler, freq1, color=ps.red,
-            lw=2, label="fish 1")
-    ax.plot(freqtime2*timescaler, freq2, color=ps.orange,
-            lw=2, label="fish 2")
+    ax.plot(freqtime1*timescaler, freq1, color=ps.g,
+            lw=2, label="Fish 1")
+    ax.plot(freqtime2*timescaler, freq2, color=ps.gray,
+            lw=2, label="Fish 2")
     ax.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower center",
               mode="normal", borderaxespad=0, ncol=2)
     # ax.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
@@ -74,8 +74,8 @@ def main():
         origin="lower",
         interpolation="gaussian",
         alpha=1,
-        vmin=-100,
-        vmax=-80,
+        # vmin=-100,
+        # vmax=-80,
     )
     # ps.hide_xax(ax2)
 
@@ -103,8 +103,8 @@ def main():
     # )
     # # ps.hide_xax(ax3)
 
-    ax.set_xlabel("time [ms]")
-    ax.set_ylabel("frequency [Hz]")
+    ax.set_xlabel("Time [ms]")
+    ax.set_ylabel("Frequency [Hz]")
 
     # ax.set_yticks(np.arange(400, 1201, 400))
     # ax.spines.left.set_bounds((400, 1200))

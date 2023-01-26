@@ -262,14 +262,14 @@ class ChirpPlotBuffer:
             # facecolors="none",
         )
 
-        ax0.set_ylabel("frequency [Hz]")
+        ax0.set_ylabel("Frequency [Hz]")
         ax1.set_ylabel(r"$\mu$V")
         ax2.set_ylabel(r"$\mu$V")
         ax3.set_ylabel("Hz")
         ax4.set_ylabel(r"$\mu$V")
         ax5.set_ylabel(r"$\mu$V")
         ax6.set_ylabel("Hz")
-        ax6.set_xlabel("time [s]")
+        ax6.set_xlabel("Time [s]")
 
         plt.setp(ax0.get_xticklabels(), visible=False)
         plt.setp(ax1.get_xticklabels(), visible=False)
@@ -652,16 +652,16 @@ def chirpdetection(datapath: str, plot: str, debug: str = 'false') -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    # window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
-    # window_duration_index = 60 * data.raw_rate
+    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
     # window_start_seconds = (23495 + ((28336-23495)/3)) * data.raw_rate
     # window_duration_seconds = (28336 - 23495) * data.raw_rate
 
-    window_start_index = 0
-    window_duration_index = data.raw.shape[0]
+    # window_start_index = 0
+    # window_duration_index = data.raw.shape[0]
 
     # generate starting points of rolling window
     window_start_indices = np.arange(
@@ -675,7 +675,7 @@ def chirpdetection(datapath: str, plot: str, debug: str = 'false') -> None:
     multiwindow_chirps = []
     multiwindow_ids = []
 
-    for st, window_start_index in enumerate(window_start_indices[3175:]):
+    for st, window_start_index in enumerate(window_start_indices):
 
         logger.info(f"Processing window {st+1} of {len(window_start_indices)}")
 
