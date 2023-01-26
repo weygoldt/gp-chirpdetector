@@ -72,7 +72,7 @@ def main(datapath: str):
     bplot1 = ax.boxplot([time_precents, chirps_percents],
                         showfliers=False, patch_artist=True)
     ps.set_boxplot_color(bplot1, ps.gray)
-    ax.set_xticklabels(['Time \nChasing', 'Chirps \nin Chasing'])
+    ax.set_xticklabels(['Time \nchasing', 'Chirps \nin chasing'])
     ax.set_ylabel('Percent')
     ax.scatter(np.ones(len(time_precents))*scatter_time, time_precents,
                facecolor=ps.white, s=size)
