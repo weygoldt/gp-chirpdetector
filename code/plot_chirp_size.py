@@ -262,7 +262,7 @@ def main(datapath: str):
 
     stat = wilcoxon(chirps_winner, chirps_loser)
     print(stat)
-    winner_color = ps.gblue3
+    winner_color = ps.gblue2
     loser_color = ps.gblue1
 
     bplot1 = ax1.boxplot(chirps_winner, positions=[

@@ -276,7 +276,7 @@ def main(dataroot):
             #     loser_physicals[-1], kde_time, kernel_width)
 
             ax[i].plot(kde_time, loser_offsets_conv /
-                       len(offsets), lw=2, zorder=100)
+                       len(offsets), lw=2, zorder=100, c=ps.gblue1)
 
             ax[i].fill_between(
                 kde_time,

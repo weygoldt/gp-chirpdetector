@@ -26,14 +26,14 @@ def PlotStyle() -> None:
         yellow = "#f9d67f"
         orange = "#faa472"
         maroon = "#eb8486"
-        red = "#f37588"
+        red = "#e0e4f7"
         purple = "#d89bf7"
         pink = "#f59edb"
         lavender = "#b4befe"
-        gblue1 = "#89b4fa"
-        gblue2 = "#89dceb"
-        gblue3 = "#a6e3a1"
-        g = "#76a0fa"
+        gblue1 = "#f37588"
+        gblue2 = "#faa472"
+        gblue3 = "#f9d67f"
+        g = "#f3626c"
 
         @classmethod
         def lims(cls, track1, track2):
@@ -230,7 +230,7 @@ def PlotStyle() -> None:
     plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
     plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-    plt.rcParams["image.cmap"] = "cmo.haline"
+    plt.rcParams["image.cmap"] = "cmo.thermal"
     plt.rcParams["axes.xmargin"] = 0.05
     plt.rcParams["axes.ymargin"] = 0.1
     plt.rcParams["axes.titlelocation"] = "left"

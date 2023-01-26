@@ -198,7 +198,7 @@ class ChirpPlotBuffer:
             for chirp in chirps:
                 ax0.scatter(
                     chirp, np.median(self.frequency), c=ps.red, marker=".",
-                    edgecolors=ps.red,
+                    edgecolors=ps.black,
                     facecolors=ps.red,
                     zorder=10,
                     s=70,
@@ -226,7 +226,7 @@ class ChirpPlotBuffer:
         ax4.scatter(
             (self.time)[self.baseline_peaks],
             (self.baseline_envelope*waveform_scaler)[self.baseline_peaks],
-            edgecolors=ps.red,
+            edgecolors=ps.black,
             facecolors=ps.red,
             zorder=10,
             marker=".",
@@ -240,7 +240,7 @@ class ChirpPlotBuffer:
         ax5.scatter(
             (self.time)[self.search_peaks],
             (self.search_envelope*waveform_scaler)[self.search_peaks],
-            edgecolors=ps.red,
+            edgecolors=ps.black,
             facecolors=ps.red,
             zorder=10,
             marker=".",
@@ -254,7 +254,7 @@ class ChirpPlotBuffer:
         ax6.scatter(
             self.frequency_time[self.frequency_peaks],
             self.frequency_filtered[self.frequency_peaks],
-            edgecolors=ps.red,
+            edgecolors=ps.black,
             facecolors=ps.red,
             zorder=10,
             marker=".",
