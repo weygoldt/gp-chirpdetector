@@ -253,7 +253,8 @@ def main(datapath: str):
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(
         21*ps.cm, 10*ps.cm), width_ratios=[1, 0.8, 0.8], sharey=True)
-    plt.subplots_adjust(left=0.11, right=0.948, top=0.905, wspace=0.343, bottom=0.145)
+    plt.subplots_adjust(left=0.11, right=0.948, top=0.905,
+                        wspace=0.343, bottom=0.145)
     scatterwinner = 1.15
     scatterloser = 1.85
     chirps_winner = np.asarray(chirps_winner)[~np.isnan(chirps_winner)]
@@ -273,13 +274,12 @@ def main(datapath: str):
                 scatterloser, chirps_loser, color=ps.orange)
     ax1.set_xticklabels(['winner', 'loser'])
 
-    ax1.text(1, 2000, f'{len(chirps_winner)}',  color='gray')
-    ax1.text(1.8, 2000, f'{len(chirps_loser)}', color='gray')
+    ax1.text(0.1, 0.95, f'n={len(chirps_winner)}', transform=ax1.transAxes, color=ps.white)
 
     for w, l in zip(chirps_winner, chirps_loser):
         ax1.plot([scatterwinner, scatterloser], [w, l],
                  color=ps.white, alpha=1, linewidth=0.5)
-    ax1.set_ylabel('chirpcount', color=ps.white)
+    ax1.set_ylabel('chirpcounts', color=ps.white)
     ax1.set_xlabel('outcome',    color=ps.white)
 
     colors1 = ps.red
@@ -291,8 +291,8 @@ def main(datapath: str):
                 color=ps.red, label=f'winner')
     ax2.scatter(size_diffs_loser, size_chirps_loser,
                 color=ps.orange, label='loser')
-    ax2.text(-1, 2000, f'{len(size_chirps_winner)}', color= 'gray')
-    ax2.text(1, 2000, f'{len(size_chirps_loser)}',   color= 'gray')
+
+    ax2.text(0.05, 0.95, f'n={len(size_chirps_winner)}', transform=ax2.transAxes, color=ps.white)
 
     ax2.set_xlabel('size difference [cm]')
     # ax2.set_xticks(np.arange(-10, 10.1, 2))
@@ -300,10 +300,9 @@ def main(datapath: str):
     ax3.scatter(freq_diffs_higher, freq_chirps_winner, color=ps.red)
     ax3.scatter(freq_diffs_lower, freq_chirps_loser, color=ps.orange)
 
-    ax3.text(600, 2000, f'n = {len(freq_chirps_winner)}', color='gray')
-    ax3.text(650, 2000, f'{len(freq_chirps_loser)}',  color='gray')
+    ax3.text(0.1, 0.95, f'n={len(freq_chirps_loser)}', transform=ax3.transAxes, color=ps.white)
 
-    ax3.set_xlabel('absolut frequency [Hz]')
+    ax3.set_xlabel('absolute frequency [Hz]')
     handles, labels = ax2.get_legend_handles_labels()
     fig.legend(handles, labels, loc='upper center', ncol=2)
     # pearson r
