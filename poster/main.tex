@@ -17,18 +17,14 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \begin{columns}
 \column{0.4}
 \myblock[TranspBlock]{Introduction}{
-    The time-frequency tradeoff makes reliable signal detecion and simultaneous
-    sender identification by simple Fourier decomposition in freely interacting
-    weakly electric fish impossible. This profoundly limits our current
-    understanding of chirps to experiments
-    with single - or physically separated - individuals.
+    \textbf{Chirps} are the most common communication signals in weakly electric fish. They are characterized by \textbf{short frequency excursions} and are emitted during various social contexts. It is nearly impossible to reliably \textbf{detect and assign} chirps in freely interacting fish using only a Fourier transform. To overcome these limits, we developed a new method of \textbf{dynamic feature extraction} and classification. 
     \vspace{1cm}
     \begin{tikzfigure}[]
         \label{griddrawing}
         \includegraphics[width=\linewidth]{figs/introplot}
     \end{tikzfigure}
 }
-\myblock[TranspBlock]{Chirp detection}{
+\myblock[TranspBlock]{Chirp detection algorithm}{
     \begin{tikzfigure}[]
         \label{fig:alg1}
         \includegraphics[width=0.9\linewidth]{figs/algorithm1}
