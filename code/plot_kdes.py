@@ -279,26 +279,28 @@ def main(dataroot):
 
             ax[i].fill_between(
                 kde_time,
-                np.percentile(loser_offsets_boot[-1], 5, axis=0),
-                np.percentile(loser_offsets_boot[-1], 95, axis=0),
-                color=ps.gray,
-                alpha=0.5)
+                np.percentile(loser_offsets_boot[-1], 1, axis=0),
+                np.percentile(loser_offsets_boot[-1], 99, axis=0),
+                color=ps.white,
+                alpha=0.3)
 
             ax[i].plot(kde_time, np.median(loser_offsets_boot[-1], axis=0),
                        color=ps.black, linewidth=2)
 
-            # ax[i].fill_between(
-            #     kde_time,
-            #     np.percentile(loser_offsets_jackknife, 5, axis=0),
-            #     np.percentile(loser_offsets_jackknife, 95, axis=0),
-            #     color=ps.blue,
-            #     alpha=0.5)
-            # ax[i].plot(kde_time, np.median(loser_offsets_jackknife, axis=0),
-            #            color=ps.white, linewidth=2)
+            ax[i].axvline(0, color=ps.gray, linestyle='--')
+
+            ax[i].fill_between(
+                kde_time,
+                np.percentile(loser_offsets_jackknife, 5, axis=0),
+                np.percentile(loser_offsets_jackknife, 95, axis=0),
+                color=ps.blue,
+                alpha=0.5)
+            ax[i].plot(kde_time, np.median(loser_offsets_jackknife, axis=0),
+                       color=ps.white, linewidth=2)
 
             ax[i].set_xlim(-60, 60)
-
-            embed()
+            fig.supylabel('Chirp rate (Hz)', fontsize=14)
+            fig.supxlabel('Time (s)', fontsize=14)
 
             # fig, ax = plt.subplots(2, 3, figsize=(
             #     21*ps.cm, 10*ps.cm), sharey=True, sharex=True)
@@ -391,7 +393,6 @@ def main(dataroot):
             #               color='black', linewidth=2)
 
             # ax[0, 0].set_xlim(-30, 30)
-    plt.show()
 
     # winner_onsets = np.sort(flatten(winner_onsets))
     # winner_offsets = np.sort(flatten(winner_offsets))
@@ -519,7 +520,7 @@ def main(dataroot):
     #                       color=ps.gray,
     #                       alpha=0.5)
 
-    # plt.show()
+    plt.show()
 
 
 if __name__ == '__main__':
