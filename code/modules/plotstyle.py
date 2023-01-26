@@ -110,7 +110,7 @@ def PlotStyle() -> None:
             plt.setp(bp["boxes"], color=color)
             plt.setp(bp["whiskers"], color=white)
             plt.setp(bp["caps"], color=white)
-            plt.setp(bp["medians"], color=white)
+            plt.setp(bp["medians"], color=black)
 
 
         @classmethod
@@ -255,10 +255,10 @@ def PlotStyle() -> None:
     plt.rcParams["boxplot.boxprops.color"] = gray
     plt.rcParams["boxplot.whiskerprops.color"] = gray
     plt.rcParams["boxplot.capprops.color"] = gray
-    plt.rcParams["boxplot.medianprops.color"] = gray
+    plt.rcParams["boxplot.medianprops.color"] = black
     plt.rcParams["text.color"] = white
     plt.rcParams["axes.facecolor"] = black  # axes background color
-    plt.rcParams["axes.edgecolor"] = gray  # axes edge color
+    plt.rcParams["axes.edgecolor"] = white  # axes edge color
     # plt.rcParams["axes.grid"] = True    # display grid or not
     # plt.rcParams["axes.grid.axis"] = "y"  # which axis the grid is applied to
     plt.rcParams["axes.labelcolor"] = white
@@ -284,9 +284,9 @@ def PlotStyle() -> None:
             "#f5c2e7",
         ],
     )
-    plt.rcParams["xtick.color"] = gray  # color of the ticks
-    plt.rcParams["ytick.color"] = gray  # color of the ticks
-    plt.rcParams["grid.color"] = dark_gray  # grid color
+    plt.rcParams["xtick.color"] = white  # color of the ticks
+    plt.rcParams["ytick.color"] = white  # color of the ticks
+    plt.rcParams["grid.color"] = white  # grid color
     plt.rcParams["figure.facecolor"] = black  # figure face color
     plt.rcParams["figure.edgecolor"] = black  # figure edge color
     plt.rcParams["savefig.facecolor"] = black  # figure face color when saving

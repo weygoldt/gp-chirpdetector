@@ -22,20 +22,20 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     weakly electric fish impossible. This profoundly limits our current
     understanding of chirps to experiments
     with single - or physically separated - individuals.
-    % \begin{tikzfigure}[]
-    %     \label{griddrawing}
-    %     \includegraphics[width=0.8\linewidth]{figs/introplot}
-    % \end{tikzfigure}
+    \begin{tikzfigure}[]
+        \label{griddrawing}
+        \includegraphics[width=0.6\linewidth]{figs/introplot}
+    \end{tikzfigure}
 }
 \myblock[TranspBlock]{Chirp detection}{
     \begin{tikzfigure}[]
         \label{fig:alg1}
-        \includegraphics[width=0.9\linewidth]{figs/algorithm1}
+        \includegraphics[width=0.6\linewidth]{figs/algorithm1}
     \end{tikzfigure}
     \vspace{2cm}
     \begin{tikzfigure}[]
         \label{fig:alg2}
-        \includegraphics[width=1\linewidth]{figs/algorithm}
+        \includegraphics[width=0.9\linewidth]{figs/algorithm}
     \end{tikzfigure}
     \vspace{0cm}
 }
@@ -49,34 +49,35 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \noindent
     \begin{itemize}
         \setlength\itemsep{0.5em}
-        \item Two fish compete for one hidding place in one tank,
+        \item Two fish compete for one hidding place in one tank.
         \item Experiment had a 3 hour long darkphase and a 3 hour long light phase.
     \end{itemize}
 
     \noindent
-    \begin{minipage}[c]{0.7\linewidth}
-        \begin{tikzfigure}[]
-            \label{fig:example_b}
-            \includegraphics[width=\linewidth]{figs/chirps_winner_loser.pdf}
-        \end{tikzfigure}
-    \end{minipage} % no space if you would like to put them side by side
-    \begin{minipage}[c]{0.2\linewidth}
-        \begin{itemize}
-            \setlength\itemsep{0.5em}
-            \item Fish who won the competition chirped more often than the fish who lost.
-            \item
-        \end{itemize}
-    \end{minipage}
+    \begin{tikzfigure}[]
+        \label{fig:example_b}
+        \includegraphics[width=\linewidth]{figs/chirps_winner_loser.pdf}
+    \end{tikzfigure}
+    \noindent
+    \begin{itemize}
+        \item Fish who lost the competition chirped more often than the fish who lost.
+        \item Size has an effect on the Competition outcome, and the chirp count.
+        \item Frequency of the fish has no effect on the competition outcome.
+    \end{itemize}
 }
 
-\myblock[TranspBlock]{Interactions at modulations}{
+\myblock[TranspBlock]{Are Chirps coding for onset or offset of physical interaction?}{
     \vspace{-1.2cm}
-    \begin{tikzfigure}[]
-        \label{fig:example_c}
-        \includegraphics[width=0.5\linewidth]{example-image-c}
-    \end{tikzfigure}
-
-
+    \begin{minipage}{0.6666\linewidth}
+        \begin{tikzfigure}[]
+            \includegraphics[width=0.3\linewidth]{figs/chirps_in_chasing.pdf}
+        \end{tikzfigure}
+    \end{minipage}
+        \begin{minipage}{0.3333\linewidth}
+            \begin{tikzfigure}[]
+                \includegraphics[width=\linewidth]{figs/chirps_in_chasing.pdf}
+            \end{tikzfigure}
+    \end{minipage}
 }
 
 \myblock[GrayBlock]{Conclusion}{

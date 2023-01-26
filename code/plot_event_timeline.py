@@ -47,17 +47,17 @@ def main(datapath: str):
         # Associate chirps to inidividual fish
         fish1 = (bh.chirps[bh.chirps_ids == fish1_id] / 60) / 60
         fish2 = (bh.chirps[bh.chirps_ids == fish2_id] / 60) / 60
-        fish1_color = ps.purple
-        fish2_color = ps.lavender
+        fish1_color = ps.gblue1
+        fish2_color = ps.gblue3
 
         fig, ax = plt.subplots(5, 1, figsize=(
             21*ps.cm, 10*ps.cm), height_ratios=[0.5, 0.5, 0.5, 0.2, 6], sharex=True)
         # marker size
         s = 80
         ax[0].scatter(physical_contact, np.ones(
-            len(physical_contact)), color=ps.maroon, marker='|', s=s)
+            len(physical_contact)), color=ps.red, marker='|', s=s)
         ax[1].scatter(chasing_onset, np.ones(len(chasing_onset)),
-                      color=ps.orange, marker='|', s=s)
+                      color=ps.purple, marker='|', s=s)
         ax[2].scatter(fish1, np.ones(len(fish1))-0.25,
                       color=fish1_color, marker='|', s=s)
         ax[2].scatter(fish2, np.zeros(len(fish2))+0.25,
@@ -79,7 +79,6 @@ def main(datapath: str):
         ax[0].set_xticks([])
         ax[0].set_yticks([])
         ps.hide_ax(ax[0])
-        ax[0].yaxis.set_label_coords(-0.1, 0.5)
 
         ax[1].grid(False)
         ax[1].set_frame_on(False)
@@ -99,19 +98,23 @@ def main(datapath: str):
 
         labelpad = 30
         fsize = 12
-        ax[0].set_ylabel('contact', rotation=0,
+
+        ax[0].set_ylabel('Contact', rotation=0,
                          labelpad=labelpad, fontsize=fsize)
-        ax[1].set_ylabel('chasing', rotation=0,
+        ax[0].yaxis.set_label_coords(-0.062, -0.08)
+        ax[1].set_ylabel('Chasing', rotation=0,
                          labelpad=labelpad, fontsize=fsize)
-        ax[2].set_ylabel('chirps', rotation=0,
+        ax[1].yaxis.set_label_coords(-0.06, -0.08)
+        ax[2].set_ylabel('Chirps', rotation=0,
                          labelpad=labelpad, fontsize=fsize)
+        ax[2].yaxis.set_label_coords(-0.07, -0.08)
         ax[4].set_ylabel('EODf')
 
-        ax[4].set_xlabel('time [h]')
+        ax[4].set_xlabel('Time [h]')
         # ax[0].set_title(foldername.split('/')[-2])
         # 2020-03-31-9_59
-        plt.subplots_adjust(left=0.158, right=0.987, top=0.918)
-        # plt.savefig('../poster/figs/timeline.pdf')
+        plt.subplots_adjust(left=0.158, right=0.987, top=0.918, bottom=0.136)
+        plt.savefig('../poster/figs/timeline.pdf')
         plt.show()
 
     # plot chirps

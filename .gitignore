@@ -14,7 +14,7 @@ output
 __pycache__/
 *.py[cod]
 *$py.class
-poster/main.pdf
+/poster/main.pdf
 
 # C extensions
 *.so
