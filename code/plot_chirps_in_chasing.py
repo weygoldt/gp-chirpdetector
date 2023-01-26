@@ -45,33 +45,46 @@ def main(datapath: str):
 
         chirps_in_chasings = []
         for onset, offset in zip(chasing_onset, chasing_offset):
-            chirps_in_chasing = [c for c in bh.chirps if (c > onset) & (c < offset)]
+            chirps_in_chasing = [
+                c for c in bh.chirps if (c > onset) & (c < offset)]
             chirps_in_chasings.append(chirps_in_chasing)
 
         try:
-            time_chasing = np.sum(chasing_offset[chasing_offset<3*60*60] - chasing_onset[chasing_onset<3*60*60])
+            time_chasing = np.sum(
+                chasing_offset[chasing_offset < 3*60*60] - chasing_onset[chasing_onset < 3*60*60])
         except:
-            time_chasing = np.sum(chasing_offset[chasing_offset<3*60*60] - chasing_onset[chasing_onset<3*60*60][:-1])
-
+            time_chasing = np.sum(
+                chasing_offset[chasing_offset < 3*60*60] - chasing_onset[chasing_onset < 3*60*60][:-1])
 
         time_chasing_percent = (time_chasing/(3*60*60))*100
         chirps_chasing = np.asarray(flatten(chirps_in_chasings))
-        chirps_chasing_new = chirps_chasing[chirps_chasing<3*60*60]
-        chirps_percent = (len(chirps_chasing_new)/len(bh.chirps[bh.chirps<3*60*60]))*100
+        chirps_chasing_new = chirps_chasing[chirps_chasing < 3*60*60]
+        chirps_percent = (len(chirps_chasing_new) /
+                          len(bh.chirps[bh.chirps < 3*60*60]))*100
 
         time_precents.append(time_chasing_percent)
         chirps_percents.append(chirps_percent)
-    
-    fig, ax = plt.subplots(1, 1, figsize=(14*ps.cm, 10*ps.cm))
 
-    ax.boxplot([time_precents, chirps_percents])
-    ax.set_xticklabels(['Time Chasing', 'Chirps in Chasing'])
+    fig, ax = plt.subplots(1, 1, figsize=(7*ps.cm, 7*ps.cm))
+    scatter_time = 1.20
+    scatter_chirps = 1.80
+    size = 10
+    bplot1 = ax.boxplot([time_precents, chirps_percents],
+                        showfliers=False, patch_artist=True)
+    ps.set_boxplot_color(bplot1, ps.gray)
+    ax.set_xticklabels(['Time \nChasing', 'Chirps \nin Chasing'])
     ax.set_ylabel('Percent')
-    ax.scatter(np.ones(len(time_precents))*1.25, time_precents, color=ps.white)
-    ax.scatter(np.ones(len(chirps_percents))*1.75, chirps_percents, color=ps.white)
+    ax.scatter(np.ones(len(time_precents))*scatter_time, time_precents,
+               facecolor=ps.white, s=size)
+    ax.scatter(np.ones(len(chirps_percents))*scatter_chirps, chirps_percents,
+               facecolor=ps.white, s=size)
+
     for i in range(len(time_precents)):
-        ax.plot([1.25, 1.75], [time_precents[i], chirps_percents[i]], color=ps.white)
-    ax.text(0.99, 0.99, f'{len(time_precents)} fish', transform=ax.transAxes)
+        ax.plot([scatter_time, scatter_chirps], [time_precents[i],
+                chirps_percents[i]], alpha=0.6, linewidth=1, color=ps.white)
+
+    ax.text(0.1, 0.9, f'n={len(time_precents)}', transform=ax.transAxes)
+    plt.subplots_adjust(left=0.221, bottom=0.186, right=0.97, top=0.967)
     plt.savefig('../poster/figs/chirps_in_chasing.pdf')
     plt.show()
 
@@ -80,5 +93,3 @@ if __name__ == '__main__':
     # Path to the data
     datapath = '../data/mount_data/'
     main(datapath)
-
-        
