@@ -249,15 +249,15 @@ def main(dataroot):
         #     time_before=time_before,
         #     time_after=time_after))
 
-        loser_offsets_jackknife = jackknife(
-            loser,
-            nresamples=nbootstraps,
-            subsetsize=0.5,
-            kde_time=kde_time,
-            kernel_width=kernel_width,
-            event_times=offsets,
-            time_before=time_before,
-            time_after=time_after)
+#         loser_offsets_jackknife = jackknife(
+#             loser,
+#             nresamples=nbootstraps,
+#             subsetsize=0.9,
+#             kde_time=kde_time,
+#             kernel_width=kernel_width,
+#             event_times=offsets,
+#             time_before=time_before,
+#             time_after=time_after)
 
         if plot_all:
 
@@ -289,17 +289,17 @@ def main(dataroot):
 
             ax[i].axvline(0, color=ps.gray, linestyle='--')
 
-            ax[i].fill_between(
-                kde_time,
-                np.percentile(loser_offsets_jackknife, 5, axis=0),
-                np.percentile(loser_offsets_jackknife, 95, axis=0),
-                color=ps.blue,
-                alpha=0.5)
-            ax[i].plot(kde_time, np.median(loser_offsets_jackknife, axis=0),
-                       color=ps.white, linewidth=2)
+            # ax[i].fill_between(
+            #     kde_time,
+            #     np.percentile(loser_offsets_jackknife, 5, axis=0),
+            #     np.percentile(loser_offsets_jackknife, 95, axis=0),
+            #     color=ps.blue,
+            #     alpha=0.5)
+            # ax[i].plot(kde_time, np.median(loser_offsets_jackknife, axis=0),
+            #            color=ps.white, linewidth=2)
 
             ax[i].set_xlim(-60, 60)
-            fig.supylabel('Chirp rate (Hz)', fontsize=14)
+            fig.supylabel('Chirp rate (a.u.)', fontsize=14)
             fig.supxlabel('Time (s)', fontsize=14)
 
             # fig, ax = plt.subplots(2, 3, figsize=(
@@ -519,7 +519,8 @@ def main(dataroot):
     #                       loser_physicals_boot_quarts[2],
     #                       color=ps.gray,
     #                       alpha=0.5)
-
+    plt.subplots_adjust(bottom=0.21)
+    plt.savefig('../poster/figs/kde.pdf')
     plt.show()
 
 
