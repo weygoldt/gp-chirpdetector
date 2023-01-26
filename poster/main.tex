@@ -24,7 +24,7 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \includegraphics[width=\linewidth]{figs/introplot}
     \end{tikzfigure}
 }
-\myblock[TranspBlock]{Chirp detection algorithm}{
+\myblock[TranspBlock]{Chirp Detection Algorithm}{
     \begin{tikzfigure}[]
         \label{fig:alg1}
         \includegraphics[width=0.9\linewidth]{figs/algorithm1}
@@ -38,17 +38,21 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 }
 
 \column{0.6}
-\myblock[TranspBlock]{Chirps during competition}{
+\myblock[TranspBlock]{Chirps in dyadic competitions}{
+    \vspace{-2.8cm}
     \begin{tikzfigure}[]
         \label{fig:example_b}
         \includegraphics[width=\linewidth]{figs/timeline.pdf}
     \end{tikzfigure}
     \noindent
-    \begin{itemize}
-        \setlength\itemsep{0.5em}
-        \item Two fish compete for one hiding place in one tank.
-        \item Experiment had a 3 hour long darkphase and a 3 hour long light phase.
-    \end{itemize}
+    \begin{multicols}{2}
+        \begin{itemize}
+            % \setlength\itemsep{0.5em}
+            \item Two fish compete for one hiding place in one tank.
+            \item Experiment had a 3 hour long darkphase and a 3 hour long light phase.
+        \end{itemize}
+    \end{multicols}
+    
 
     \noindent
     \begin{tikzfigure}[]
