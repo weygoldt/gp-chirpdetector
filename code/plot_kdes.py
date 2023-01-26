@@ -275,14 +275,15 @@ def main(dataroot):
             # loser_physicals_conv = acausal_kde1d(
             #     loser_physicals[-1], kde_time, kernel_width)
 
-            ax[i].plot(kde_time, loser_offsets_conv/len(offsets))
+            ax[i].plot(kde_time, loser_offsets_conv /
+                       len(offsets), lw=2, zorder=100)
 
             ax[i].fill_between(
                 kde_time,
                 np.percentile(loser_offsets_boot[-1], 1, axis=0),
                 np.percentile(loser_offsets_boot[-1], 99, axis=0),
                 color=ps.white,
-                alpha=0.5)
+                alpha=0.4)
 
             ax[i].plot(kde_time, np.median(loser_offsets_boot[-1], axis=0),
                        color=ps.black, linewidth=2)
@@ -519,7 +520,7 @@ def main(dataroot):
     #                       loser_physicals_boot_quarts[2],
     #                       color=ps.gray,
     #                       alpha=0.5)
-    plt.subplots_adjust(bottom=0.21)
+    plt.subplots_adjust(bottom=0.21, top=0.93)
     plt.savefig('../poster/figs/kde.pdf')
     plt.show()
 
