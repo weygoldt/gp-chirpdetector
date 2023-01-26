@@ -38,8 +38,8 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 }
 
 \column{0.6}
-\myblock[TranspBlock]{Chirps in dyadic competitions (Data courtesy by Till Raab, 2020)}{
-    \vspace{-2.8cm}
+\myblock[TranspBlock]{Chirps in dyadic competitions (Data by Till Raab, 2020)}{
+    \vspace{-2.75cm}
     \begin{tikzfigure}[]
         \label{fig:example_b}
         \includegraphics[width=\linewidth]{figs/timeline.pdf}
@@ -49,25 +49,28 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
         \begin{itemize}
             % \setlength\itemsep{0.5em}
             \item The electric behavior of two fish competing for one shelter were recorded in a light and dark condition.
-            \item Using additional IR-video recordings, the physical behavior was classified as one of two agonistic categories: Chasings and physical contacts.
+            \item Using video recordings, behavior was classified as chasings or physical contacts.
         \end{itemize}
     \end{multicols}
 
-
+    \vspace{-2cm}
     \noindent
     \begin{tikzfigure}[]
         \label{fig:example_b}
         \includegraphics[width=\linewidth]{figs/chirps_winner_loser.pdf}
     \end{tikzfigure}
     \noindent
-    \begin{itemize}
-        \item Losers tend to chirp more.
-        \item Larger fish usually win the competition. The smaller the size difference the more chirps are emitted.
-        \item EOD frequency has no effect on the competition outcome as well as the chirp rate.
-    \end{itemize}
+    \begin{multicols}{2}
+        \begin{itemize}
+            \item Losers tend to chirp more.
+            \item Larger fish usually win. The smaller the size difference the more chirps are emitted. 
+            \columnbreak
+            \item EOD frequency has no effect on the competition outcome and the chirp rate.
+        \end{itemize}
+    \end{multicols}
 }
 
-\myblock[TranspBlock]{Chirp rate increases before chasing offset}{
+\myblock[TranspBlock]{Chirps emitted by loser fish might stop chasing events}{
     \vspace{-1.2cm}
     \begin{minipage}{0.6666\linewidth}
         \begin{tikzfigure}[]
@@ -82,8 +85,8 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \noindent
     \begin{multicols}{2}
         \begin{itemize}
-            \item The electric behavior of two fish competing for one shelter were recorded in a light and dark condition.
-            \item Using additional IR-video recordings, the physical behavior was classified as one of two agonistic categories: Chasings and physical contacts.
+            \item In most cases there is no correlation between chirping and chasing- or physical contact events.
+            \item The chirp rate during chasings only increases for some dyads.
         \end{itemize}
     \end{multicols}
 }
@@ -91,9 +94,9 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 \myblock[GrayBlock]{Conclusion}{
     \begin{itemize}
         \setlength\itemsep{0.5em}
-        \item Our analysis is the first to indicate that \textit{A. leptorhynchus} uses long, diffuse and synchronized EOD$f$ signals to communicate in addition to chirps and rises.
-        \item The recorded fish do not exhibit jamming avoidance behavior while close during synchronous modulations.
-        \item Synchronous signals \textbf{initiate} spatio-temporal interactions.
+        \item First tests indicate that our algorithm is able to detect chirps in recordings of multiple fish.
+        \item In some cases the chirp rate drastically increases before chasings stop.
+        \item Behavioral analysis needs to consider more variables, such as sex, size, and interindividual differences in chirping behavior.
     \end{itemize}
     \vspace{0.2cm}
     }
