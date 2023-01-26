@@ -58,9 +58,10 @@ def jackknife(data, nresamples, subsetsize, kde_time, kernel_width, event_times,
 
     for i in tqdm(range(nresamples)):
 
-        jackknifed_data = np.random.choice(data, subsetsize, replace=False)
+        jackknifed_data = np.random.choice(
+            diff_data, subsetsize, replace=False)
 
-        jackknifed_data = np.cumsum(diff_data)
+        jackknifed_data = np.cumsum(jackknifed_data)
 
         jackknifed_data_centered = center_chirps(
             jackknifed_data, event_times, time_before, time_after)
@@ -72,7 +73,6 @@ def jackknife(data, nresamples, subsetsize, kde_time, kernel_width, event_times,
             jackknifed_kde) / len(event_times))
 
         jackknife_kdes.append(jackknifed_kde)
-
     return jackknife_kdes
 
 

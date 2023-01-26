@@ -41,9 +41,9 @@ def main():
     freqtime2, freq2 = instantaneous_frequency(
         filtered2, data.raw_rate, smoothing_window=3)
 
-    ax.plot(freqtime1*timescaler, freq1, color=ps.gblue1,
+    ax.plot(freqtime1*timescaler, freq1, color=ps.red,
             lw=2, label="fish 1")
-    ax.plot(freqtime2*timescaler, freq2, color=ps.gblue2,
+    ax.plot(freqtime2*timescaler, freq2, color=ps.orange,
             lw=2, label="fish 2")
     ax.legend(bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower center",
               mode="normal", borderaxespad=0, ncol=2)
