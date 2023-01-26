@@ -133,41 +133,45 @@ def get_chirp_freq(folder_name, Behavior, order_meta_df):
         Behavior.freq[Behavior.ident == fish2_freq])
 
     if winner == fish1:
-        if chirp_freq_fish1 > chirp_freq_fish2:
-            freq_diff_higher = chirp_freq_fish1 - chirp_freq_fish2
-            freq_diff_lower = chirp_freq_fish2 - chirp_freq_fish1
+        # if chirp_freq_fish1 > chirp_freq_fish2:
+        #     freq_diff_higher = chirp_freq_fish1 - chirp_freq_fish2
+        #     freq_diff_lower = chirp_freq_fish2 - chirp_freq_fish1
 
-        elif chirp_freq_fish1 < chirp_freq_fish2:
-            freq_diff_higher = chirp_freq_fish1 - chirp_freq_fish2
-            freq_diff_lower = chirp_freq_fish2 - chirp_freq_fish1
-        else:
-            freq_diff_higher = np.nan
-            freq_diff_lower = np.nan
-            winner_fish_id = np.nan
-            loser_fish_id = np.nan
+        # elif chirp_freq_fish1 < chirp_freq_fish2:
+        #     freq_diff_higher = chirp_freq_fish1 - chirp_freq_fish2
+        #     freq_diff_lower = chirp_freq_fish2 - chirp_freq_fish1
+        # else:
+        #     freq_diff_higher = np.nan
+        #     freq_diff_lower = np.nan
+        #     winner_fish_id = np.nan
+        #     loser_fish_id = np.nan
 
         winner_fish_id = folder_row['rec_id1'].values[0]
+        winner_fish_freq = chirp_freq_fish1
         loser_fish_id = folder_row['rec_id2'].values[0]
+        loser_fish_freq = chirp_freq_fish2
 
     elif winner == fish2:
-        if chirp_freq_fish2 > chirp_freq_fish1:
-            freq_diff_higher = chirp_freq_fish2 - chirp_freq_fish1
-            freq_diff_lower = chirp_freq_fish1 - chirp_freq_fish2
+        # if chirp_freq_fish2 > chirp_freq_fish1:
+        #     freq_diff_higher = chirp_freq_fish2 - chirp_freq_fish1
+        #     freq_diff_lower = chirp_freq_fish1 - chirp_freq_fish2
 
-        elif chirp_freq_fish2 < chirp_freq_fish1:
-            freq_diff_higher = chirp_freq_fish2 - chirp_freq_fish1
-            freq_diff_lower = chirp_freq_fish1 - chirp_freq_fish2
-        else:
-            freq_diff_higher = np.nan
-            freq_diff_lower = np.nan
-            winner_fish_id = np.nan
-            loser_fish_id = np.nan
+        # elif chirp_freq_fish2 < chirp_freq_fish1:
+        #     freq_diff_higher = chirp_freq_fish2 - chirp_freq_fish1
+        #     freq_diff_lower = chirp_freq_fish1 - chirp_freq_fish2
+        # else:
+        #     freq_diff_higher = np.nan
+        #     freq_diff_lower = np.nan
+        #     winner_fish_id = np.nan
+        #     loser_fish_id = np.nan
 
         winner_fish_id = folder_row['rec_id2'].values[0]
+        winner_fish_freq = chirp_freq_fish2
         loser_fish_id = folder_row['rec_id1'].values[0]
+        loser_fish_freq = chirp_freq_fish1
     else:
-        freq_diff_higher = np.nan
-        freq_diff_lower = np.nan
+        winner_fish_freq = np.nan
+        loser_fish_freq = np.nan
         winner_fish_id = np.nan
         loser_fish_id = np.nan
 
@@ -176,7 +180,7 @@ def get_chirp_freq(folder_name, Behavior, order_meta_df):
     chirp_loser = len(
         Behavior.chirps[Behavior.chirps_ids == loser_fish_id])
 
-    return freq_diff_higher, chirp_winner, freq_diff_lower, chirp_loser
+    return winner_fish_freq, chirp_winner, loser_fish_freq, chirp_loser
 
 
 def main(datapath: str):
@@ -229,11 +233,11 @@ def main(datapath: str):
         size_diff_bigger, chirp_winner,  size_diff_smaller, chirp_loser = get_chirp_size(
             foldername, bh, order_meta_df, id_meta_df)
 
-        freq_diff_higher, chirp_freq_winner, freq_diff_lower, chirp_freq_loser = get_chirp_freq(
+        freq_winner, chirp_freq_winner, freq_loser, chirp_freq_loser = get_chirp_freq(
             foldername, bh, order_meta_df)
 
-        freq_diffs_higher.append(freq_diff_higher)
-        freq_diffs_lower.append(freq_diff_lower)
+        freq_diffs_higher.append(freq_winner)
+        freq_diffs_lower.append(freq_loser)
         freq_chirps_winner.append(chirp_freq_winner)
         freq_chirps_loser.append(chirp_freq_loser)
 
@@ -247,15 +251,15 @@ def main(datapath: str):
     size_winner_pearsonr = pearsonr(size_diffs_winner, size_chirps_winner)
     size_loser_pearsonr = pearsonr(size_diffs_loser, size_chirps_loser)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(
-        13*ps.cm, 10*ps.cm), sharey=True)
-    plt.subplots_adjust(left=0.098, right=0.945, top=0.94, wspace=0.343)
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(
+        21*ps.cm, 10*ps.cm), width_ratios=[1, 0.8, 0.8], sharey=True)
+    plt.subplots_adjust(left=0.11, right=0.948, top=0.905, wspace=0.343, bottom=0.145)
     scatterwinner = 1.15
     scatterloser = 1.85
     chirps_winner = np.asarray(chirps_winner)[~np.isnan(chirps_winner)]
     chirps_loser = np.asarray(chirps_loser)[~np.isnan(chirps_loser)]
 
-    stat = wilcoxon(chirps_winner, chirps_loser) 
+    stat = wilcoxon(chirps_winner, chirps_loser)
     print(stat)
 
     bplot1 = ax1.boxplot(chirps_winner, positions=[
@@ -268,14 +272,15 @@ def main(datapath: str):
     ax1.scatter(np.ones(len(chirps_loser)) *
                 scatterloser, chirps_loser, color=ps.orange)
     ax1.set_xticklabels(['winner', 'loser'])
-    ax1.text(0.1, 0.9, f'n = {len(chirps_winner)}',
-             transform=ax1.transAxes, color=ps.white)
+
+    ax1.text(1, 2000, f'{len(chirps_winner)}',  color='gray')
+    ax1.text(1.8, 2000, f'{len(chirps_loser)}', color='gray')
 
     for w, l in zip(chirps_winner, chirps_loser):
         ax1.plot([scatterwinner, scatterloser], [w, l],
                  color=ps.white, alpha=1, linewidth=0.5)
-    ax1.set_ylabel('chirps [n]', color=ps.white)
-    ax1.set_xlabel('outcome', color=ps.white)
+    ax1.set_ylabel('chirpcount', color=ps.white)
+    ax1.set_xlabel('outcome',    color=ps.white)
 
     colors1 = ps.red
     ps.set_boxplot_color(bplot1, colors1)
@@ -283,17 +288,24 @@ def main(datapath: str):
     ps.set_boxplot_color(bplot2, colors1)
 
     ax2.scatter(size_diffs_winner, size_chirps_winner,
-                color=ps.red, label='winner')
+                color=ps.red, label=f'winner')
     ax2.scatter(size_diffs_loser, size_chirps_loser,
                 color=ps.orange, label='loser')
+    ax2.text(-1, 2000, f'{len(size_chirps_winner)}', color= 'gray')
+    ax2.text(1, 2000, f'{len(size_chirps_loser)}',   color= 'gray')
 
     ax2.set_xlabel('size difference [cm]')
     # ax2.set_xticks(np.arange(-10, 10.1, 2))
 
+    ax3.scatter(freq_diffs_higher, freq_chirps_winner, color=ps.red)
+    ax3.scatter(freq_diffs_lower, freq_chirps_loser, color=ps.orange)
+
+    ax3.text(600, 2000, f'n = {len(freq_chirps_winner)}', color='gray')
+    ax3.text(650, 2000, f'{len(freq_chirps_loser)}',  color='gray')
+
+    ax3.set_xlabel('absolut frequency [Hz]')
     handles, labels = ax2.get_legend_handles_labels()
     fig.legend(handles, labels, loc='upper center', ncol=2)
-    plt.subplots_adjust(left=0.162, right=0.97, top=0.85, bottom=0.176)
-
     # pearson r
     plt.savefig('../poster/figs/chirps_winner_loser.pdf')
     plt.show()

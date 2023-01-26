@@ -54,19 +54,19 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
     \end{itemize}
 
     \noindent
-    \begin{minipage}[c]{0.7\linewidth}
-        \begin{tikzfigure}[]
-            \label{fig:example_b}
-            \includegraphics[width=\linewidth]{figs/chirps_winner_loser.pdf}
-        \end{tikzfigure}
-    \end{minipage} % no space if you would like to put them side by side
-    \begin{minipage}[c]{0.2\linewidth}
-        \begin{itemize}
-            \setlength\itemsep{0.5em}
-            \item Fish who won the competition chirped more often than the fish who lost.
-            \item
-        \end{itemize}
-    \end{minipage}
+
+    \begin{tikzfigure}[]
+        \label{fig:example_b}
+        \includegraphics[width=\linewidth]{figs/chirps_winner_loser.pdf}
+    \end{tikzfigure}
+
+
+    \begin{itemize}
+        \setlength\itemsep{0.5em}
+        \item Fish who won the competition chirped more often than the fish who lost.
+        \item
+    \end{itemize}
+
 }
 
 \myblock[TranspBlock]{Interactions at modulations}{

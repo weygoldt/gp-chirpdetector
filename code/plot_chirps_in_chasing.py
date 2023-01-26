@@ -57,7 +57,7 @@ def main(datapath: str):
         time_chasing_percent = (time_chasing/(3*60*60))*100
         chirps_chasing = np.asarray(flatten(chirps_in_chasings))
         chirps_chasing_new = chirps_chasing[chirps_chasing<3*60*60]
-        chirps_percent = (len(chirps_chasing_new)/len(bh.chirps))*100
+        chirps_percent = (len(chirps_chasing_new)/len(bh.chirps[bh.chirps<3*60*60]))*100
 
         time_precents.append(time_chasing_percent)
         chirps_percents.append(chirps_percent)
@@ -69,6 +69,9 @@ def main(datapath: str):
     ax.set_ylabel('Percent')
     ax.scatter(np.ones(len(time_precents))*1.25, time_precents, color=ps.white)
     ax.scatter(np.ones(len(chirps_percents))*1.75, chirps_percents, color=ps.white)
+    for i in range(len(time_precents)):
+        ax.plot([1.25, 1.75], [time_precents[i], chirps_percents[i]], color=ps.white)
+    ax.text(0.99, 0.99, f'{len(time_precents)} fish', transform=ax.transAxes)
     plt.savefig('../poster/figs/chirps_in_chasing.pdf')
     plt.show()
 
