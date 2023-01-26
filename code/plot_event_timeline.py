@@ -19,11 +19,11 @@ logger = makeLogger(__name__)
 
 
 def main(datapath: str):
-
     foldernames = [
         datapath + x + '/' for x in os.listdir(datapath) if os.path.isdir(datapath+x)]
     foldernames, _ = get_valid_datasets(datapath)
-    for foldername in foldernames[1:2]:
+
+    for foldername in foldernames[3:4]:
         # foldername = foldernames[0]
         if foldername == '../data/mount_data/2020-05-12-10_00/':
             continue
