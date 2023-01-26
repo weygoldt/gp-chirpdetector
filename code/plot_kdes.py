@@ -282,7 +282,7 @@ def main(dataroot):
                 np.percentile(loser_offsets_boot[-1], 1, axis=0),
                 np.percentile(loser_offsets_boot[-1], 99, axis=0),
                 color=ps.white,
-                alpha=0.3)
+                alpha=0.5)
 
             ax[i].plot(kde_time, np.median(loser_offsets_boot[-1], axis=0),
                        color=ps.black, linewidth=2)
