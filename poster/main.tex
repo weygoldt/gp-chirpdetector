@@ -16,21 +16,22 @@ blockverticalspace=2mm, colspace=20mm, subcolspace=0mm]{tikzposter} %Default val
 
 \begin{columns}
 \column{0.4}
-\myblock[GrayBlock]{Introduction}{
+\myblock[TranspBlock]{Introduction}{
     The time-frequency tradeoff makes reliable signal detecion and simultaneous
     sender identification by simple Fourier decomposition in freely interacting
     weakly electric fish impossible. This profoundly limits our current
     understanding of chirps to experiments
     with single - or physically separated - individuals.
+    \vspace{1cm}
     \begin{tikzfigure}[]
         \label{griddrawing}
-        \includegraphics[width=0.6\linewidth]{figs/introplot}
+        \includegraphics[width=\linewidth]{figs/introplot}
     \end{tikzfigure}
 }
 \myblock[TranspBlock]{Chirp detection}{
     \begin{tikzfigure}[]
         \label{fig:alg1}
-        \includegraphics[width=0.6\linewidth]{figs/algorithm1}
+        \includegraphics[width=0.9\linewidth]{figs/algorithm1}
     \end{tikzfigure}
     \vspace{2cm}
     \begin{tikzfigure}[]

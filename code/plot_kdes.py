@@ -1,18 +1,18 @@
-from extract_chirps import get_valid_datasets
-import os
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-from tqdm import tqdm
-from IPython import embed
-from pandas import read_csv
-from modules.logger import makeLogger
-from modules.datahandling import flatten, causal_kde1d, acausal_kde1d
+from modules.plotstyle import PlotStyle
 from modules.behaviour_handling import (
     Behavior, correct_chasing_events, center_chirps)
-from modules.plotstyle import PlotStyle
+from modules.datahandling import flatten, causal_kde1d, acausal_kde1d
+from modules.logger import makeLogger
+from pandas import read_csv
+from IPython import embed
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import os
+from extract_chirps import get_valid_datasets
+
 
 logger = makeLogger(__name__)
 ps = PlotStyle()
@@ -23,16 +23,16 @@ def bootstrap(data, nresamples, kde_time, kernel_width, event_times, time_before
     bootstrapped_kdes = []
     data = data[data <= 3*60*60]  # only night time
 
-    # diff_data = np.diff(np.sort(data), prepend=0)
+    diff_data = np.diff(np.sort(data), prepend=0)
     # if len(data) != 0:
     #     mean_chirprate = (len(data) - 1) / (data[-1] - data[0])
 
     for i in tqdm(range(nresamples)):
 
-        # np.random.shuffle(diff_data)
+        np.random.shuffle(diff_data)
 
-        # bootstrapped_data = np.cumsum(diff_data)
-        bootstrapped_data = data + np.random.randn(len(data)) * 10
+        bootstrapped_data = np.cumsum(diff_data)
+        # bootstrapped_data = data + np.random.randn(len(data)) * 10
 
         bootstrap_data_centered = center_chirps(
             bootstrapped_data, event_times, time_before, time_after)
@@ -40,8 +40,8 @@ def bootstrap(data, nresamples, kde_time, kernel_width, event_times, time_before
         bootstrapped_kde = acausal_kde1d(
             bootstrap_data_centered, time=kde_time, width=kernel_width)
 
-        # bootstrapped_kdes = list(np.asarray(
-        #     bootstrapped_kdes) / len(event_times))
+        bootstrapped_kde = list(np.asarray(
+            bootstrapped_kde) / len(event_times))
 
         bootstrapped_kdes.append(bootstrapped_kde)
 
@@ -58,21 +58,21 @@ def jackknife(data, nresamples, subsetsize, kde_time, kernel_width, event_times,
 
     for i in tqdm(range(nresamples)):
 
-        bootstrapped_data = np.random.sample(data, subsetsize, replace=False)
+        jackknifed_data = np.random.choice(
+            diff_data, subsetsize, replace=False)
 
-        bootstrapped_data = np.cumsum(diff_data)
+        jackknifed_data = np.cumsum(jackknifed_data)
 
-        bootstrap_data_centered = center_chirps(
-            bootstrapped_data, event_times, time_before, time_after)
+        jackknifed_data_centered = center_chirps(
+            jackknifed_data, event_times, time_before, time_after)
 
-        bootstrapped_kde = acausal_kde1d(
-            bootstrap_data_centered, time=kde_time, width=kernel_width)
+        jackknifed_kde = acausal_kde1d(
+            jackknifed_data_centered, time=kde_time, width=kernel_width)
 
-        # bootstrapped_kdes = list(np.asarray(
-        #     bootstrapped_kdes) / len(event_times))
+        jackknifed_kde = list(np.asarray(
+            jackknifed_kde) / len(event_times))
 
-        jackknife_kdes.append(bootstrapped_kde)
-
+        jackknife_kdes.append(jackknifed_kde)
     return jackknife_kdes
 
 
@@ -102,14 +102,14 @@ def get_chirp_winner_loser(folder_name, Behavior, order_meta_df):
 
 def main(dataroot):
 
-    foldernames, _ = get_valid_datasets(dataroot)
+    foldernames, _ = np.asarray(get_valid_datasets(dataroot))
     plot_all = True
-    time_before = 60
-    time_after = 60
+    time_before = 90
+    time_after = 90
     dt = 0.001
-    kernel_width = 1
+    kernel_width = 2
     kde_time = np.arange(-time_before, time_after, dt)
-    nbootstraps = 2
+    nbootstraps = 50
 
     meta_path = (
         '/').join(foldernames[0].split('/')[:-2]) + '/order_meta.csv'
@@ -135,9 +135,19 @@ def main(dataroot):
     onset_count = 0
     offset_count = 0
     physical_count = 0
-
+    # winner_count = 0
+    # loser_count = 0
+    # winner_onset_chirpcount = 0
+    # winner_offset_chirpcount = 0
+    # winner_physical_chirpcount = 0
+    # loser_onset_chirpcount = 0
+    # loser_offset_chirpcount = 0
+    # loser_physical_chirpcount = 0
+    fig, ax = plt.subplots(1, 2, figsize=(
+        14 * ps.cm, 7*ps.cm), sharey=True, sharex=True)
     # Iterate over all recordings and save chirp- and event-timestamps
-    for folder in tqdm(foldernames):
+    good_recs = np.asarray([0, 15])
+    for i, folder in tqdm(enumerate(foldernames[good_recs])):
 
         foldername = folder.split('/')[-2]
         # logger.info('Loading data from folder: {}'.format(foldername))
@@ -153,9 +163,10 @@ def main(dataroot):
         timestamps = timestamps[timestamps < 3*60*60]  # only night time
 
         winner, loser = get_chirp_winner_loser(folder, bh, meta)
-
         if winner is None:
             continue
+        # winner_count += len(winner)
+        # loser_count += len(loser)
 
         onsets = (timestamps[category == 0])
         offsets = (timestamps[category == 1])
@@ -179,42 +190,48 @@ def main(dataroot):
         loser_physicals.append(center_chirps(
             loser, physicals, time_before, time_after))
 
+        # winner_onset_chirpcount += len(winner_onsets[-1])
+        # winner_offset_chirpcount += len(winner_offsets[-1])
+        # winner_physical_chirpcount += len(winner_physicals[-1])
+        # loser_onset_chirpcount += len(loser_onsets[-1])
+        # loser_offset_chirpcount += len(loser_offsets[-1])
+        # loser_physical_chirpcount += len(loser_physicals[-1])
         # bootstrap
         # chirps = [winner, winner, winner, loser, loser, loser]
 
-        winner_onsets_boot.append(bootstrap(
-            winner,
-            nresamples=nbootstraps,
-            kde_time=kde_time,
-            kernel_width=kernel_width,
-            event_times=onsets,
-            time_before=time_before,
-            time_after=time_after))
-        winner_offsets_boot.append(bootstrap(
-            winner,
-            nresamples=nbootstraps,
-            kde_time=kde_time,
-            kernel_width=kernel_width,
-            event_times=offsets,
-            time_before=time_before,
-            time_after=time_after))
-        winner_physicals_boot.append(bootstrap(
-            winner,
-            nresamples=nbootstraps,
-            kde_time=kde_time,
-            kernel_width=kernel_width,
-            event_times=physicals,
-            time_before=time_before,
-            time_after=time_after))
+        # winner_onsets_boot.append(bootstrap(
+        #     winner,
+        #     nresamples=nbootstraps,
+        #     kde_time=kde_time,
+        #     kernel_width=kernel_width,
+        #     event_times=onsets,
+        #     time_before=time_before,
+        #     time_after=time_after))
+        # winner_offsets_boot.append(bootstrap(
+        #     winner,
+        #     nresamples=nbootstraps,
+        #     kde_time=kde_time,
+        #     kernel_width=kernel_width,
+        #     event_times=offsets,
+        #     time_before=time_before,
+        #     time_after=time_after))
+        # winner_physicals_boot.append(bootstrap(
+        #     winner,
+        #     nresamples=nbootstraps,
+        #     kde_time=kde_time,
+        #     kernel_width=kernel_width,
+        #     event_times=physicals,
+        #     time_before=time_before,
+        #     time_after=time_after))
 
-        loser_onsets_boot.append(bootstrap(
-            loser,
-            nresamples=nbootstraps,
-            kde_time=kde_time,
-            kernel_width=kernel_width,
-            event_times=onsets,
-            time_before=time_before,
-            time_after=time_after))
+        # loser_onsets_boot.append(bootstrap(
+        #     loser,
+        #     nresamples=nbootstraps,
+        #     kde_time=kde_time,
+        #     kernel_width=kernel_width,
+        #     event_times=onsets,
+        #     time_before=time_before,
+        #     time_after=time_after))
         loser_offsets_boot.append(bootstrap(
             loser,
             nresamples=nbootstraps,
@@ -223,61 +240,99 @@ def main(dataroot):
             event_times=offsets,
             time_before=time_before,
             time_after=time_after))
-        loser_physicals_boot.append(bootstrap(
+        # loser_physicals_boot.append(bootstrap(
+        #     loser,
+        #     nresamples=nbootstraps,
+        #     kde_time=kde_time,
+        #     kernel_width=kernel_width,
+        #     event_times=physicals,
+        #     time_before=time_before,
+        #     time_after=time_after))
+
+        loser_offsets_jackknife = jackknife(
             loser,
             nresamples=nbootstraps,
+            subsetsize=0.5,
             kde_time=kde_time,
             kernel_width=kernel_width,
-            event_times=physicals,
+            event_times=offsets,
             time_before=time_before,
-            time_after=time_after))
+            time_after=time_after)
 
         if plot_all:
 
-            winner_onsets_conv = acausal_kde1d(
-                winner_onsets[-1], kde_time, kernel_width)
-            winner_offsets_conv = acausal_kde1d(
-                winner_offsets[-1], kde_time, kernel_width)
-            winner_physicals_conv = acausal_kde1d(
-                winner_physicals[-1], kde_time, kernel_width)
+            # winner_onsets_conv = acausal_kde1d(
+            #     winner_onsets[-1], kde_time, kernel_width)
+            # winner_offsets_conv = acausal_kde1d(
+            #     winner_offsets[-1], kde_time, kernel_width)
+            # winner_physicals_conv = acausal_kde1d(
+            #     winner_physicals[-1], kde_time, kernel_width)
 
-            loser_onsets_conv = acausal_kde1d(
-                loser_onsets[-1], kde_time, kernel_width)
+            # loser_onsets_conv = acausal_kde1d(
+            #     loser_onsets[-1], kde_time, kernel_width)
             loser_offsets_conv = acausal_kde1d(
                 loser_offsets[-1], kde_time, kernel_width)
-            loser_physicals_conv = acausal_kde1d(
-                loser_physicals[-1], kde_time, kernel_width)
+            # loser_physicals_conv = acausal_kde1d(
+            #     loser_physicals[-1], kde_time, kernel_width)
 
-            fig, ax = plt.subplots(2, 3, figsize=(
-                21*ps.cm, 10*ps.cm), sharey=True, sharex=True)
-            ax[0, 0].set_title(
-                f"{foldername}, onsets {len(onsets)}, offsets {len(offsets)}, physicals {len(physicals)},winner {len(winner)}, looser {len(loser)} , onsets")
-            ax[0, 0].plot(kde_time, winner_onsets_conv/len(onsets))
-            ax[0, 1].plot(kde_time, winner_offsets_conv/len(offsets))
-            ax[0, 2].plot(kde_time, winner_physicals_conv/len(physicals))
-            ax[1, 0].plot(kde_time, loser_onsets_conv/len(onsets))
-            ax[1, 1].plot(kde_time, loser_offsets_conv/len(offsets))
-            ax[1, 2].plot(kde_time, loser_physicals_conv/len(physicals))
+            ax[i].plot(kde_time, loser_offsets_conv/len(offsets))
+
+            ax[i].fill_between(
+                kde_time,
+                np.percentile(loser_offsets_boot[-1], 5, axis=0),
+                np.percentile(loser_offsets_boot[-1], 95, axis=0),
+                color=ps.gray,
+                alpha=0.5)
+
+            ax[i].plot(kde_time, np.median(loser_offsets_boot[-1], axis=0),
+                       color=ps.black, linewidth=2)
+
+            ax[i].fill_between(
+                kde_time,
+                np.percentile(loser_offsets_jackknife, 5, axis=0),
+                np.percentile(loser_offsets_jackknife, 95, axis=0),
+                color=ps.blue,
+                alpha=0.5)
+            ax[i].plot(kde_time, np.median(loser_offsets_jackknife, axis=0),
+                       color=ps.white, linewidth=2)
+
+            ax[i].set_xlim(-60, 60)
+
+            embed()
+
+            # fig, ax = plt.subplots(2, 3, figsize=(
+            #     21*ps.cm, 10*ps.cm), sharey=True, sharex=True)
+            # ax[0, 0].set_title(
+            #     f"{foldername}, onsets {len(onsets)}, offsets {len(offsets)}, physicals {len(physicals)},winner {len(winner)}, looser {len(loser)} , onsets")
+            # ax[0, 0].plot(kde_time, winner_onsets_conv/len(onsets))
+            # ax[0, 1].plot(kde_time, winner_offsets_conv /
+            #               len(offsets))
+            # ax[0, 2].plot(kde_time, winner_physicals_conv /
+            #               len(physicals))
+            # ax[1, 0].plot(kde_time, loser_onsets_conv/len(onsets))
+            # ax[1, 1].plot(kde_time, loser_offsets_conv/len(offsets))
+            # ax[1, 2].plot(kde_time, loser_physicals_conv /
+            #               len(physicals))
 
             # # plot bootstrap lines
-            for kde in winner_onsets_boot[-1]:
-                ax[0, 0].plot(kde_time, kde/len(onsets),
-                              color='gray')
-            for kde in winner_offsets_boot[-1]:
-                ax[0, 1].plot(kde_time, kde/len(offsets),
-                              color='gray')
-            for kde in winner_physicals_boot[-1]:
-                ax[0, 2].plot(kde_time, kde/len(physicals),
-                              color='gray')
-            for kde in loser_onsets_boot[-1]:
-                ax[1, 0].plot(kde_time, kde/len(onsets),
-                              color='gray')
-            for kde in loser_offsets_boot[-1]:
-                ax[1, 1].plot(kde_time, kde/len(offsets),
-                              color='gray')
-            for kde in loser_physicals_boot[-1]:
-                ax[1, 2].plot(kde_time, kde/len(physicals),
-                              color='gray')
+            # for kde in winner_onsets_boot[-1]:
+            #     ax[0, 0].plot(kde_time, kde,
+            #                   color='gray')
+            # for kde in winner_offsets_boot[-1]:
+            #     ax[0, 1].plot(kde_time, kde,
+            #                   color='gray')
+            # for kde in winner_physicals_boot[-1]:
+            #     ax[0, 2].plot(kde_time, kde,
+            #                   color='gray')
+            # for kde in loser_onsets_boot[-1]:
+            #     ax[1, 0].plot(kde_time, kde,
+            #                   color='gray')
+            # for kde in loser_offsets_boot[-1]:
+            #     ax[1, 1].plot(kde_time, kde,
+            #                   color='gray')
+            # for kde in loser_physicals_boot[-1]:
+            #     ax[1, 2].plot(kde_time, kde,
+            #                   color='gray')
 
             # plot bootstrap percentiles
             # ax[0, 0].fill_between(
@@ -335,79 +390,79 @@ def main(dataroot):
             # ax[1, 2].plot(kde_time, np.median(loser_physicals_boot[-1], axis=0),
             #               color='black', linewidth=2)
 
-            ax[0, 0].set_xlim(-30, 30)
-            plt.show()
+            # ax[0, 0].set_xlim(-30, 30)
+    plt.show()
 
-    winner_onsets = np.sort(flatten(winner_onsets))
-    winner_offsets = np.sort(flatten(winner_offsets))
-    winner_physicals = np.sort(flatten(winner_physicals))
-    loser_onsets = np.sort(flatten(loser_onsets))
-    loser_offsets = np.sort(flatten(loser_offsets))
-    loser_physicals = np.sort(flatten(loser_physicals))
+    # winner_onsets = np.sort(flatten(winner_onsets))
+    # winner_offsets = np.sort(flatten(winner_offsets))
+    # winner_physicals = np.sort(flatten(winner_physicals))
+    # loser_onsets = np.sort(flatten(loser_onsets))
+    # loser_offsets = np.sort(flatten(loser_offsets))
+    # loser_physicals = np.sort(flatten(loser_physicals))
 
-    winner_onsets_conv = acausal_kde1d(
-        winner_onsets, kde_time, kernel_width)
-    winner_offsets_conv = acausal_kde1d(
-        winner_offsets, kde_time, kernel_width)
-    winner_physicals_conv = acausal_kde1d(
-        winner_physicals, kde_time, kernel_width)
-    loser_onsets_conv = acausal_kde1d(
-        loser_onsets, kde_time, kernel_width)
-    loser_offsets_conv = acausal_kde1d(
-        loser_offsets, kde_time, kernel_width)
-    loser_physicals_conv = acausal_kde1d(
-        loser_physicals, kde_time, kernel_width)
+    # winner_onsets_conv = acausal_kde1d(
+    #     winner_onsets, kde_time, kernel_width)
+    # winner_offsets_conv = acausal_kde1d(
+    #     winner_offsets, kde_time, kernel_width)
+    # winner_physicals_conv = acausal_kde1d(
+    #     winner_physicals, kde_time, kernel_width)
+    # loser_onsets_conv = acausal_kde1d(
+    #     loser_onsets, kde_time, kernel_width)
+    # loser_offsets_conv = acausal_kde1d(
+    #     loser_offsets, kde_time, kernel_width)
+    # loser_physicals_conv = acausal_kde1d(
+    #     loser_physicals, kde_time, kernel_width)
 
-    winner_onsets_conv = winner_onsets_conv / onset_count
-    winner_offsets_conv = winner_offsets_conv / offset_count
-    winner_physicals_conv = winner_physicals_conv / physical_count
-    loser_onsets_conv = loser_onsets_conv / onset_count
-    loser_offsets_conv = loser_offsets_conv / offset_count
-    loser_physicals_conv = loser_physicals_conv / physical_count
+    # winner_onsets_conv = winner_onsets_conv / onset_count
+    # winner_offsets_conv = winner_offsets_conv / offset_count
+    # winner_physicals_conv = winner_physicals_conv / physical_count
+    # loser_onsets_conv = loser_onsets_conv / onset_count
+    # loser_offsets_conv = loser_offsets_conv / offset_count
+    # loser_physicals_conv = loser_physicals_conv / physical_count
 
-    winner_onsets_boot = np.concatenate(
-        winner_onsets_boot)
-    winner_offsets_boot = np.concatenate(
-        winner_offsets_boot)
-    winner_physicals_boot = np.concatenate(
-        winner_physicals_boot)
-    loser_onsets_boot = np.concatenate(
-        loser_onsets_boot)
-    loser_offsets_boot = np.concatenate(
-        loser_offsets_boot)
-    loser_physicals_boot = np.concatenate(
-        loser_physicals_boot)
+    # winner_onsets_boot = np.concatenate(
+    #     winner_onsets_boot)
+    # winner_offsets_boot = np.concatenate(
+    #     winner_offsets_boot)
+    # winner_physicals_boot = np.concatenate(
+    #     winner_physicals_boot)
+    # loser_onsets_boot = np.concatenate(
+    #     loser_onsets_boot)
+    # loser_offsets_boot = np.concatenate(
+    #     loser_offsets_boot)
+    # loser_physicals_boot = np.concatenate(
+    #     loser_physicals_boot)
 
-    percs = [5, 50, 95]
-    winner_onsets_boot_quarts = np.percentile(
-        winner_onsets_boot, percs, axis=0)
-    winner_offsets_boot_quarts = np.percentile(
-        winner_offsets_boot, percs, axis=0)
-    winner_physicals_boot_quarts = np.percentile(
-        winner_physicals_boot, percs, axis=0)
-    loser_onsets_boot_quarts = np.percentile(
-        loser_onsets_boot, percs, axis=0)
-    loser_offsets_boot_quarts = np.percentile(
-        loser_offsets_boot, percs, axis=0)
-    loser_physicals_boot_quarts = np.percentile(
-        loser_physicals_boot, percs, axis=0)
+    # percs = [5, 50, 95]
+    # winner_onsets_boot_quarts = np.percentile(
+    #     winner_onsets_boot, percs, axis=0)
+    # winner_offsets_boot_quarts = np.percentile(
+    #     winner_offsets_boot, percs, axis=0)
+    # winner_physicals_boot_quarts = np.percentile(
+    #     winner_physicals_boot, percs, axis=0)
+    # loser_onsets_boot_quarts = np.percentile(
+    #     loser_onsets_boot, percs, axis=0)
+    # loser_offsets_boot_quarts = np.percentile(
+    #     loser_offsets_boot, percs, axis=0)
+    # loser_physicals_boot_quarts = np.percentile(
+    #     loser_physicals_boot, percs, axis=0)
 
-    fig, ax = plt.subplots(2, 3, figsize=(
-        21*ps.cm, 10*ps.cm), sharey=True, sharex=True)
+    # fig, ax = plt.subplots(2, 3, figsize=(
+    #     21*ps.cm, 10*ps.cm), sharey=True, sharex=True)
 
-    ax[0, 0].plot(kde_time, winner_onsets_conv)
-    ax[0, 1].plot(kde_time, winner_offsets_conv)
-    ax[0, 2].plot(kde_time, winner_physicals_conv)
-    ax[1, 0].plot(kde_time, loser_onsets_conv)
-    ax[1, 1].plot(kde_time, loser_offsets_conv)
-    ax[1, 2].plot(kde_time, loser_physicals_conv)
+    # ax[0, 0].plot(kde_time, winner_onsets_conv)
+    # ax[0, 1].plot(kde_time, winner_offsets_conv)
+    # ax[0, 2].plot(kde_time, winner_physicals_conv)
+    # ax[1, 0].plot(kde_time, loser_onsets_conv)
+    # ax[1, 1].plot(kde_time, loser_offsets_conv)
+    # ax[1, 2].plot(kde_time, loser_physicals_conv)
 
-    ax[0, 0].plot(kde_time, winner_onsets_boot_quarts[1], c=ps.black)
-    ax[0, 1].plot(kde_time, winner_offsets_boot_quarts[1], c=ps.black)
-    ax[0, 2].plot(kde_time, winner_physicals_boot_quarts[1], c=ps.black)
-    ax[1, 0].plot(kde_time, loser_onsets_boot_quarts[1], c=ps.black)
-    ax[1, 1].plot(kde_time, loser_offsets_boot_quarts[1], c=ps.black)
-    ax[1, 2].plot(kde_time, loser_physicals_boot_quarts[1], c=ps.black)
+    # ax[0, 0].plot(kde_time, winner_onsets_boot_quarts[1], c=ps.black)
+    # ax[0, 1].plot(kde_time, winner_offsets_boot_quarts[1], c=ps.black)
+    # ax[0, 2].plot(kde_time, winner_physicals_boot_quarts[1], c=ps.black)
+    # ax[1, 0].plot(kde_time, loser_onsets_boot_quarts[1], c=ps.black)
+    # ax[1, 1].plot(kde_time, loser_offsets_boot_quarts[1], c=ps.black)
+    # ax[1, 2].plot(kde_time, loser_physicals_boot_quarts[1], c=ps.black)
 
     # for kde in winner_onsets_boot:
     #     ax[0, 0].plot(kde_time, kde,
@@ -428,43 +483,43 @@ def main(dataroot):
     #     ax[1, 2].plot(kde_time, kde,
     #                   color='gray')
 
-    ax[0, 0].fill_between(kde_time,
-                          winner_onsets_boot_quarts[0],
-                          winner_onsets_boot_quarts[2],
-                          color=ps.gray,
-                          alpha=0.5)
+    # ax[0, 0].fill_between(kde_time,
+    #                       winner_onsets_boot_quarts[0],
+    #                       winner_onsets_boot_quarts[2],
+    #                       color=ps.gray,
+    #                       alpha=0.5)
 
-    ax[0, 1].fill_between(kde_time,
-                          winner_offsets_boot_quarts[0],
-                          winner_offsets_boot_quarts[2],
-                          color=ps.gray,
-                          alpha=0.5)
+    # ax[0, 1].fill_between(kde_time,
+    #                       winner_offsets_boot_quarts[0],
+    #                       winner_offsets_boot_quarts[2],
+    #                       color=ps.gray,
+    #                       alpha=0.5)
 
-    ax[0, 2].fill_between(kde_time,
-                          loser_physicals_boot_quarts[0],
-                          loser_physicals_boot_quarts[2],
-                          color=ps.gray,
-                          alpha=0.5)
+    # ax[0, 2].fill_between(kde_time,
+    #                       loser_physicals_boot_quarts[0],
+    #                       loser_physicals_boot_quarts[2],
+    #                       color=ps.gray,
+    #                       alpha=0.5)
 
-    ax[1, 0].fill_between(kde_time,
-                          loser_onsets_boot_quarts[0],
-                          loser_onsets_boot_quarts[2],
-                          color=ps.gray,
-                          alpha=0.5)
+    # ax[1, 0].fill_between(kde_time,
+    #                       loser_onsets_boot_quarts[0],
+    #                       loser_onsets_boot_quarts[2],
+    #                       color=ps.gray,
+    #                       alpha=0.5)
 
-    ax[1, 1].fill_between(kde_time,
-                          loser_offsets_boot_quarts[0],
-                          loser_offsets_boot_quarts[2],
-                          color=ps.gray,
-                          alpha=0.5)
+    # ax[1, 1].fill_between(kde_time,
+    #                       loser_offsets_boot_quarts[0],
+    #                       loser_offsets_boot_quarts[2],
+    #                       color=ps.gray,
+    #                       alpha=0.5)
 
-    ax[1, 2].fill_between(kde_time,
-                          loser_physicals_boot_quarts[0],
-                          loser_physicals_boot_quarts[2],
-                          color=ps.gray,
-                          alpha=0.5)
+    # ax[1, 2].fill_between(kde_time,
+    #                       loser_physicals_boot_quarts[0],
+    #                       loser_physicals_boot_quarts[2],
+    #                       color=ps.gray,
+    #                       alpha=0.5)
 
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':
