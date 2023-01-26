@@ -252,9 +252,9 @@ def main(datapath: str):
     size_loser_pearsonr = pearsonr(size_diffs_loser, size_chirps_loser)
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(
-        21*ps.cm, 8*ps.cm), width_ratios=[1, 0.8, 0.8], sharey=True)
+        21*ps.cm, 7*ps.cm), width_ratios=[1, 0.8, 0.8], sharey=True)
     plt.subplots_adjust(left=0.11, right=0.948, top=0.86,
-                        wspace=0.343, bottom=0.18)
+                        wspace=0.343, bottom=0.198)
     scatterwinner = 1.15
     scatterloser = 1.85
     chirps_winner = np.asarray(chirps_winner)[~np.isnan(chirps_winner)]
@@ -262,8 +262,8 @@ def main(datapath: str):
 
     stat = wilcoxon(chirps_winner, chirps_loser)
     print(stat)
-    winner_color = ps.lavender
-    loser_color = ps.purple
+    winner_color = ps.gblue3
+    loser_color = ps.gblue1
 
     bplot1 = ax1.boxplot(chirps_winner, positions=[
         0.9], showfliers=False, patch_artist=True)
@@ -308,7 +308,8 @@ def main(datapath: str):
 
     ax3.set_xlabel('EODf [Hz]')
     handles, labels = ax2.get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper center', ncol=2)
+    fig.legend(handles, labels, loc='upper center',
+               ncol=2, bbox_to_anchor=(0.5, 1.04))
     # pearson r
     plt.savefig('../poster/figs/chirps_winner_loser.pdf')
     plt.show()

@@ -47,17 +47,17 @@ def main(datapath: str):
         # Associate chirps to inidividual fish
         fish1 = (bh.chirps[bh.chirps_ids == fish1_id] / 60) / 60
         fish2 = (bh.chirps[bh.chirps_ids == fish2_id] / 60) / 60
-        fish1_color = ps.purple
-        fish2_color = ps.lavender
+        fish1_color = ps.gblue1
+        fish2_color = ps.gblue3
 
         fig, ax = plt.subplots(5, 1, figsize=(
             21*ps.cm, 10*ps.cm), height_ratios=[0.5, 0.5, 0.5, 0.2, 6], sharex=True)
         # marker size
         s = 80
         ax[0].scatter(physical_contact, np.ones(
-            len(physical_contact)), color=ps.maroon, marker='|', s=s)
+            len(physical_contact)), color=ps.red, marker='|', s=s)
         ax[1].scatter(chasing_onset, np.ones(len(chasing_onset)),
-                      color=ps.orange, marker='|', s=s)
+                      color=ps.purple, marker='|', s=s)
         ax[2].scatter(fish1, np.ones(len(fish1))-0.25,
                       color=fish1_color, marker='|', s=s)
         ax[2].scatter(fish2, np.zeros(len(fish2))+0.25,
