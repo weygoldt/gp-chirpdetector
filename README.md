@@ -90,6 +90,49 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
+```sh
+ .
+├──  2022-06-02-10_00
+│  ├──  2022.06.02_0.mp4
+│  ├──  analysis
+│  │  ├──  baseline_freq_times.npy
+│  │  ├──  baseline_freqs.npy
+│  │  ├──  fish_freq.npy
+│  │  ├──  fish_freq_interp.npy
+│  │  ├──  frame_times.npy
+│  │  ├──  rise_idx.npy
+│  │  └──  rise_size.npy
+│  ├──  backup
+│  │  ├──  fund_v.npy
+│  │  ├──  ident_v.npy
+│  │  ├──  idx_v.npy
+│  │  ├──  meta.npy
+│  │  ├──  sign_v.npy
+│  │  ├──  spec.npy
+│  │  └──  times.npy
+│  ├──  chirp_ids.npy
+│  ├──  chirps.npy
+│  ├──  chirps_ids.npy
+│  ├──  fill_freqs.npy
+│  ├──  fill_spec.npy
+│  ├──  fill_spec_shape.npy
+│  ├──  fill_times.npy
+│  ├──  fishgrid.cfg
+│  ├──  fund_v.npy
+│  ├──  ident_v.npy
+│  ├──  idx_v.npy
+│  ├──  LED_frames.npy
+│  ├──  led_idxs.csv
+│  ├──  led_times.csv
+│  ├──  LED_val.npy
+│  ├──  meta.npy
+│  ├──  sign_v.npy
+│  ├──  spec.npy
+│  ├──  times.npy
+│  └──  traces-grid1.raw
+└──  mount_data
+```
+
 
 <!-- ### Built With -->
 
