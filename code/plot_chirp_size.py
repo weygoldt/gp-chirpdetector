@@ -277,7 +277,7 @@ def main(datapath: str):
                 scatterloser, chirps_loser, color=loser_color)
     ax1.set_xticklabels(['Winner', 'Loser'])
 
-    ax1.text(0.1, 0.95, f'n={len(chirps_winner)}',
+    ax1.text(0.1, 0.85, f'n={len(chirps_loser)}',
              transform=ax1.transAxes, color=ps.white)
 
     for w, l in zip(chirps_winner, chirps_loser):
@@ -294,7 +294,7 @@ def main(datapath: str):
     ax2.scatter(size_diffs_loser, size_chirps_loser,
                 color=loser_color, label='Loser')
 
-    ax2.text(0.05, 0.95, f'n={len(size_chirps_winner)}',
+    ax2.text(0.05, 0.85, f'n={len(size_chirps_loser)}',
              transform=ax2.transAxes, color=ps.white)
 
     ax2.set_xlabel('Size difference [cm]')
@@ -303,7 +303,7 @@ def main(datapath: str):
     ax3.scatter(freq_diffs_higher, freq_chirps_winner, color=winner_color)
     ax3.scatter(freq_diffs_lower, freq_chirps_loser, color=loser_color)
 
-    ax3.text(0.1, 0.95, f'n={len(freq_chirps_loser)}',
+    ax3.text(0.1, 0.85, f'n={len(np.asarray(freq_chirps_winner)[~np.isnan(freq_chirps_loser)])}',
              transform=ax3.transAxes, color=ps.white)
 
     ax3.set_xlabel('EODf [Hz]')

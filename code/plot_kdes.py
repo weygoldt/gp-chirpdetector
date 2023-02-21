@@ -282,8 +282,8 @@ def main(dataroot):
                 kde_time,
                 np.percentile(loser_offsets_boot[-1], 1, axis=0),
                 np.percentile(loser_offsets_boot[-1], 99, axis=0),
-                color=ps.white,
-                alpha=0.4)
+                color='gray',
+                alpha=0.8)
 
             ax[i].plot(kde_time, np.median(loser_offsets_boot[-1], axis=0),
                        color=ps.black, linewidth=2)
