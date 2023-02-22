@@ -114,7 +114,7 @@ def main(datapath: str):
         # ax[0].set_title(foldername.split('/')[-2])
         # 2020-03-31-9_59
         plt.subplots_adjust(left=0.158, right=0.987, top=0.918, bottom=0.136)
-        plt.savefig('../poster/figs/timeline.pdf')
+        plt.savefig('../poster/figs/timeline.svg')
         plt.show()
 
     # plot chirps
