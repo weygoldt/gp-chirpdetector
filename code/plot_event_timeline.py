@@ -48,6 +48,8 @@ def main(datapath: str):
         # Associate chirps to inidividual fish
         fish1 = (bh.chirps[bh.chirps_ids == fish1_id] / 60) / 60
         fish2 = (bh.chirps[bh.chirps_ids == fish2_id] / 60) / 60
+        embed()
+        exit()
         fish1_color = ps.gblue2
         fish2_color = ps.gblue1
         fig, ax = plt.subplots(5, 1, figsize=(

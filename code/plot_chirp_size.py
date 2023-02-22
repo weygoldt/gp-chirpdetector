@@ -67,6 +67,7 @@ def get_chirp_size(folder_name, Behavior, order_meta_df, id_meta_df):
 
     size_losers = [size_fish2_row[col].values[0] for col in ['l1', 'l2', 'l3']]
     size_fish2 = np.nanmean(size_losers)
+
     if winner == fish1:
         if size_fish1 > size_fish2:
             size_diff_bigger = size_fish1 - size_fish2
@@ -76,11 +77,8 @@ def get_chirp_size(folder_name, Behavior, order_meta_df, id_meta_df):
             size_diff_bigger = size_fish1 - size_fish2
             size_diff_smaller = size_fish2 - size_fish1
         else:
-            size_diff_bigger = np.nan
-            size_diff_smaller = np.nan
-            winner_fish_id = np.nan
-            loser_fish_id = np.nan
-            return size_diff_bigger, size_diff_smaller, winner_fish_id, loser_fish_id
+            size_diff_bigger = 0
+            size_diff_smaller = 0
 
         winner_fish_id = folder_row['rec_id1'].values[0]
         loser_fish_id = folder_row['rec_id2'].values[0]
@@ -94,11 +92,8 @@ def get_chirp_size(folder_name, Behavior, order_meta_df, id_meta_df):
             size_diff_bigger = size_fish2 - size_fish1
             size_diff_smaller = size_fish1 - size_fish2
         else:
-            size_diff_bigger = np.nan
-            size_diff_smaller = np.nan
-            winner_fish_id = np.nan
-            loser_fish_id = np.nan
-            return size_diff_bigger, size_diff_smaller, winner_fish_id, loser_fish_id
+            size_diff_bigger = 0
+            size_diff_smaller = 0
 
         winner_fish_id = folder_row['rec_id2'].values[0]
         loser_fish_id = folder_row['rec_id1'].values[0]
@@ -107,6 +102,7 @@ def get_chirp_size(folder_name, Behavior, order_meta_df, id_meta_df):
         size_diff_smaller = np.nan
         winner_fish_id = np.nan
         loser_fish_id = np.nan
+
         return size_diff_bigger, size_diff_smaller, winner_fish_id, loser_fish_id
 
     chirp_winner = len(
@@ -126,11 +122,12 @@ def get_chirp_freq(folder_name, Behavior, order_meta_df):
 
     fish1_freq = folder_row['rec_id1'].values[0].astype(int)
     fish2_freq = folder_row['rec_id2'].values[0].astype(int)
-    winner = folder_row['winner'].values[0].astype(int)
+
     chirp_freq_fish1 = np.nanmedian(
         Behavior.freq[Behavior.ident == fish1_freq])
     chirp_freq_fish2 = np.nanmedian(
         Behavior.freq[Behavior.ident == fish2_freq])
+    winner = folder_row['winner'].values[0].astype(int)
 
     if winner == fish1:
         # if chirp_freq_fish1 > chirp_freq_fish2:
@@ -174,6 +171,7 @@ def get_chirp_freq(folder_name, Behavior, order_meta_df):
         loser_fish_freq = np.nan
         winner_fish_id = np.nan
         loser_fish_id = np.nan
+        return winner_fish_freq, winner_fish_id, loser_fish_freq, loser_fish_id
 
     chirp_winner = len(
         Behavior.chirps[Behavior.chirps_ids == winner_fish_id])
@@ -197,6 +195,7 @@ def main(datapath: str):
     id_meta_df = read_csv(path_id_meta)
 
     chirps_winner = []
+    chirps_loser = []
 
     size_diffs_winner = []
     size_diffs_loser = []
@@ -208,7 +207,6 @@ def main(datapath: str):
     freq_chirps_winner = []
     freq_chirps_loser = []
 
-    chirps_loser = []
     freq_diffs = []
     freq_chirps_diffs = []
 
@@ -259,6 +257,16 @@ def main(datapath: str):
     scatterloser = 1.85
     chirps_winner = np.asarray(chirps_winner)[~np.isnan(chirps_winner)]
     chirps_loser = np.asarray(chirps_loser)[~np.isnan(chirps_loser)]
+    embed()
+    exit()
+    freq_diffs_higher = np.asarray(
+        freq_diffs_higher)[~np.isnan(freq_diffs_higher)]
+    freq_diffs_lower = np.asarray(freq_diffs_lower)[
+        ~np.isnan(freq_diffs_lower)]
+    freq_chirps_winner = np.asarray(
+        freq_chirps_winner)[~np.isnan(freq_chirps_winner)]
+    freq_chirps_loser = np.asarray(
+        freq_chirps_loser)[~np.isnan(freq_chirps_loser)]
 
     stat = wilcoxon(chirps_winner, chirps_loser)
     print(stat)
@@ -299,7 +307,6 @@ def main(datapath: str):
 
     ax2.set_xlabel('Size difference [cm]')
     # ax2.set_xticks(np.arange(-10, 10.1, 2))
-
     ax3.scatter(freq_diffs_higher, freq_chirps_winner, color=winner_color)
     ax3.scatter(freq_diffs_lower, freq_chirps_loser, color=loser_color)
 
