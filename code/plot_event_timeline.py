@@ -24,6 +24,7 @@ def main(datapath: str):
     foldernames, _ = get_valid_datasets(datapath)
 
     for foldername in foldernames[3:4]:
+        print(foldername)
         # foldername = foldernames[0]
         if foldername == '../data/mount_data/2020-05-12-10_00/':
             continue
@@ -47,9 +48,8 @@ def main(datapath: str):
         # Associate chirps to inidividual fish
         fish1 = (bh.chirps[bh.chirps_ids == fish1_id] / 60) / 60
         fish2 = (bh.chirps[bh.chirps_ids == fish2_id] / 60) / 60
-        fish1_color = ps.gblue1
-        fish2_color = ps.gblue2
-
+        fish1_color = ps.gblue2
+        fish2_color = ps.gblue1
         fig, ax = plt.subplots(5, 1, figsize=(
             21*ps.cm, 10*ps.cm), height_ratios=[0.5, 0.5, 0.5, 0.2, 6], sharex=True)
         # marker size
@@ -92,7 +92,7 @@ def main(datapath: str):
         ax[2].set_xticks([])
         ps.hide_ax(ax[2])
 
-        ax[4].axvspan(3, 6, 0, 5, facecolor='grey', alpha=0.5)
+        ax[4].axvspan(0, 3, 0, 5, facecolor='grey', alpha=0.5)
         ax[4].set_xticks(np.arange(0, 6.1, 0.5))
         ps.hide_ax(ax[3])
 
