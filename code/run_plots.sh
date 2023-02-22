@@ -6,5 +6,5 @@ message='Running scripts in directory: '
 
 for py_file in $(ls plot_*); do
     echo -e $message$color$py_file$nocolor
-    python $py_file
+    python3 $py_file
 done
