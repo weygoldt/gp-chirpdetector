@@ -1,4 +1,4 @@
-audioio==0.10.0
+audioio==0.9.5
 cmocean==2.0
 cycler==0.11.0
 ipython==8.10.0
@@ -9,5 +9,5 @@ paramiko==2.11.1
 PyYAML==6.0
 scipy==1.10.1
 scp==0.14.5
-thunderfish==1.9.10
+thunderfish==1.9.9
 tqdm==4.64.1
