@@ -1,19 +1,14 @@
-import numpy as np
-from extract_chirps import get_valid_datasets
-
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import pearsonr, spearmanr, wilcoxon
-from thunderfish.powerspectrum import decibel
-
+import numpy as np
+from extract_chirps import get_valid_datasets
 from IPython import embed
-from pandas import read_csv
+from modules.behaviour_handling import Behavior, correct_chasing_events
 from modules.logger import makeLogger
 from modules.plotstyle import PlotStyle
-from modules.behaviour_handling import Behavior, correct_chasing_events
-
+from pandas import read_csv
+from scipy.stats import pearsonr, wilcoxon
 
 ps = PlotStyle()
 
@@ -207,8 +202,6 @@ def main(datapath: str):
     freq_chirps_winner = []
     freq_chirps_loser = []
 
-    freq_diffs = []
-    freq_chirps_diffs = []
 
     for foldername in foldernames:
         # behabvior is pandas dataframe with all the data
@@ -246,8 +239,8 @@ def main(datapath: str):
         size_chirps_winner.append(chirp_winner)
         size_chirps_loser.append(chirp_loser)
 
-    size_winner_pearsonr = pearsonr(size_diffs_winner, size_chirps_winner)
-    size_loser_pearsonr = pearsonr(size_diffs_loser, size_chirps_loser)
+    pearsonr(size_diffs_winner, size_chirps_winner)
+    pearsonr(size_diffs_loser, size_chirps_loser)
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(
         21*ps.cm, 7*ps.cm), width_ratios=[1, 0.8, 0.8], sharey=True)
@@ -298,7 +291,7 @@ def main(datapath: str):
     ps.set_boxplot_color(bplot2, loser_color)
 
     ax2.scatter(size_diffs_winner, size_chirps_winner,
-                color=winner_color, label=f'Winner')
+                color=winner_color, label='Winner')
     ax2.scatter(size_diffs_loser, size_chirps_loser,
                 color=loser_color, label='Loser')
 
