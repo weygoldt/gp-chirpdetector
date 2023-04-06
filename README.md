@@ -10,7 +10,7 @@
 <h3 align="center">chirpdetector</h3>
 
   <p align="center">
-    An algorithm to detect the chirps of weakly electric fish on multielectrode recordings.
+    An algorithm to detect transient communication signals of weakly electric fish on multielectrode recordings.
     <br />
     <a href="https://github.com/github_username/repo_name"><strong>Explore the docs »</strong></a>
     <br />
