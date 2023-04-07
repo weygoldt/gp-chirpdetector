@@ -234,12 +234,16 @@ class ChirpPlotBuffer:
         )
 
         # plot filtered and rectified envelope
+        # ax4.plot(
+        #     self.time, self.baseline_envelope * waveform_scaler, c=ps.gblue1, lw=lw
+        # )
         ax4.plot(
-            self.time, self.baseline_envelope * waveform_scaler, c=ps.gblue1, lw=lw
+            self.time, self.baseline_envelope, c=ps.gblue1, lw=lw
         )
         ax4.scatter(
             (self.time)[self.baseline_peaks],
-            (self.baseline_envelope * waveform_scaler)[self.baseline_peaks],
+            # (self.baseline_envelope * waveform_scaler)[self.baseline_peaks],
+            (self.baseline_envelope)[self.baseline_peaks],
             edgecolors=ps.black,
             facecolors=ps.red,
             zorder=10,
@@ -249,10 +253,12 @@ class ChirpPlotBuffer:
         )
 
         # plot envelope of search signal
-        ax5.plot(self.time, self.search_envelope * waveform_scaler, c=ps.gblue2, lw=lw)
+        # ax5.plot(self.time, self.search_envelope * waveform_scaler, c=ps.gblue2, lw=lw)
+        ax5.plot(self.time, self.search_envelope, c=ps.gblue2, lw=lw)
         ax5.scatter(
             (self.time)[self.search_peaks],
-            (self.search_envelope * waveform_scaler)[self.search_peaks],
+            # (self.search_envelope * waveform_scaler)[self.search_peaks],
+            (self.search_envelope)[self.search_peaks],
             edgecolors=ps.black,
             facecolors=ps.red,
             zorder=10,
@@ -489,6 +495,28 @@ def array_center(array: np.ndarray) -> float:
         return array[int(len(array) / 2)]
 
 
+def has_chirp(baseline_frequency: np.ndarray, peak_height: float) -> bool:
+    """
+    Check if a fish has a chirp.
+
+    Parameters
+    ----------
+    baseline_frequency : np.ndarray
+        Baseline frequency of the fish.
+    peak_height : float
+        Minimal peak height of a chirp on the instant. freq.
+
+    Returns
+    -------
+    bool: True if the fish has a chirp, False otherwise.
+    """
+    peaks, _ = find_peaks(baseline_frequency, height=peak_height)
+    if len(peaks) > 0:
+        return True
+    else:
+        return False
+
+
 def find_searchband(
     current_frequency: np.ndarray,
     percentiles_ids: np.ndarray,
@@ -655,16 +683,16 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
-    window_duration_index = 60 * data.raw_rate
+    # window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    # window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
     # window_start_seconds = (23495 + ((28336-23495)/3)) * data.raw_rate
     # window_duration_seconds = (28336 - 23495) * data.raw_rate
 
-    # window_start_index = 0
-    # window_duration_index = data.raw.shape[0]
+    window_start_index = 0
+    window_duration_index = data.raw.shape[0]
 
     # generate starting points of rolling window
     window_start_indices = np.arange(
@@ -825,6 +853,7 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                     samplerate=data.raw_rate,
                     cutoff_frequency=config.search_envelope_cutoff,
                 )
+
                 search_envelope = search_envelope_unfiltered
 
                 # compute instantaneous frequency of the baseline band to find
@@ -843,30 +872,28 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                     smoothing_window=config.baseline_frequency_smoothing,
                 )
 
-                # bandpass filter the instantaneous frequency to remove slow
-                # fluctuations. Just as with the baseline envelope, we then
-                # compute the envelope of the signal to remove the oscillations
-                # around the peaks
 
-                # baseline_frequency_samplerate = np.mean(
-                #     np.diff(baseline_frequency_time)
-                # )
-
+                # Take the absolute of the instantaneous frequency to invert
+                # troughs into peaks. This is nessecary since the narrow 
+                # pass band introduces these anomalies. Also substract by the
+                # median to set it to 0.
+                
                 baseline_frequency_filtered = np.abs(
                     baseline_frequency - np.median(baseline_frequency)
                 )
 
-                # baseline_frequency_filtered = highpass_filter(
-                #     signal=baseline_frequency_filtered,
-                #     samplerate=baseline_frequency_samplerate,
-                #     cutoff=config.baseline_frequency_highpass_cutoff,
-                # )
+                # Now check if there are strong dips in the signal amplitude
+                # in the rolling window. These result in frequency anomalies, 
+                # which would be detected as chirps on the frequency trace.
 
-                # baseline_frequency_filtered = envelope(
-                #     signal=-baseline_frequency_filtered,
-                #     samplerate=baseline_frequency_samplerate,
-                #     cutoff_frequency=config.baseline_frequency_envelope_cutoff,
-                # )
+                # check if there is at least one superthreshold peak on the 
+                # instantaneous and exit the loop if not. This is used to 
+                # prevent windows that do definetely not include a chirp 
+                # to enter normalization, where small changes due to noise 
+                # would be amplified 
+
+                if not has_chirp(baseline_frequency, config.baseline_frequency_peakheight):
+                    continue
 
                 # CUT OFF OVERLAP ---------------------------------------------
 
@@ -877,6 +904,7 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 no_edges = np.arange(
                     int(window_edge), len(baseline_envelope) - int(window_edge)
                 )
+
                 current_raw_time = current_raw_time[no_edges]
                 baselineband = baselineband[no_edges]
                 baseline_envelope_unfiltered = baseline_envelope_unfiltered[no_edges]
@@ -905,11 +933,11 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 # normalize all three feature arrays to the same range to make
                 # peak detection simpler
 
-                # baseline_envelope = minmaxnorm([baseline_envelope])[0]
-                # search_envelope = minmaxnorm([search_envelope])[0]
-                # baseline_frequency_filtered = minmaxnorm(
-                #     [baseline_frequency_filtered]
-                # )[0]
+                baseline_envelope = minmaxnorm([baseline_envelope])[0]
+                search_envelope = minmaxnorm([search_envelope])[0]
+                baseline_frequency_filtered = minmaxnorm(
+                    [baseline_frequency_filtered]
+                )[0]
 
                 # PEAK DETECTION ----------------------------------------------
 
@@ -1110,7 +1138,7 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
 
 if __name__ == "__main__":
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-05-13-10_00/"
-    datapath = "../data/2022-06-02-10_00/"
     # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
-    chirpdetection(datapath, plot="save", debug="false")
+    datapath = "../data/2022-06-02-10_00/"
+    chirpdetection(datapath, plot="show", debug="false")
