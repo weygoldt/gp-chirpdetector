@@ -2,6 +2,7 @@ import numpy as np
 from typing import List, Any
 from scipy.ndimage import gaussian_filter1d
 from scipy.stats import gamma, norm
+from scipy.signal import resample
 
 
 def minmaxnorm(data):
@@ -20,6 +21,45 @@ def minmaxnorm(data):
 
     """
     return (data - np.min(data)) / (np.max(data) - np.min(data))
+
+def instantaneous_frequency2(signal: np.ndarray, fs: float, interpolation: str = 'linear') -> np.ndarray:
+    """
+    Compute the instantaneous frequency of a periodic signal using zero crossings and resample the frequency using linear
+    or cubic interpolation to match the dimensions of the input array.
+
+    Parameters
+    ----------
+    signal : np.ndarray
+        Input signal.
+    fs : float
+        Sampling frequency of the input signal.
+    interpolation : str, optional
+        Interpolation method to use during resampling. Should be either 'linear' or 'cubic'. Default is 'linear'.
+
+    Returns
+    -------
+    freq : np.ndarray
+        Instantaneous frequency of the input signal, resampled to match the dimensions of the input array.
+    """
+    # Find zero crossings
+    zero_crossings = np.where(np.diff(np.sign(signal)))[0]
+
+    # Compute time differences between zero crossings
+    time_diff = np.diff(zero_crossings) / fs
+
+    # Compute instantaneous frequency as inverse of time differences
+    freq = 1 / time_diff
+
+    # Resample the frequency using specified interpolation method to match the dimensions of the input array
+    orig_len = len(signal)
+    freq = resample(freq, orig_len)
+
+    if interpolation == 'linear':
+        freq = np.interp(np.arange(0, orig_len), np.arange(0, orig_len), freq)
+    elif interpolation == 'cubic':
+        freq = resample(freq, orig_len, window='cubic')
+
+    return freq
 
 
 def instantaneous_frequency(

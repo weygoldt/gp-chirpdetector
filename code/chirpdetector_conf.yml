@@ -27,6 +27,7 @@ baseline_frequency_smoothing: 3 # instantaneous frequency smoothing
 # Feature processing parameters -----------------------------------------------
 
 baseline_frequency_peakheight: 5 # the min peak height of the baseline instfreq
+baseline_min_amplitude: 0.1 # the minimal value of the baseline envelope
 baseline_envelope_cutoff: 25            # envelope estimation cutoff
 baseline_envelope_bandpass_lowf: 2      # envelope badpass lower cutoff
 baseline_envelope_bandpass_highf: 100   # envelope bandbass higher cutoff

@@ -18,6 +18,7 @@ from modules.datahandling import (
     purge_duplicates,
     group_timestamps,
     instantaneous_frequency,
+    instantaneous_frequency2, 
     minmaxnorm,
 )
 
@@ -517,6 +518,27 @@ def has_chirp(baseline_frequency: np.ndarray, peak_height: float) -> bool:
         return False
 
 
+def mask_low_amplitudes(envelope, threshold):
+    """
+    Mask low amplitudes in the envelope.
+
+    Parameters
+    ----------
+    envelope : np.ndarray
+        Envelope of the signal.
+    threshold : float
+        Threshold to mask low amplitudes.
+
+    Returns
+    -------
+    np.ndarray
+
+    """
+    mask = np.ones_like(envelope, dtype=bool)
+    mask[envelope < threshold] = np.nan
+    return mask
+
+
 def find_searchband(
     current_frequency: np.ndarray,
     percentiles_ids: np.ndarray,
@@ -740,15 +762,6 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
             current_frequencies = data.freq[track_window_index]
             current_powers = data.powers[track_window_index, :]
 
-            # approximate sampling rate to compute expected durations if there
-            # is data available for this time window for this fish id
-
-            #             track_samplerate = np.mean(1 / np.diff(data.time))
-            #             expected_duration = (
-            #                 (window_start_seconds + window_duration_seconds)
-            #                 - window_start_seconds
-            #             ) * track_samplerate
-
             # check if tracked data available in this window
             if len(current_frequencies) < 3:
                 logger.warning(
@@ -832,17 +845,17 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                     highf=config.baseline_envelope_bandpass_highf,
                 )
 
-                # highbass filter introduced filter effects, i.e. oscillations
-                # around peaks. Compute the envelope of the highpass filtered
-                # and inverted baseline envelope to remove these oscillations
+                # create a mask that removes areas where amplitudes are very
+                # because the instantaneous frequency is not reliable there
+
+                amplitude_mask = mask_low_amplitudes(
+                        baseline_envelope,
+                        config.baseline_min_amplitude
+                        )
+
+                # invert baseline envelope to find troughs in the baseline
 
                 baseline_envelope = -baseline_envelope
-
-                # baseline_envelope = envelope(
-                #     signal=baseline_envelope,
-                #     samplerate=data.raw_rate,
-                #     cutoff_frequency=config.baseline_envelope_envelope_cutoff,
-                # )
 
                 # compute the envelope of the search band. Peaks in the search
                 # band envelope correspond to troughs in the baseline envelope
@@ -863,6 +876,8 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 # chirp. This phenomenon is only observed on chirps on a narrow
                 # filtered baseline such as the one we are working with.
 
+                baseline_frequency = instantaneous_frequency2(baselineband, data.raw_rate)
+
                 (
                     baseline_frequency_time,
                     baseline_frequency,
@@ -871,7 +886,6 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                     samplerate=data.raw_rate,
                     smoothing_window=config.baseline_frequency_smoothing,
                 )
-
 
                 # Take the absolute of the instantaneous frequency to invert
                 # troughs into peaks. This is nessecary since the narrow 
@@ -882,16 +896,14 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                     baseline_frequency - np.median(baseline_frequency)
                 )
 
-                # Now check if there are strong dips in the signal amplitude
-                # in the rolling window. These result in frequency anomalies, 
-                # which would be detected as chirps on the frequency trace.
-
                 # check if there is at least one superthreshold peak on the 
                 # instantaneous and exit the loop if not. This is used to 
                 # prevent windows that do definetely not include a chirp 
                 # to enter normalization, where small changes due to noise 
                 # would be amplified 
 
+                # if not has_chirp(baseline_frequency[amplitude_mask], config.baseline_frequency_peakheight):
+                #     continue
                 if not has_chirp(baseline_frequency, config.baseline_frequency_peakheight):
                     continue
 
