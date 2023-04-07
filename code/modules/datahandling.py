@@ -22,6 +22,7 @@ def minmaxnorm(data):
     """
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
+
 def instantaneous_frequency2(signal: np.ndarray, fs: float, interpolation: str = 'linear') -> np.ndarray:
     """
     Compute the instantaneous frequency of a periodic signal using zero crossings and resample the frequency using linear
@@ -66,7 +67,8 @@ def instantaneous_frequency(
     signal: np.ndarray,
     samplerate: int,
     smoothing_window: int,
-) -> tuple[np.ndarray, np.ndarray]:
+    interpolation: str = 'linear',
+) -> np.ndarray:
     """
     Compute the instantaneous frequency of a signal that is approximately
     sinusoidal and symmetric around 0.
@@ -79,6 +81,8 @@ def instantaneous_frequency(
         Samplerate of the signal.
     smoothing_window : int
         Window size for the gaussian filter.
+    interpolation : str, optional
+        Interpolation method to use during resampling. Should be either 'linear' or 'cubic'. Default is 'linear'.
 
     Returns
     -------
@@ -112,7 +116,17 @@ def instantaneous_frequency(
         1 / np.diff(true_zero), smoothing_window
     )
 
-    return instantaneous_frequency_time, instantaneous_frequency
+    # Resample the frequency using specified interpolation method to match the dimensions of the input array
+    orig_len = len(signal)
+    freq = resample(instantaneous_frequency, orig_len)
+
+    if interpolation == 'linear':
+        freq = np.interp(np.arange(0, orig_len), np.arange(0, orig_len), freq)
+    elif interpolation == 'cubic':
+        freq = resample(freq, orig_len, window='cubic')
+
+
+    return freq
 
 
 def purge_duplicates(

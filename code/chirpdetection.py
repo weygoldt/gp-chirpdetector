@@ -535,7 +535,7 @@ def mask_low_amplitudes(envelope, threshold):
 
     """
     mask = np.ones_like(envelope, dtype=bool)
-    mask[envelope < threshold] = np.nan
+    mask[envelope < threshold] = False
     return mask
 
 
@@ -835,6 +835,14 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                     cutoff_frequency=config.baseline_envelope_cutoff,
                 )
 
+                # create a mask that removes areas where amplitudes are very
+                # because the instantaneous frequency is not reliable there
+
+                amplitude_mask = mask_low_amplitudes(
+                        baseline_envelope_unfiltered,
+                        config.baseline_min_amplitude
+                )
+
                 # highpass filter baseline envelope to remove slower
                 # fluctuations e.g. due to motion envelope
 
@@ -844,14 +852,6 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                     lowf=config.baseline_envelope_bandpass_lowf,
                     highf=config.baseline_envelope_bandpass_highf,
                 )
-
-                # create a mask that removes areas where amplitudes are very
-                # because the instantaneous frequency is not reliable there
-
-                amplitude_mask = mask_low_amplitudes(
-                        baseline_envelope,
-                        config.baseline_min_amplitude
-                        )
 
                 # invert baseline envelope to find troughs in the baseline
 
@@ -876,15 +876,10 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 # chirp. This phenomenon is only observed on chirps on a narrow
                 # filtered baseline such as the one we are working with.
 
-                baseline_frequency = instantaneous_frequency2(baselineband, data.raw_rate)
-
-                (
-                    baseline_frequency_time,
-                    baseline_frequency,
-                ) = instantaneous_frequency(
-                    signal=baselineband,
-                    samplerate=data.raw_rate,
-                    smoothing_window=config.baseline_frequency_smoothing,
+                baseline_frequency = instantaneous_frequency(
+                        baselineband, 
+                        data.raw_rate, 
+                        config.baseline_frequency_smoothing
                 )
 
                 # Take the absolute of the instantaneous frequency to invert
@@ -902,9 +897,7 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 # to enter normalization, where small changes due to noise 
                 # would be amplified 
 
-                # if not has_chirp(baseline_frequency[amplitude_mask], config.baseline_frequency_peakheight):
-                #     continue
-                if not has_chirp(baseline_frequency, config.baseline_frequency_peakheight):
+                if not has_chirp(baseline_frequency_filtered[amplitude_mask], config.baseline_frequency_peakheight):
                     continue
 
                 # CUT OFF OVERLAP ---------------------------------------------
@@ -925,20 +918,24 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 search_envelope_unfiltered = search_envelope_unfiltered[no_edges]
                 search_envelope = search_envelope[no_edges]
 
-                # get instantaneous frequency withoup edges
-                no_edges_t0 = int(window_edge) / data.raw_rate
-                no_edges_t1 = baseline_frequency_time[-1] - (
-                    int(window_edge) / data.raw_rate
-                )
-                no_edges = (baseline_frequency_time >= no_edges_t0) & (
-                    baseline_frequency_time <= no_edges_t1
-                )
-
-                baseline_frequency_filtered = baseline_frequency_filtered[no_edges]
                 baseline_frequency = baseline_frequency[no_edges]
-                baseline_frequency_time = (
-                    baseline_frequency_time[no_edges] + window_start_seconds
-                )
+                baseline_frequency_filtered = baseline_frequency_filtered[no_edges]
+                baseline_frequency_time = current_raw_time
+
+                # # get instantaneous frequency withoup edges
+                # no_edges_t0 = int(window_edge) / data.raw_rate
+                # no_edges_t1 = baseline_frequency_time[-1] - (
+                #     int(window_edge) / data.raw_rate
+                # )
+                # no_edges = (baseline_frequency_time >= no_edges_t0) & (
+                #     baseline_frequency_time <= no_edges_t1
+                # )
+
+                # baseline_frequency_filtered = baseline_frequency_filtered[no_edges]
+                # baseline_frequency = baseline_frequency[no_edges]
+                # baseline_frequency_time = (
+                #     baseline_frequency_time[no_edges] + window_start_seconds
+                # )
 
                 # NORMALIZE ---------------------------------------------------
 
