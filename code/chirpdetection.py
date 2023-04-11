@@ -24,7 +24,6 @@ from modules.datahandling import (
 )
 
 logger = makeLogger(__name__)
-
 ps = PlotStyle()
 
 
