@@ -7,7 +7,6 @@ from matplotlib.colors import ListedColormap
 
 def PlotStyle() -> None:
     class style:
-
         # lightcmap = cmocean.tools.lighten(cmocean.cm.haline, 0.8)
 
         # units
@@ -76,13 +75,15 @@ def PlotStyle() -> None:
                 va="center",
                 zorder=1000,
                 bbox=dict(
-                    boxstyle=f"circle, pad={padding}", fc="white", ec="black", lw=1
+                    boxstyle=f"circle, pad={padding}",
+                    fc="white",
+                    ec="black",
+                    lw=1,
                 ),
             )
 
         @classmethod
         def fade_cmap(cls, cmap):
-
             my_cmap = cmap(np.arange(cmap.N))
             my_cmap[:, -1] = np.linspace(0, 1, cmap.N)
             my_cmap = ListedColormap(my_cmap)
@@ -295,7 +296,6 @@ def PlotStyle() -> None:
 
 
 if __name__ == "__main__":
-
     s = PlotStyle()
 
     import matplotlib.cbook as cbook
@@ -347,7 +347,8 @@ if __name__ == "__main__":
     for ax in axs:
         ax.yaxis.grid(True)
         ax.set_xticks(
-            [y + 1 for y in range(len(all_data))], labels=["x1", "x2", "x3", "x4"]
+            [y + 1 for y in range(len(all_data))],
+            labels=["x1", "x2", "x3", "x4"],
         )
         ax.set_xlabel("Four separate samples")
         ax.set_ylabel("Observed values")
@@ -396,7 +397,10 @@ if __name__ == "__main__":
     grid = np.random.rand(4, 4)
 
     fig, axs = plt.subplots(
-        nrows=3, ncols=6, figsize=(9, 6), subplot_kw={"xticks": [], "yticks": []}
+        nrows=3,
+        ncols=6,
+        figsize=(9, 6),
+        subplot_kw={"xticks": [], "yticks": []},
     )
 
     for ax, interp_method in zip(axs.flat, methods):

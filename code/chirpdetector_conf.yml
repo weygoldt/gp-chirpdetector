@@ -1,37 +1,37 @@
 # Path setup ------------------------------------------------------------------
 
-dataroot: "../data/"      # path to data
-outputdir: "../output/"   # path to save plots to
+dataroot: "../data/"  # path to data
+outputdir: "../output/"  # path to save plots to
 
 # Rolling window parameters ---------------------------------------------------
 
-window: 5   # rolling window length in seconds
+window: 5  # rolling window length in seconds
 overlap: 1  # window overlap in seconds
 edge: 0.25  # window edge cufoffs to mitigate filter edge effects
 
 # Electrode iteration parameters ----------------------------------------------
 
-number_electrodes: 2    # number of electrodes to go over
-minimum_electrodes: 1   # mimumun number of electrodes a chirp must be on
+number_electrodes: 2  # number of electrodes to go over
+minimum_electrodes: 1  # mimumun number of electrodes a chirp must be on
 
 # Feature extraction parameters -----------------------------------------------
 
-search_df_lower: 20     # start searching this far above the baseline
-search_df_upper: 100    # stop searching this far above the baseline
-search_res: 1           # search window resolution
-default_search_freq: 60 # search here if no need for a search frequency
-minimal_bandwidth: 10   # minimal bandpass filter width for baseline
-search_bandwidth: 10    # minimal bandpass filter width for search frequency
-baseline_frequency_smoothing: 3 # instantaneous frequency smoothing
+search_df_lower: 20  # start searching this far above the baseline
+search_df_upper: 100  # stop searching this far above the baseline
+search_res: 1  # search window resolution
+default_search_freq: 60  # search here if no need for a search frequency
+minimal_bandwidth: 10  # minimal bandpass filter width for baseline
+search_bandwidth: 10  # minimal bandpass filter width for search frequency
+baseline_frequency_smoothing: 3  # instantaneous frequency smoothing
 
 # Feature processing parameters -----------------------------------------------
 
-baseline_frequency_peakheight: 5 # the min peak height of the baseline instfreq
-baseline_min_amplitude: 0.0001 # the minimal value of the baseline envelope
-baseline_envelope_cutoff: 25            # envelope estimation cutoff
-baseline_envelope_bandpass_lowf: 2      # envelope badpass lower cutoff
-baseline_envelope_bandpass_highf: 100   # envelope bandbass higher cutoff
-search_envelope_cutoff: 10              # search envelope estimation cufoff
+baseline_frequency_peakheight: 5  # the min peak height of the baseline instfreq
+baseline_min_amplitude: 0.0001  # the minimal value of the baseline envelope
+baseline_envelope_cutoff: 25  # envelope estimation cutoff
+baseline_envelope_bandpass_lowf: 2  # envelope badpass lower cutoff
+baseline_envelope_bandpass_highf: 100  # envelope bandbass higher cutoff
+search_envelope_cutoff: 10  # search envelope estimation cufoff
 
 # Peak detecion parameters ----------------------------------------------------
 # baseline_prominence: 0.00005  # peak prominence threshold for baseline envelope
@@ -39,9 +39,8 @@ search_envelope_cutoff: 10              # search envelope estimation cufoff
 # frequency_prominence: 2       # peak prominence threshold for baseline freq
 
 baseline_prominence: 0.3  # peak prominence threshold for baseline envelope
-search_prominence: 0.3   # peak prominence threshold for search envelope
-frequency_prominence: 0.3       # peak prominence threshold for baseline freq
+search_prominence: 0.3  # peak prominence threshold for search envelope
+frequency_prominence: 0.3  # peak prominence threshold for baseline freq
 
 # Classify events as chirps if they are less than this time apart
 chirp_window_threshold: 0.02
-

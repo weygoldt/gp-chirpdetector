@@ -35,7 +35,6 @@ class LoadData:
     """
 
     def __init__(self, datapath: str) -> None:
-
         # load raw data
         self.datapath = datapath
         self.file = os.path.join(datapath, "traces-grid1.raw")

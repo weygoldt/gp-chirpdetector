@@ -59,14 +59,14 @@ def instantaneous_frequency(
 def inst_freq(signal, fs):
     """
     Computes the instantaneous frequency of a periodic signal using zero-crossings.
-    
+
     Parameters:
     -----------
     signal : array-like
         The input signal.
     fs : float
         The sampling frequency of the input signal.
-    
+
     Returns:
     --------
     freq : array-like
@@ -74,29 +74,30 @@ def inst_freq(signal, fs):
     """
     # Compute the sign of the signal
     sign = np.sign(signal)
-    
+
     # Compute the crossings of the sign signal with a zero line
     crossings = np.where(np.diff(sign))[0]
-    
+
     # Compute the time differences between zero crossings
     dt = np.diff(crossings) / fs
-    
+
     # Compute the instantaneous frequency as the reciprocal of the time differences
     freq = 1 / dt
 
-    # Gaussian filter the signal 
+    # Gaussian filter the signal
     freq = gaussian_filter1d(freq, 10)
-    
+
     # Pad the frequency vector with zeros to match the length of the input signal
     freq = np.pad(freq, (0, len(signal) - len(freq)))
-    
+
     return freq
 
+
 def bandpass_filter(
-        signal: np.ndarray,
-        samplerate: float,
-        lowf: float,
-        highf: float,
+    signal: np.ndarray,
+    samplerate: float,
+    lowf: float,
+    highf: float,
 ) -> np.ndarray:
     """Bandpass filter a signal.
 
@@ -150,9 +151,7 @@ def highpass_filter(
 
 
 def lowpass_filter(
-    signal: np.ndarray,
-    samplerate: float,
-    cutoff: float
+    signal: np.ndarray, samplerate: float, cutoff: float
 ) -> np.ndarray:
     """Lowpass filter a signal.
 
@@ -176,10 +175,9 @@ def lowpass_filter(
     return filtered_signal
 
 
-def envelope(signal: np.ndarray,
-             samplerate: float,
-             cutoff_frequency: float
-             ) -> np.ndarray:
+def envelope(
+    signal: np.ndarray, samplerate: float, cutoff_frequency: float
+) -> np.ndarray:
     """Calculate the envelope of a signal using a lowpass filter.
 
     Parameters

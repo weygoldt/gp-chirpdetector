@@ -13,6 +13,7 @@ from modules.plotstyle import PlotStyle
 from modules.behaviour_handling import Behavior, correct_chasing_events
 
 from extract_chirps import get_valid_datasets
+
 ps = PlotStyle()
 
 logger = makeLogger(__name__)
@@ -20,13 +21,16 @@ logger = makeLogger(__name__)
 
 def main(datapath: str):
     foldernames = [
-        datapath + x + '/' for x in os.listdir(datapath) if os.path.isdir(datapath+x)]
+        datapath + x + "/"
+        for x in os.listdir(datapath)
+        if os.path.isdir(datapath + x)
+    ]
     foldernames, _ = get_valid_datasets(datapath)
 
     for foldername in foldernames[3:4]:
         print(foldername)
         # foldername = foldernames[0]
-        if foldername == '../data/mount_data/2020-05-12-10_00/':
+        if foldername == "../data/mount_data/2020-05-12-10_00/":
             continue
         # behabvior is pandas dataframe with all the data
         bh = Behavior(foldername)
@@ -52,18 +56,43 @@ def main(datapath: str):
         exit()
         fish1_color = ps.gblue2
         fish2_color = ps.gblue1
-        fig, ax = plt.subplots(5, 1, figsize=(
-            21*ps.cm, 10*ps.cm), height_ratios=[0.5, 0.5, 0.5, 0.2, 6], sharex=True)
+        fig, ax = plt.subplots(
+            5,
+            1,
+            figsize=(21 * ps.cm, 10 * ps.cm),
+            height_ratios=[0.5, 0.5, 0.5, 0.2, 6],
+            sharex=True,
+        )
         # marker size
         s = 80
-        ax[0].scatter(physical_contact, np.ones(
-            len(physical_contact)), color=ps.gray, marker='|', s=s)
-        ax[1].scatter(chasing_onset, np.ones(len(chasing_onset)),
-                      color=ps.gray, marker='|', s=s)
-        ax[2].scatter(fish1, np.ones(len(fish1))-0.25,
-                      color=fish1_color, marker='|', s=s)
-        ax[2].scatter(fish2, np.zeros(len(fish2))+0.25,
-                      color=fish2_color, marker='|', s=s)
+        ax[0].scatter(
+            physical_contact,
+            np.ones(len(physical_contact)),
+            color=ps.gray,
+            marker="|",
+            s=s,
+        )
+        ax[1].scatter(
+            chasing_onset,
+            np.ones(len(chasing_onset)),
+            color=ps.gray,
+            marker="|",
+            s=s,
+        )
+        ax[2].scatter(
+            fish1,
+            np.ones(len(fish1)) - 0.25,
+            color=fish1_color,
+            marker="|",
+            s=s,
+        )
+        ax[2].scatter(
+            fish2,
+            np.zeros(len(fish2)) + 0.25,
+            color=fish2_color,
+            marker="|",
+            s=s,
+        )
 
         freq_temp = bh.freq[bh.ident == fish1_id]
         time_temp = bh.time[bh.idx[bh.ident == fish1_id]]
@@ -94,35 +123,38 @@ def main(datapath: str):
         ax[2].set_xticks([])
         ps.hide_ax(ax[2])
 
-        ax[4].axvspan(0, 3, 0, 5, facecolor='grey', alpha=0.5)
+        ax[4].axvspan(0, 3, 0, 5, facecolor="grey", alpha=0.5)
         ax[4].set_xticks(np.arange(0, 6.1, 0.5))
         ps.hide_ax(ax[3])
 
         labelpad = 30
         fsize = 12
 
-        ax[0].set_ylabel('Contact', rotation=0,
-                         labelpad=labelpad, fontsize=fsize)
+        ax[0].set_ylabel(
+            "Contact", rotation=0, labelpad=labelpad, fontsize=fsize
+        )
         ax[0].yaxis.set_label_coords(-0.062, -0.08)
-        ax[1].set_ylabel('Chasing', rotation=0,
-                         labelpad=labelpad, fontsize=fsize)
+        ax[1].set_ylabel(
+            "Chasing", rotation=0, labelpad=labelpad, fontsize=fsize
+        )
         ax[1].yaxis.set_label_coords(-0.06, -0.08)
-        ax[2].set_ylabel('Chirps', rotation=0,
-                         labelpad=labelpad, fontsize=fsize)
+        ax[2].set_ylabel(
+            "Chirps", rotation=0, labelpad=labelpad, fontsize=fsize
+        )
         ax[2].yaxis.set_label_coords(-0.07, -0.08)
-        ax[4].set_ylabel('EODf')
+        ax[4].set_ylabel("EODf")
 
-        ax[4].set_xlabel('Time [h]')
+        ax[4].set_xlabel("Time [h]")
         # ax[0].set_title(foldername.split('/')[-2])
         # 2020-03-31-9_59
         plt.subplots_adjust(left=0.158, right=0.987, top=0.918, bottom=0.136)
-        plt.savefig('../poster/figs/timeline.svg')
+        plt.savefig("../poster/figs/timeline.svg")
         plt.show()
 
     # plot chirps
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Path to the data
-    datapath = '../data/mount_data/'
+    datapath = "../data/mount_data/"
     main(datapath)

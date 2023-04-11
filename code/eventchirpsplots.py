@@ -35,28 +35,36 @@ class Behavior:
     """
 
     def __init__(self, folder_path: str) -> None:
-        print(f'{folder_path}')
-        LED_on_time_BORIS = np.load(os.path.join(
-            folder_path, 'LED_on_time.npy'), allow_pickle=True)
-        self.time = np.load(os.path.join(
-            folder_path, "times.npy"), allow_pickle=True)
-        csv_filename = [f for f in os.listdir(folder_path) if f.endswith(
-            '.csv')][0]  # check if there are more than one csv file
+        print(f"{folder_path}")
+        LED_on_time_BORIS = np.load(
+            os.path.join(folder_path, "LED_on_time.npy"), allow_pickle=True
+        )
+        self.time = np.load(
+            os.path.join(folder_path, "times.npy"), allow_pickle=True
+        )
+        csv_filename = [
+            f for f in os.listdir(folder_path) if f.endswith(".csv")
+        ][
+            0
+        ]  # check if there are more than one csv file
         self.dataframe = read_csv(os.path.join(folder_path, csv_filename))
-        self.chirps = np.load(os.path.join(
-            folder_path, 'chirps.npy'), allow_pickle=True)
-        self.chirps_ids = np.load(os.path.join(
-            folder_path, 'chirp_ids.npy'), allow_pickle=True)
+        self.chirps = np.load(
+            os.path.join(folder_path, "chirps.npy"), allow_pickle=True
+        )
+        self.chirps_ids = np.load(
+            os.path.join(folder_path, "chirp_ids.npy"), allow_pickle=True
+        )
 
         for k, key in enumerate(self.dataframe.keys()):
             key = key.lower()
-            if ' ' in key:
-                key = key.replace(' ', '_')
-                if '(' in key:
-                    key = key.replace('(', '')
-                    key = key.replace(')', '')
-            setattr(self, key, np.array(
-                self.dataframe[self.dataframe.keys()[k]]))
+            if " " in key:
+                key = key.replace(" ", "_")
+                if "(" in key:
+                    key = key.replace("(", "")
+                    key = key.replace(")", "")
+            setattr(
+                self, key, np.array(self.dataframe[self.dataframe.keys()[k]])
+            )
 
         last_LED_t_BORIS = LED_on_time_BORIS[-1]
         real_time_range = self.time[-1] - self.time[0]
@@ -95,17 +103,14 @@ temporal encpding needs to be corrected ... not exactly 25FPS.
 
 
 def correct_chasing_events(
-    category: np.ndarray,
-    timestamps: np.ndarray
+    category: np.ndarray, timestamps: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
+    onset_ids = np.arange(len(category))[category == 0]
+    offset_ids = np.arange(len(category))[category == 1]
 
-    onset_ids = np.arange(
-        len(category))[category == 0]
-    offset_ids = np.arange(
-        len(category))[category == 1]
-
-    wrong_bh = np.arange(len(category))[
-        category != 2][:-1][np.diff(category[category != 2]) == 0]
+    wrong_bh = np.arange(len(category))[category != 2][:-1][
+        np.diff(category[category != 2]) == 0
+    ]
     if onset_ids[0] > offset_ids[0]:
         offset_ids = np.delete(offset_ids, 0)
         help_index = offset_ids[0]
@@ -117,12 +122,12 @@ def correct_chasing_events(
     # Check whether on- or offset is longer and calculate length difference
     if len(onset_ids) > len(offset_ids):
         len_diff = len(onset_ids) - len(offset_ids)
-        logger.info(f'Onsets are greater than offsets by {len_diff}')
+        logger.info(f"Onsets are greater than offsets by {len_diff}")
     elif len(onset_ids) < len(offset_ids):
         len_diff = len(offset_ids) - len(onset_ids)
-        logger.info(f'Offsets are greater than onsets by {len_diff}')
+        logger.info(f"Offsets are greater than onsets by {len_diff}")
     elif len(onset_ids) == len(offset_ids):
-        logger.info('Chasing events are equal')
+        logger.info("Chasing events are equal")
 
     return category, timestamps
 
@@ -135,8 +140,7 @@ def event_triggered_chirps(
     dt: float,
     width: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-
-    event_chirps = []   # chirps that are in specified window around event
+    event_chirps = []  # chirps that are in specified window around event
     # timestamps of chirps around event centered on the event timepoint
     centered_chirps = []
 
@@ -159,16 +163,19 @@ def event_triggered_chirps(
     else:
         # convert list of arrays to one array for plotting
         centered_chirps = np.concatenate(centered_chirps, axis=0)
-        centered_chirps_convolved = (acausal_kde1d(
-            centered_chirps, time, width)) / len(event)
+        centered_chirps_convolved = (
+            acausal_kde1d(centered_chirps, time, width)
+        ) / len(event)
 
     return event_chirps, centered_chirps, centered_chirps_convolved
 
 
 def main(datapath: str):
-
     foldernames = [
-        datapath + x + '/' for x in os.listdir(datapath) if os.path.isdir(datapath + x)]
+        datapath + x + "/"
+        for x in os.listdir(datapath)
+        if os.path.isdir(datapath + x)
+    ]
 
     nrecording_chirps = []
     nrecording_chirps_fish_ids = []
@@ -179,7 +186,7 @@ def main(datapath: str):
     # Iterate over all recordings and save chirp- and event-timestamps
     for folder in foldernames:
         # exclude folder with empty LED_on_time.npy
-        if folder == '../data/mount_data/2020-05-12-10_00/':
+        if folder == "../data/mount_data/2020-05-12-10_00/":
             continue
 
         bh = Behavior(folder)
@@ -209,7 +216,7 @@ def main(datapath: str):
     time_before_event = 30
     time_after_event = 60
     dt = 0.01
-    width = 1.5   # width of kernel for all recordings, currently gaussian kernel
+    width = 1.5  # width of kernel for all recordings, currently gaussian kernel
     recording_width = 2  # width of kernel for each recording
     time = np.arange(-time_before_event, time_after_event, dt)
 
@@ -232,18 +239,47 @@ def main(datapath: str):
         physical_contacts = nrecording_physicals[i]
 
         # Chirps around chasing onsets
-        _, centered_chasing_onset_chirps, cc_chasing_onset_chirps = event_triggered_chirps(
-            chasing_onsets, chirps, time_before_event, time_after_event, dt, recording_width)
+        (
+            _,
+            centered_chasing_onset_chirps,
+            cc_chasing_onset_chirps,
+        ) = event_triggered_chirps(
+            chasing_onsets,
+            chirps,
+            time_before_event,
+            time_after_event,
+            dt,
+            recording_width,
+        )
         # Chirps around chasing offsets
-        _, centered_chasing_offset_chirps, cc_chasing_offset_chirps = event_triggered_chirps(
-            chasing_offsets, chirps, time_before_event, time_after_event, dt, recording_width)
+        (
+            _,
+            centered_chasing_offset_chirps,
+            cc_chasing_offset_chirps,
+        ) = event_triggered_chirps(
+            chasing_offsets,
+            chirps,
+            time_before_event,
+            time_after_event,
+            dt,
+            recording_width,
+        )
         # Chirps around physical contacts
-        _, centered_physical_chirps, cc_physical_chirps = event_triggered_chirps(
-            physical_contacts, chirps, time_before_event, time_after_event, dt, recording_width)
+        (
+            _,
+            centered_physical_chirps,
+            cc_physical_chirps,
+        ) = event_triggered_chirps(
+            physical_contacts,
+            chirps,
+            time_before_event,
+            time_after_event,
+            dt,
+            recording_width,
+        )
 
         nrecording_centered_onset_chirps.append(centered_chasing_onset_chirps)
-        nrecording_centered_offset_chirps.append(
-            centered_chasing_offset_chirps)
+        nrecording_centered_offset_chirps.append(centered_chasing_offset_chirps)
         nrecording_centered_physical_chirps.append(centered_physical_chirps)
 
         ## Shuffled chirps ##
@@ -331,12 +367,13 @@ def main(datapath: str):
 
     # New bootstrapping approach
     for n in range(nbootstrapping):
-        diff_onset = np.diff(
-            np.sort(flatten(nrecording_centered_onset_chirps)))
+        diff_onset = np.diff(np.sort(flatten(nrecording_centered_onset_chirps)))
         diff_offset = np.diff(
-            np.sort(flatten(nrecording_centered_offset_chirps)))
+            np.sort(flatten(nrecording_centered_offset_chirps))
+        )
         diff_physical = np.diff(
-            np.sort(flatten(nrecording_centered_physical_chirps)))
+            np.sort(flatten(nrecording_centered_physical_chirps))
+        )
 
         np.random.shuffle(diff_onset)
         shuffled_onset = np.cumsum(diff_onset)
@@ -345,9 +382,11 @@ def main(datapath: str):
         np.random.shuffle(diff_physical)
         shuffled_physical = np.cumsum(diff_physical)
 
-        kde_onset (acausal_kde1d(shuffled_onset, time, width))/(27*100)
-        kde_offset = (acausal_kde1d(shuffled_offset, time, width))/(27*100)
-        kde_physical = (acausal_kde1d(shuffled_physical, time, width))/(27*100)
+        kde_onset(acausal_kde1d(shuffled_onset, time, width)) / (27 * 100)
+        kde_offset = (acausal_kde1d(shuffled_offset, time, width)) / (27 * 100)
+        kde_physical = (acausal_kde1d(shuffled_physical, time, width)) / (
+            27 * 100
+        )
 
         bootstrap_onset.append(kde_onset)
         bootstrap_offset.append(kde_offset)
@@ -355,11 +394,14 @@ def main(datapath: str):
 
     # New shuffle approach q5, q50, q95
     onset_q5, onset_median, onset_q95 = np.percentile(
-        bootstrap_onset, [5, 50, 95], axis=0)
+        bootstrap_onset, [5, 50, 95], axis=0
+    )
     offset_q5, offset_median, offset_q95 = np.percentile(
-        bootstrap_offset, [5, 50, 95], axis=0)
+        bootstrap_offset, [5, 50, 95], axis=0
+    )
     physical_q5, physical_median, physical_q95 = np.percentile(
-        bootstrap_physical, [5, 50, 95], axis=0)
+        bootstrap_physical, [5, 50, 95], axis=0
+    )
 
     #  vstack um 1. Dim zu cutten
     # nrecording_shuffled_convolved_onset_chirps = np.vstack(nrecording_shuffled_convolved_onset_chirps)
@@ -378,45 +420,66 @@ def main(datapath: str):
 
     # Flatten event timestamps
     all_onsets = np.concatenate(
-        nrecording_chasing_onsets).ravel()  # not centered
+        nrecording_chasing_onsets
+    ).ravel()  # not centered
     all_offsets = np.concatenate(
-        nrecording_chasing_offsets).ravel()  # not centered
-    all_physicals = np.concatenate(
-        nrecording_physicals).ravel()  # not centered
+        nrecording_chasing_offsets
+    ).ravel()  # not centered
+    all_physicals = np.concatenate(nrecording_physicals).ravel()  # not centered
 
     # Flatten all chirps around events
     all_onset_chirps = np.concatenate(
-        nrecording_centered_onset_chirps).ravel()   # centered
+        nrecording_centered_onset_chirps
+    ).ravel()  # centered
     all_offset_chirps = np.concatenate(
-        nrecording_centered_offset_chirps).ravel()  # centered
+        nrecording_centered_offset_chirps
+    ).ravel()  # centered
     all_physical_chirps = np.concatenate(
-        nrecording_centered_physical_chirps).ravel()  # centered
+        nrecording_centered_physical_chirps
+    ).ravel()  # centered
 
     # Convolute all chirps
     # Divide by total number of each event over all recordings
-    all_onset_chirps_convolved = (acausal_kde1d(
-        all_onset_chirps, time, width)) / len(all_onsets)
-    all_offset_chirps_convolved = (acausal_kde1d(
-        all_offset_chirps, time, width)) / len(all_offsets)
-    all_physical_chirps_convolved = (acausal_kde1d(
-        all_physical_chirps, time, width)) / len(all_physicals)
+    all_onset_chirps_convolved = (
+        acausal_kde1d(all_onset_chirps, time, width)
+    ) / len(all_onsets)
+    all_offset_chirps_convolved = (
+        acausal_kde1d(all_offset_chirps, time, width)
+    ) / len(all_offsets)
+    all_physical_chirps_convolved = (
+        acausal_kde1d(all_physical_chirps, time, width)
+    ) / len(all_physicals)
 
     # Plot all events with all shuffled
-    fig, ax = plt.subplots(1, 3, figsize=(
-        28*ps.cm, 16*ps.cm, ), constrained_layout=True, sharey='all')
+    fig, ax = plt.subplots(
+        1,
+        3,
+        figsize=(
+            28 * ps.cm,
+            16 * ps.cm,
+        ),
+        constrained_layout=True,
+        sharey="all",
+    )
     # offsets = np.arange(1,28,1)
-    ax[0].set_xlabel('Time[s]')
+    ax[0].set_xlabel("Time[s]")
 
     # Plot chasing onsets
-    ax[0].set_ylabel('Chirp rate [Hz]')
+    ax[0].set_ylabel("Chirp rate [Hz]")
     ax[0].plot(time, all_onset_chirps_convolved, color=ps.yellow, zorder=2)
     ax0 = ax[0].twinx()
     nrecording_centered_onset_chirps = np.asarray(
-        nrecording_centered_onset_chirps, dtype=object)
-    ax0.eventplot(np.array(nrecording_centered_onset_chirps),
-                  linelengths=0.5, colors=ps.gray, alpha=0.25, zorder=1)
-    ax0.vlines(0, 0, 1.5, ps.white, 'dashed')
-    ax[0].set_zorder(ax0.get_zorder()+1)
+        nrecording_centered_onset_chirps, dtype=object
+    )
+    ax0.eventplot(
+        np.array(nrecording_centered_onset_chirps),
+        linelengths=0.5,
+        colors=ps.gray,
+        alpha=0.25,
+        zorder=1,
+    )
+    ax0.vlines(0, 0, 1.5, ps.white, "dashed")
+    ax[0].set_zorder(ax0.get_zorder() + 1)
     ax[0].patch.set_visible(False)
     ax0.set_yticklabels([])
     ax0.set_yticks([])
@@ -426,15 +489,21 @@ def main(datapath: str):
     ax[0].plot(time, onset_median, color=ps.black)
 
     # Plot chasing offets
-    ax[1].set_xlabel('Time[s]')
+    ax[1].set_xlabel("Time[s]")
     ax[1].plot(time, all_offset_chirps_convolved, color=ps.orange, zorder=2)
     ax1 = ax[1].twinx()
     nrecording_centered_offset_chirps = np.asarray(
-        nrecording_centered_offset_chirps, dtype=object)
-    ax1.eventplot(np.array(nrecording_centered_offset_chirps),
-                  linelengths=0.5, colors=ps.gray, alpha=0.25, zorder=1)
-    ax1.vlines(0, 0, 1.5, ps.white, 'dashed')
-    ax[1].set_zorder(ax1.get_zorder()+1)
+        nrecording_centered_offset_chirps, dtype=object
+    )
+    ax1.eventplot(
+        np.array(nrecording_centered_offset_chirps),
+        linelengths=0.5,
+        colors=ps.gray,
+        alpha=0.25,
+        zorder=1,
+    )
+    ax1.vlines(0, 0, 1.5, ps.white, "dashed")
+    ax[1].set_zorder(ax1.get_zorder() + 1)
     ax[1].patch.set_visible(False)
     ax1.set_yticklabels([])
     ax1.set_yticks([])
@@ -444,24 +513,31 @@ def main(datapath: str):
     ax[1].plot(time, offset_median, color=ps.black)
 
     # Plot physical contacts
-    ax[2].set_xlabel('Time[s]')
+    ax[2].set_xlabel("Time[s]")
     ax[2].plot(time, all_physical_chirps_convolved, color=ps.maroon, zorder=2)
     ax2 = ax[2].twinx()
     nrecording_centered_physical_chirps = np.asarray(
-        nrecording_centered_physical_chirps, dtype=object)
-    ax2.eventplot(np.array(nrecording_centered_physical_chirps),
-                  linelengths=0.5, colors=ps.gray, alpha=0.25, zorder=1)
-    ax2.vlines(0, 0, 1.5, ps.white, 'dashed')
-    ax[2].set_zorder(ax2.get_zorder()+1)
+        nrecording_centered_physical_chirps, dtype=object
+    )
+    ax2.eventplot(
+        np.array(nrecording_centered_physical_chirps),
+        linelengths=0.5,
+        colors=ps.gray,
+        alpha=0.25,
+        zorder=1,
+    )
+    ax2.vlines(0, 0, 1.5, ps.white, "dashed")
+    ax[2].set_zorder(ax2.get_zorder() + 1)
     ax[2].patch.set_visible(False)
     ax2.set_yticklabels([])
     ax2.set_yticks([])
     # ax[2].fill_between(time, shuffled_q5_physical, shuffled_q95_physical, color=ps.gray, alpha=0.5)
     # ax[2].plot(time, shuffled_median_physical, ps.black)
-    ax[2].fill_between(time, physical_q5, physical_q95,
-                       color=ps.gray, alpha=0.5)
+    ax[2].fill_between(
+        time, physical_q5, physical_q95, color=ps.gray, alpha=0.5
+    )
     ax[2].plot(time, physical_median, ps.black)
-    fig.suptitle('All recordings')
+    fig.suptitle("All recordings")
     plt.show()
     plt.close()
 
@@ -587,7 +663,7 @@ def main(datapath: str):
     #### Chirps around events, only losers, one recording ####
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Path to the data
-    datapath = '../data/mount_data/'
+    datapath = "../data/mount_data/"
     main(datapath)
