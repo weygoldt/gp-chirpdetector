@@ -1,7 +1,7 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from filters import bandpass_filter, inst_freq, instantaneous_frequency
 from fish_signal import chirps, wavefish_eods
-from filters import bandpass_filter, instantaneous_frequency, inst_freq
 from IPython import embed
 
 
@@ -28,13 +28,14 @@ def extract_dict(dict, index):
     return {key: value[index] for key, value in dict.items()}
 
 
-def main(test1, test2, resolution=10):
+def test(test1, test2, resolution=10):
     assert test1 in [
         "width",
         "size",
         "kurtosis",
         "contrast",
     ], "Test1 not recognized"
+
     assert test2 in [
         "width",
         "size",
@@ -139,10 +140,11 @@ def main(test1, test2, resolution=10):
 
             iter0 += 1
 
-    fig, ax = plt.subplots()
-    ax.imshow(distances, cmap="jet")
     plt.show()
+
+def main():
+    test("contrast", "kurtosis")
 
 
 if __name__ == "__main__":
-    main("width", "size")
+    main()
