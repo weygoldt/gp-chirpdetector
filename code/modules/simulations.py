@@ -37,7 +37,7 @@ def create_chirp(
 
     ck = 0
     csig = 0.5 * chirpduration / np.power(2.0 * np.log(10.0), 0.5 / kurtosis)
-    #csig = csig*-1
+    # csig = csig*-1
     for k, t in enumerate(time):
         a = 1.0
         f = eodf

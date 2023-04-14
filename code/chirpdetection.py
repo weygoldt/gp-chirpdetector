@@ -1,6 +1,8 @@
-from itertools import compress
 from dataclasses import dataclass
+from itertools import compress
 
+import matplotlib.gridspec as gr
+import matplotlib.pyplot as plt
 import numpy as np
 from IPython import embed
 import matplotlib.pyplot as plt
@@ -15,11 +17,17 @@ from modules.plotstyle import PlotStyle
 from modules.logger import makeLogger
 from modules.datahandling import (
     flatten,
-    purge_duplicates,
     group_timestamps,
     instantaneous_frequency,
     minmaxnorm,
+    purge_duplicates,
 )
+from modules.filehandling import ConfLoader, LoadData, make_outputdir
+from modules.filters import bandpass_filter, envelope, highpass_filter
+from modules.logger import makeLogger
+from modules.plotstyle import PlotStyle
+from scipy.signal import find_peaks
+from thunderfish.powerspectrum import decibel, spectrogram
 
 logger = makeLogger(__name__)
 
@@ -58,7 +66,6 @@ class ChirpPlotBuffer:
     frequency_peaks: np.ndarray
 
     def plot_buffer(self, chirps: np.ndarray, plot: str) -> None:
-
         logger.debug("Starting plotting")
 
         # make data for plotting
@@ -134,7 +141,6 @@ class ChirpPlotBuffer:
         ax0.set_ylim(np.min(self.frequency) - 100, np.max(self.frequency) + 200)
 
         for track_id in self.data.ids:
-
             t0_track = self.t0_old - 5
             dt_track = self.dt + 10
             window_idx = np.arange(len(self.data.idx))[
@@ -175,10 +181,16 @@ class ChirpPlotBuffer:
         # )
 
         ax0.axhline(
-            q50 - self.config.minimal_bandwidth / 2, color=ps.gblue1, lw=1, ls="dashed"
+            q50 - self.config.minimal_bandwidth / 2,
+            color=ps.gblue1,
+            lw=1,
+            ls="dashed",
         )
         ax0.axhline(
-            q50 + self.config.minimal_bandwidth / 2, color=ps.gblue1, lw=1, ls="dashed"
+            q50 + self.config.minimal_bandwidth / 2,
+            color=ps.gblue1,
+            lw=1,
+            ls="dashed",
         )
         ax0.axhline(search_lower, color=ps.gblue2, lw=1, ls="dashed")
         ax0.axhline(search_upper, color=ps.gblue2, lw=1, ls="dashed")
@@ -204,7 +216,11 @@ class ChirpPlotBuffer:
 
         # plot waveform of filtered signal
         ax1.plot(
-            self.time, self.baseline * waveform_scaler, c=ps.gray, lw=lw, alpha=0.5
+            self.time,
+            self.baseline * waveform_scaler,
+            c=ps.gray,
+            lw=lw,
+            alpha=0.5,
         )
         ax1.plot(
             self.time,
@@ -215,7 +231,13 @@ class ChirpPlotBuffer:
         )
 
         # plot waveform of filtered search signal
-        ax2.plot(self.time, self.search * waveform_scaler, c=ps.gray, lw=lw, alpha=0.5)
+        ax2.plot(
+            self.time,
+            self.search * waveform_scaler,
+            c=ps.gray,
+            lw=lw,
+            alpha=0.5,
+        )
         ax2.plot(
             self.time,
             self.search_envelope_unfiltered * waveform_scaler,
@@ -237,9 +259,7 @@ class ChirpPlotBuffer:
         # ax4.plot(
         #     self.time, self.baseline_envelope * waveform_scaler, c=ps.gblue1, lw=lw
         # )
-        ax4.plot(
-            self.time, self.baseline_envelope, c=ps.gblue1, lw=lw
-        )
+        ax4.plot(self.time, self.baseline_envelope, c=ps.gblue1, lw=lw)
         ax4.scatter(
             (self.time)[self.baseline_peaks],
             # (self.baseline_envelope * waveform_scaler)[self.baseline_peaks],
@@ -268,7 +288,9 @@ class ChirpPlotBuffer:
         )
 
         # plot filtered instantaneous frequency
-        ax6.plot(self.frequency_time, self.frequency_filtered, c=ps.gblue3, lw=lw)
+        ax6.plot(
+            self.frequency_time, self.frequency_filtered, c=ps.gblue3, lw=lw
+        )
         ax6.scatter(
             self.frequency_time[self.frequency_peaks],
             self.frequency_filtered[self.frequency_peaks],
@@ -302,7 +324,9 @@ class ChirpPlotBuffer:
         # ax7.spines.bottom.set_bounds((0, 5))
 
         ax0.set_xlim(0, self.config.window)
-        plt.subplots_adjust(left=0.165, right=0.975, top=0.98, bottom=0.074, hspace=0.2)
+        plt.subplots_adjust(
+            left=0.165, right=0.975, top=0.98, bottom=0.074, hspace=0.2
+        )
         fig.align_labels()
 
         if plot == "show":
@@ -407,7 +431,9 @@ def extract_frequency_bands(
         q25, q75 = q50 - minimal_bandwidth / 2, q50 + minimal_bandwidth / 2
 
     # filter baseline
-    filtered_baseline = bandpass_filter(raw_data, samplerate, lowf=q25, highf=q75)
+    filtered_baseline = bandpass_filter(
+        raw_data, samplerate, lowf=q25, highf=q75
+    )
 
     # filter search area
     filtered_search_freq = bandpass_filter(
@@ -452,12 +478,14 @@ def window_median_all_track_ids(
     track_ids = []
 
     for _, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])):
-
         # the window index combines the track id and the time window
         window_idx = np.arange(len(data.idx))[
             (data.ident == track_id)
             & (data.time[data.idx] >= window_start_seconds)
-            & (data.time[data.idx] <= (window_start_seconds + window_duration_seconds))
+            & (
+                data.time[data.idx]
+                <= (window_start_seconds + window_duration_seconds)
+            )
         ]
 
         if len(data.freq[window_idx]) > 0:
@@ -594,15 +622,15 @@ def find_searchband(
 
     # iterate through theses tracks
     if check_track_ids.size != 0:
-
         for j, check_track_id in enumerate(check_track_ids):
-
             q25_temp = q25[percentiles_ids == check_track_id]
             q75_temp = q75[percentiles_ids == check_track_id]
 
             bool_lower[search_window > q25_temp - config.search_res] = False
             bool_upper[search_window < q75_temp + config.search_res] = False
-            search_window_bool[(bool_lower == False) & (bool_upper == False)] = False
+            search_window_bool[
+                (bool_lower == False) & (bool_upper == False)
+            ] = False
 
         # find gaps in search window
         search_window_indices = np.arange(len(search_window))
@@ -621,7 +649,9 @@ def find_searchband(
         # if the first value is -1, the array starst with true, so a gap
         if nonzeros[0] == -1:
             stops = search_window_indices[search_window_gaps == -1]
-            starts = np.append(0, search_window_indices[search_window_gaps == 1])
+            starts = np.append(
+                0, search_window_indices[search_window_gaps == 1]
+            )
 
             # if the last value is -1, the array ends with true, so a gap
             if nonzeros[-1] == 1:
@@ -658,7 +688,6 @@ def find_searchband(
 
 
 def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
-
     assert plot in [
         "save",
         "show",
@@ -728,7 +757,6 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
     multiwindow_ids = []
 
     for st, window_start_index in enumerate(window_start_indices):
-
         logger.info(f"Processing window {st+1} of {len(window_start_indices)}")
 
         window_start_seconds = window_start_index / data.raw_rate
@@ -743,8 +771,9 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
         )
 
         # iterate through all fish
-        for tr, track_id in enumerate(np.unique(data.ident[~np.isnan(data.ident)])):
-
+        for tr, track_id in enumerate(
+            np.unique(data.ident[~np.isnan(data.ident)])
+        ):
             logger.debug(f"Processing track {tr} of {len(data.ids)}")
 
             # get index of track data in this time window
@@ -772,16 +801,17 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
             nanchecker = np.unique(np.isnan(current_powers))
             if (len(nanchecker) == 1) and nanchecker[0] is True:
                 logger.warning(
-                    f"No powers available for track {track_id} window {st}," "skipping."
+                    f"No powers available for track {track_id} window {st},"
+                    "skipping."
                 )
                 continue
 
             # find the strongest electrodes for the current fish in the current
             # window
 
-            best_electrode_index = np.argsort(np.nanmean(current_powers, axis=0))[
-                -config.number_electrodes :
-            ]
+            best_electrode_index = np.argsort(
+                np.nanmean(current_powers, axis=0)
+            )[-config.number_electrodes :]
 
             # find a frequency above the baseline of the current fish in which
             # no other fish is active to search for chirps there
@@ -801,9 +831,9 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
 
             # iterate through electrodes
             for el, electrode_index in enumerate(best_electrode_index):
-
                 logger.debug(
-                    f"Processing electrode {el+1} of " f"{len(best_electrode_index)}"
+                    f"Processing electrode {el+1} of "
+                    f"{len(best_electrode_index)}"
                 )
 
                 # LOAD DATA FOR CURRENT ELECTRODE AND CURRENT FISH ------------
@@ -812,7 +842,9 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 current_raw_data = data.raw[
                     window_start_index:window_stop_index, electrode_index
                 ]
-                current_raw_time = raw_time[window_start_index:window_stop_index]
+                current_raw_time = raw_time[
+                    window_start_index:window_stop_index
+                ]
 
                 # EXTRACT FEATURES --------------------------------------------
 
@@ -838,8 +870,7 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 # because the instantaneous frequency is not reliable there
 
                 amplitude_mask = mask_low_amplitudes(
-                        baseline_envelope_unfiltered,
-                        config.baseline_min_amplitude
+                    baseline_envelope_unfiltered, config.baseline_min_amplitude
                 )
 
                 # highpass filter baseline envelope to remove slower
@@ -876,27 +907,30 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 # filtered baseline such as the one we are working with.
 
                 baseline_frequency = instantaneous_frequency(
-                        baselineband, 
-                        data.raw_rate, 
-                        config.baseline_frequency_smoothing
+                    baselineband,
+                    data.raw_rate,
+                    config.baseline_frequency_smoothing,
                 )
 
                 # Take the absolute of the instantaneous frequency to invert
-                # troughs into peaks. This is nessecary since the narrow 
+                # troughs into peaks. This is nessecary since the narrow
                 # pass band introduces these anomalies. Also substract by the
                 # median to set it to 0.
-                
+
                 baseline_frequency_filtered = np.abs(
                     baseline_frequency - np.median(baseline_frequency)
                 )
 
-                # check if there is at least one superthreshold peak on the 
-                # instantaneous and exit the loop if not. This is used to 
-                # prevent windows that do definetely not include a chirp 
-                # to enter normalization, where small changes due to noise 
-                # would be amplified 
+                # check if there is at least one superthreshold peak on the
+                # instantaneous and exit the loop if not. This is used to
+                # prevent windows that do definetely not include a chirp
+                # to enter normalization, where small changes due to noise
+                # would be amplified
 
-                if not has_chirp(baseline_frequency_filtered[amplitude_mask], config.baseline_frequency_peakheight):
+                if not has_chirp(
+                    baseline_frequency_filtered[amplitude_mask],
+                    config.baseline_frequency_peakheight,
+                ):
                     continue
 
                 # CUT OFF OVERLAP ---------------------------------------------
@@ -911,14 +945,20 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
 
                 current_raw_time = current_raw_time[no_edges]
                 baselineband = baselineband[no_edges]
-                baseline_envelope_unfiltered = baseline_envelope_unfiltered[no_edges]
+                baseline_envelope_unfiltered = baseline_envelope_unfiltered[
+                    no_edges
+                ]
                 searchband = searchband[no_edges]
                 baseline_envelope = baseline_envelope[no_edges]
-                search_envelope_unfiltered = search_envelope_unfiltered[no_edges]
+                search_envelope_unfiltered = search_envelope_unfiltered[
+                    no_edges
+                ]
                 search_envelope = search_envelope[no_edges]
 
                 baseline_frequency = baseline_frequency[no_edges]
-                baseline_frequency_filtered = baseline_frequency_filtered[no_edges]
+                baseline_frequency_filtered = baseline_frequency_filtered[
+                    no_edges
+                ]
                 baseline_frequency_time = current_raw_time
 
                 # # get instantaneous frequency withoup edges
@@ -959,13 +999,16 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 )
                 # detect peaks inst_freq_filtered
                 frequency_peak_indices, _ = find_peaks(
-                    baseline_frequency_filtered, prominence=config.frequency_prominence
+                    baseline_frequency_filtered,
+                    prominence=config.frequency_prominence,
                 )
 
                 # DETECT CHIRPS IN SEARCH WINDOW ------------------------------
 
                 # get the peak timestamps from the peak indices
-                baseline_peak_timestamps = current_raw_time[baseline_peak_indices]
+                baseline_peak_timestamps = current_raw_time[
+                    baseline_peak_indices
+                ]
                 search_peak_timestamps = current_raw_time[search_peak_indices]
 
                 frequency_peak_timestamps = baseline_frequency_time[
@@ -1014,7 +1057,6 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 )
 
                 if chirp_detected or (debug != "elecrode"):
-
                     logger.debug("Detected chirp, ititialize buffer ...")
 
                     # save data to Buffer
@@ -1106,7 +1148,6 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
     multiwindow_chirps_flat = []
     multiwindow_ids_flat = []
     for track_id in np.unique(multiwindow_ids):
-
         # get chirps for this fish and flatten the list
         current_track_bool = np.asarray(multiwindow_ids) == track_id
         current_track_chirps = flatten(
@@ -1115,7 +1156,9 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
 
         # add flattened chirps to the list
         multiwindow_chirps_flat.extend(current_track_chirps)
-        multiwindow_ids_flat.extend(list(np.ones_like(current_track_chirps) * track_id))
+        multiwindow_ids_flat.extend(
+            list(np.ones_like(current_track_chirps) * track_id)
+        )
 
     # purge duplicates, i.e. chirps that are very close to each other
     # duplites arise due to overlapping windows

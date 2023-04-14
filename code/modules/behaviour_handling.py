@@ -30,12 +30,12 @@ class Behavior:
     """
 
     def __init__(self, folder_path: str) -> None:
-
-        LED_on_time_BORIS = np.load(os.path.join(
-            folder_path, 'LED_on_time.npy'), allow_pickle=True)
+        LED_on_time_BORIS = np.load(
+            os.path.join(folder_path, "LED_on_time.npy"), allow_pickle=True
+        )
 
         csv_filename = os.path.split(folder_path[:-1])[-1]
-        csv_filename = '-'.join(csv_filename.split('-')[:-1]) + '.csv'
+        csv_filename = "-".join(csv_filename.split("-")[:-1]) + ".csv"
         # embed()
 
         # csv_filename = [f for f in os.listdir(
@@ -43,31 +43,39 @@ class Behavior:
         # logger.info(f'CSV file: {csv_filename}')
         self.dataframe = read_csv(os.path.join(folder_path, csv_filename))
 
-        self.chirps = np.load(os.path.join(
-            folder_path, 'chirps.npy'), allow_pickle=True)
-        self.chirps_ids = np.load(os.path.join(
-            folder_path, 'chirp_ids.npy'), allow_pickle=True)
+        self.chirps = np.load(
+            os.path.join(folder_path, "chirps.npy"), allow_pickle=True
+        )
+        self.chirps_ids = np.load(
+            os.path.join(folder_path, "chirp_ids.npy"), allow_pickle=True
+        )
 
-        self.ident = np.load(os.path.join(
-            folder_path, 'ident_v.npy'), allow_pickle=True)
-        self.idx = np.load(os.path.join(
-            folder_path, 'idx_v.npy'), allow_pickle=True)
-        self.freq = np.load(os.path.join(
-            folder_path, 'fund_v.npy'), allow_pickle=True)
-        self.time = np.load(os.path.join(
-            folder_path, "times.npy"), allow_pickle=True)
-        self.spec = np.load(os.path.join(
-            folder_path, "spec.npy"), allow_pickle=True)
+        self.ident = np.load(
+            os.path.join(folder_path, "ident_v.npy"), allow_pickle=True
+        )
+        self.idx = np.load(
+            os.path.join(folder_path, "idx_v.npy"), allow_pickle=True
+        )
+        self.freq = np.load(
+            os.path.join(folder_path, "fund_v.npy"), allow_pickle=True
+        )
+        self.time = np.load(
+            os.path.join(folder_path, "times.npy"), allow_pickle=True
+        )
+        self.spec = np.load(
+            os.path.join(folder_path, "spec.npy"), allow_pickle=True
+        )
 
         for k, key in enumerate(self.dataframe.keys()):
             key = key.lower()
-            if ' ' in key:
-                key = key.replace(' ', '_')
-                if '(' in key:
-                    key = key.replace('(', '')
-                    key = key.replace(')', '')
-            setattr(self, key, np.array(
-                self.dataframe[self.dataframe.keys()[k]]))
+            if " " in key:
+                key = key.replace(" ", "_")
+                if "(" in key:
+                    key = key.replace("(", "")
+                    key = key.replace(")", "")
+            setattr(
+                self, key, np.array(self.dataframe[self.dataframe.keys()[k]])
+            )
 
         last_LED_t_BORIS = LED_on_time_BORIS[-1]
         real_time_range = self.time[-1] - self.time[0]
@@ -78,22 +86,19 @@ class Behavior:
 
 
 def correct_chasing_events(
-    category: np.ndarray,
-    timestamps: np.ndarray
+    category: np.ndarray, timestamps: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
+    onset_ids = np.arange(len(category))[category == 0]
+    offset_ids = np.arange(len(category))[category == 1]
 
-    onset_ids = np.arange(
-        len(category))[category == 0]
-    offset_ids = np.arange(
-        len(category))[category == 1]
-
-    wrong_bh = np.arange(len(category))[
-        category != 2][:-1][np.diff(category[category != 2]) == 0]
+    wrong_bh = np.arange(len(category))[category != 2][:-1][
+        np.diff(category[category != 2]) == 0
+    ]
 
     if category[category != 2][-1] == 0:
         wrong_bh = np.append(
-            wrong_bh,
-            np.arange(len(category))[category != 2][-1])
+            wrong_bh, np.arange(len(category))[category != 2][-1]
+        )
 
     if onset_ids[0] > offset_ids[0]:
         offset_ids = np.delete(offset_ids, 0)
@@ -103,18 +108,16 @@ def correct_chasing_events(
     category = np.delete(category, wrong_bh)
     timestamps = np.delete(timestamps, wrong_bh)
 
-    new_onset_ids = np.arange(
-        len(category))[category == 0]
-    new_offset_ids = np.arange(
-        len(category))[category == 1]
+    new_onset_ids = np.arange(len(category))[category == 0]
+    new_offset_ids = np.arange(len(category))[category == 1]
 
     # Check whether on- or offset is longer and calculate length difference
 
     if len(new_onset_ids) > len(new_offset_ids):
         embed()
-        logger.warning('Onsets are greater than offsets')
+        logger.warning("Onsets are greater than offsets")
     elif len(new_onset_ids) < len(new_offset_ids):
-        logger.warning('Offsets are greater than onsets')
+        logger.warning("Offsets are greater than onsets")
     elif len(new_onset_ids) == len(new_offset_ids):
         # logger.info('Chasing events are equal')
         pass
@@ -130,13 +133,11 @@ def center_chirps(
     # dt: float,
     # width: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-
-    event_chirps = []   # chirps that are in specified window around event
+    event_chirps = []  # chirps that are in specified window around event
     # timestamps of chirps around event centered on the event timepoint
     centered_chirps = []
 
     for event_timestamp in events:
-
         start = event_timestamp - time_before_event
         stop = event_timestamp + time_after_event
         chirps_around_event = [c for c in chirps if (c >= start) & (c <= stop)]
@@ -152,7 +153,8 @@ def center_chirps(
 
     if len(centered_chirps) != len(event_chirps):
         raise ValueError(
-            'Non centered chirps and centered chirps are not equal')
+            "Non centered chirps and centered chirps are not equal"
+        )
 
     # time = np.arange(-time_before_event, time_after_event, dt)
 

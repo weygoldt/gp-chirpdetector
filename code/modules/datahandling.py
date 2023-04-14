@@ -23,7 +23,9 @@ def minmaxnorm(data):
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 
-def instantaneous_frequency2(signal: np.ndarray, fs: float, interpolation: str = 'linear') -> np.ndarray:
+def instantaneous_frequency2(
+    signal: np.ndarray, fs: float, interpolation: str = "linear"
+) -> np.ndarray:
     """
     Compute the instantaneous frequency of a periodic signal using zero crossings and resample the frequency using linear
     or cubic interpolation to match the dimensions of the input array.
@@ -55,10 +57,10 @@ def instantaneous_frequency2(signal: np.ndarray, fs: float, interpolation: str =
     orig_len = len(signal)
     freq = resample(freq, orig_len)
 
-    if interpolation == 'linear':
+    if interpolation == "linear":
         freq = np.interp(np.arange(0, orig_len), np.arange(0, orig_len), freq)
-    elif interpolation == 'cubic':
-        freq = resample(freq, orig_len, window='cubic')
+    elif interpolation == "cubic":
+        freq = resample(freq, orig_len, window="cubic")
 
     return freq
 
@@ -67,7 +69,7 @@ def instantaneous_frequency(
     signal: np.ndarray,
     samplerate: int,
     smoothing_window: int,
-    interpolation: str = 'linear',
+    interpolation: str = "linear",
 ) -> np.ndarray:
     """
     Compute the instantaneous frequency of a signal that is approximately
@@ -120,11 +122,10 @@ def instantaneous_frequency(
     orig_len = len(signal)
     freq = resample(instantaneous_frequency, orig_len)
 
-    if interpolation == 'linear':
+    if interpolation == "linear":
         freq = np.interp(np.arange(0, orig_len), np.arange(0, orig_len), freq)
-    elif interpolation == 'cubic':
-        freq = resample(freq, orig_len, window='cubic')
-
+    elif interpolation == "cubic":
+        freq = resample(freq, orig_len, window="cubic")
 
     return freq
 
@@ -160,7 +161,6 @@ def purge_duplicates(
     group = [timestamps[0]]
 
     for i in range(1, len(timestamps)):
-
         # check the difference between current timestamp and previous
         # timestamp is less than the threshold
         if timestamps[i] - timestamps[i - 1] < threshold:
@@ -379,7 +379,6 @@ def acausal_kde1d(spikes, time, width):
 
 
 if __name__ == "__main__":
-
     timestamps = [
         [1.2, 1.5, 1.3],
         [],

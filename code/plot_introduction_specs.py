@@ -11,7 +11,6 @@ ps = PlotStyle()
 
 
 def main():
-
     # Load data
     datapath = "../data/2022-06-02-10_00/"
     data = LoadData(datapath)
@@ -24,26 +23,31 @@ def main():
 
     timescaler = 1000
 
-    raw = data.raw[window_start_index:window_start_index +
-                   window_duration_index, 10]
+    raw = data.raw[
+        window_start_index : window_start_index + window_duration_index, 10
+    ]
 
     fig, (ax1, ax2) = plt.subplots(
-        1, 2, figsize=(21 * ps.cm, 8*ps.cm), sharex=True, sharey=True)
+        1, 2, figsize=(21 * ps.cm, 8 * ps.cm), sharex=True, sharey=True
+    )
 
     # plot instantaneous frequency
     filtered1 = bandpass_filter(
-        signal=raw, lowf=750, highf=1200, samplerate=data.raw_rate)
+        signal=raw, lowf=750, highf=1200, samplerate=data.raw_rate
+    )
     filtered2 = bandpass_filter(
-        signal=raw, lowf=550, highf=700, samplerate=data.raw_rate)
+        signal=raw, lowf=550, highf=700, samplerate=data.raw_rate
+    )
 
     freqtime1, freq1 = instantaneous_frequency(
-        filtered1, data.raw_rate, smoothing_window=3)
+        filtered1, data.raw_rate, smoothing_window=3
+    )
     freqtime2, freq2 = instantaneous_frequency(
-        filtered2, data.raw_rate, smoothing_window=3)
+        filtered2, data.raw_rate, smoothing_window=3
+    )
 
-    ax1.plot(freqtime1*timescaler, freq1, color=ps.g, lw=2, label="Fish 1") 
-    ax1.plot(freqtime2*timescaler, freq2, color=ps.gray,
-            lw=2, label="Fish 2")
+    ax1.plot(freqtime1 * timescaler, freq1, color=ps.g, lw=2, label="Fish 1")
+    ax1.plot(freqtime2 * timescaler, freq2, color=ps.gray, lw=2, label="Fish 2")
     # ax.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
     # # ps.hide_xax(ax1)
 
@@ -62,8 +66,8 @@ def main():
     ax1.imshow(
         decibel(spec_power[fmask, :]),
         extent=[
-            spec_times[0]*timescaler,
-            spec_times[-1]*timescaler,
+            spec_times[0] * timescaler,
+            spec_times[-1] * timescaler,
             spec_freqs[fmask][0],
             spec_freqs[fmask][-1],
         ],
@@ -87,8 +91,8 @@ def main():
     ax2.imshow(
         decibel(spec_power[fmask, :]),
         extent=[
-            spec_times[0]*timescaler,
-            spec_times[-1]*timescaler,
+            spec_times[0] * timescaler,
+            spec_times[-1] * timescaler,
             spec_freqs[fmask][0],
             spec_freqs[fmask][-1],
         ],
@@ -98,9 +102,8 @@ def main():
         alpha=1,
     )
     # ps.hide_xax(ax3)
-    ax2.plot(freqtime1*timescaler, freq1, color=ps.g, lw=2, label="_") 
-    ax2.plot(freqtime2*timescaler, freq2, color=ps.gray,
-            lw=2, label="_")
+    ax2.plot(freqtime1 * timescaler, freq1, color=ps.g, lw=2, label="_")
+    ax2.plot(freqtime2 * timescaler, freq2, color=ps.gray, lw=2, label="_")
 
     ax2.set_xlim(75, 200)
     ax1.set_ylim(400, 1200)
@@ -109,15 +112,22 @@ def main():
     fig.supylabel("Frequency [Hz]", fontsize=14)
 
     handles, labels = ax1.get_legend_handles_labels()
-    ax2.legend(handles, labels, bbox_to_anchor=(1.04, 1), loc="upper left", ncol=1,)
+    ax2.legend(
+        handles,
+        labels,
+        bbox_to_anchor=(1.04, 1),
+        loc="upper left",
+        ncol=1,
+    )
 
     ps.letter_subplots(xoffset=[-0.27, -0.1], yoffset=1.05)
 
-    plt.subplots_adjust(left=0.12, right=0.85, top=0.89,
-                        bottom=0.18, hspace=0.35)
+    plt.subplots_adjust(
+        left=0.12, right=0.85, top=0.89, bottom=0.18, hspace=0.35
+    )
 
-    plt.savefig('../poster/figs/introplot.pdf')
+    plt.savefig("../poster/figs/introplot.pdf")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -3,10 +3,10 @@ import numpy as np
 
 
 def bandpass_filter(
-        signal: np.ndarray,
-        samplerate: float,
-        lowf: float,
-        highf: float,
+    signal: np.ndarray,
+    samplerate: float,
+    lowf: float,
+    highf: float,
 ) -> np.ndarray:
     """Bandpass filter a signal.
 
@@ -60,9 +60,7 @@ def highpass_filter(
 
 
 def lowpass_filter(
-    signal: np.ndarray,
-    samplerate: float,
-    cutoff: float
+    signal: np.ndarray, samplerate: float, cutoff: float
 ) -> np.ndarray:
     """Lowpass filter a signal.
 
@@ -86,10 +84,9 @@ def lowpass_filter(
     return filtered_signal
 
 
-def envelope(signal: np.ndarray,
-             samplerate: float,
-             cutoff_frequency: float
-             ) -> np.ndarray:
+def envelope(
+    signal: np.ndarray, samplerate: float, cutoff_frequency: float
+) -> np.ndarray:
     """Calculate the envelope of a signal using a lowpass filter.
 
     Parameters
