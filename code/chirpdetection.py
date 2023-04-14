@@ -5,16 +5,6 @@ import matplotlib.gridspec as gr
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython import embed
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gr
-from scipy.signal import find_peaks
-from thunderfish.powerspectrum import spectrogram, decibel
-# from sklearn.preprocessing import normalize
-
-from modules.filters import bandpass_filter, envelope, highpass_filter
-from modules.filehandling import ConfLoader, LoadData, make_outputdir
-from modules.plotstyle import PlotStyle
-from modules.logger import makeLogger
 from modules.datahandling import (
     flatten,
     group_timestamps,
@@ -28,6 +18,9 @@ from modules.logger import makeLogger
 from modules.plotstyle import PlotStyle
 from scipy.signal import find_peaks
 from thunderfish.powerspectrum import decibel, spectrogram
+
+# from sklearn.preprocessing import normalize
+
 
 logger = makeLogger(__name__)
 
