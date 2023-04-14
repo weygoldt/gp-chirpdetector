@@ -18,7 +18,6 @@ from modules.datahandling import (
     purge_duplicates,
     group_timestamps,
     instantaneous_frequency,
-    instantaneous_frequency2, 
     minmaxnorm,
 )
 
