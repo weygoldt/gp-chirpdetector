@@ -726,8 +726,8 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
-    window_duration_index = 60 * data.raw_rate
+    # window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    # window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
