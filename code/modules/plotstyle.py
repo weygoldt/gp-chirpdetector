@@ -15,8 +15,8 @@ def PlotStyle() -> None:
 
         # colors
         black = "#111116"
-        white = "#111116"
-        gray = "#111116"
+        white = "#e0e4f7"
+        gray = "#6c6e7d"
         blue = "#89b4fa"
         sapphire = "#74c7ec"
         sky = "#89dceb"
@@ -217,10 +217,10 @@ def PlotStyle() -> None:
     SMALL_SIZE = 12
     MEDIUM_SIZE = 14
     BIGGER_SIZE = 16
-    black = "#e0e4f7"
-    white = "#111116"
-    # gray = "#6c6e7d"
-    # dark_gray = "#2a2a32"
+    black = "#111116"
+    white = "#e0e4f7"
+    gray = "#6c6e7d"
+    dark_gray = "#2a2a32"
 
     # rcparams
     plt.rc("font", size=MEDIUM_SIZE)  # controls default text sizes
@@ -231,7 +231,7 @@ def PlotStyle() -> None:
     plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
     plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-    plt.rcParams["image.cmap"] = "cmo.haline"
+    plt.rcParams["image.cmap"] = "cmo.thermal"
     plt.rcParams["axes.xmargin"] = 0.05
     plt.rcParams["axes.ymargin"] = 0.1
     plt.rcParams["axes.titlelocation"] = "left"
@@ -251,46 +251,46 @@ def PlotStyle() -> None:
     # plt.rcParams["font.sans-serif"] = "Helvetica Now Text"
 
     # dark mode modifications
-    # plt.rcParams["boxplot.flierprops.color"] = white
-    # plt.rcParams["boxplot.flierprops.markeredgecolor"] = gray
-    # plt.rcParams["boxplot.boxprops.color"] = gray
-    # plt.rcParams["boxplot.whiskerprops.color"] = gray
-    # plt.rcParams["boxplot.capprops.color"] = gray
-    # plt.rcParams["boxplot.medianprops.color"] = black
-    # plt.rcParams["text.color"] = white
-    # plt.rcParams["axes.facecolor"] = black  # axes background color
-    # plt.rcParams["axes.edgecolor"] = white  # axes edge color
-    # # plt.rcParams["axes.grid"] = True    # display grid or not
-    # # plt.rcParams["axes.grid.axis"] = "y"  # which axis the grid is applied to
-    # plt.rcParams["axes.labelcolor"] = white
-    # plt.rcParams["axes.axisbelow"] = True  # draw axis gridlines and ticks:
-    # plt.rcParams["axes.spines.left"] = True  # display axis spines
-    # plt.rcParams["axes.spines.bottom"] = True
-    # plt.rcParams["axes.spines.top"] = False
-    # plt.rcParams["axes.spines.right"] = False
-    # plt.rcParams["axes.prop_cycle"] = cycler(
-    #     "color",
-    #     [
-    #         "#b4befe",
-    #         "#89b4fa",
-    #         "#74c7ec",
-    #         "#89dceb",
-    #         "#94e2d5",
-    #         "#a6e3a1",
-    #         "#f9e2af",
-    #         "#fab387",
-    #         "#eba0ac",
-    #         "#f38ba8",
-    #         "#cba6f7",
-    #         "#f5c2e7",
-    #     ],
-    # )
-    # plt.rcParams["xtick.color"] = white  # color of the ticks
-    # plt.rcParams["ytick.color"] = white  # color of the ticks
-    # plt.rcParams["grid.color"] = white  # grid color
-    # plt.rcParams["figure.facecolor"] = black  # figure face color
-    # plt.rcParams["figure.edgecolor"] = black  # figure edge color
-    # plt.rcParams["savefig.facecolor"] = black  # figure face color when saving
+    plt.rcParams["boxplot.flierprops.color"] = white
+    plt.rcParams["boxplot.flierprops.markeredgecolor"] = gray
+    plt.rcParams["boxplot.boxprops.color"] = gray
+    plt.rcParams["boxplot.whiskerprops.color"] = gray
+    plt.rcParams["boxplot.capprops.color"] = gray
+    plt.rcParams["boxplot.medianprops.color"] = black
+    plt.rcParams["text.color"] = white
+    plt.rcParams["axes.facecolor"] = black  # axes background color
+    plt.rcParams["axes.edgecolor"] = white  # axes edge color
+    # plt.rcParams["axes.grid"] = True    # display grid or not
+    # plt.rcParams["axes.grid.axis"] = "y"  # which axis the grid is applied to
+    plt.rcParams["axes.labelcolor"] = white
+    plt.rcParams["axes.axisbelow"] = True  # draw axis gridlines and ticks:
+    plt.rcParams["axes.spines.left"] = True  # display axis spines
+    plt.rcParams["axes.spines.bottom"] = True
+    plt.rcParams["axes.spines.top"] = False
+    plt.rcParams["axes.spines.right"] = False
+    plt.rcParams["axes.prop_cycle"] = cycler(
+        "color",
+        [
+            "#b4befe",
+            "#89b4fa",
+            "#74c7ec",
+            "#89dceb",
+            "#94e2d5",
+            "#a6e3a1",
+            "#f9e2af",
+            "#fab387",
+            "#eba0ac",
+            "#f38ba8",
+            "#cba6f7",
+            "#f5c2e7",
+        ],
+    )
+    plt.rcParams["xtick.color"] = white  # color of the ticks
+    plt.rcParams["ytick.color"] = white  # color of the ticks
+    plt.rcParams["grid.color"] = white  # grid color
+    plt.rcParams["figure.facecolor"] = black  # figure face color
+    plt.rcParams["figure.edgecolor"] = black  # figure edge color
+    plt.rcParams["savefig.facecolor"] = black  # figure face color when saving
 
     return style
 

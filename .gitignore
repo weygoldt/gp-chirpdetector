@@ -6,6 +6,7 @@ data
 env
 output
 trash
+.vscode
 
 # Mac Stuff
 *.DS_Store

@@ -726,8 +726,8 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
     raw_time = np.arange(data.raw.shape[0]) / data.raw_rate
 
     # good chirp times for data: 2022-06-02-10_00
-    # window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
-    # window_duration_index = 60 * data.raw_rate
+    window_start_index = (3 * 60 * 60 + 6 * 60 + 43.5) * data.raw_rate
+    window_duration_index = 60 * data.raw_rate
 
     #     t0 = 0
     #     dt = data.raw.shape[0]
@@ -1185,4 +1185,4 @@ if __name__ == "__main__":
     # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
     datapath = "../data/2022-06-02-10_00/"
-    chirpdetection(datapath, plot="show", debug="false")
+    chirpdetection(datapath, plot="save", debug="false")
