@@ -28,9 +28,7 @@
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#about-the-project">About The Project</a></li>
-    <li><a href="#getting-started">Getting Started</a></li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#to-do">Roadmap</a></li>
+    <li><a href="#the-approach">Getting Started</a></li>
   </ol>
 </details>
 
@@ -42,6 +40,10 @@ Chirps are transient communication singals of many wave-type electric fish. Beca
 The majority of the code and its tests were part of a lab rotation with the [Neuroethology](https://github.com/bendalab) at the University of Tuebingen. It also contains a [poster](poster_printed/main.pdf) and a more thorough [lab protocol](protocol/main.pdf).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## The Approach
+
+To detect chirps, we extract some features of the raw signal using frequency traces that were computed beforehand using the [wavetracker](https://github.com/tillraab/wavetracker). For a frequency band of a single fish, we filter the signal using a bandpass filter, extract the instantaneous frequency, the envelelope and the envelope of a frequency band slightly above the fundamental frequency of the fish. We then transform those features using various filters and detect the peaks on them. Peaks on all three features are chirps. We always use the strongest electrode relative to the fish of interest. By that, we include the spatial demensions to increase our detection performance, if fish are spaced sufficiently apart. The full algorithm is thoroughly explained in the lab protocol. All parameters can be tuned using a `yaml` config file. While this approach excels in assigning detected chirps to the currect fish, the actial chirp detection is not that reliable. If peak detection thresholds are set for each feature manually, the detector can become quite reliable. But if features are normalized to generalize the detector, noise often introduces false detections, especially during amplitude breakdowns. 
 
 <!-- # Chirp detection - GP2023 -->
 <!-- ## Git-Repository and commands -->
