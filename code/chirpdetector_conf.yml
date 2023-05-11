@@ -38,9 +38,9 @@ search_envelope_cutoff: 10  # search envelope estimation cufoff
 # search_prominence: 0.000004   # peak prominence threshold for search envelope
 # frequency_prominence: 2       # peak prominence threshold for baseline freq
 
-baseline_prominence: 0.3  # peak prominence threshold for baseline envelope
-search_prominence: 0.3  # peak prominence threshold for search envelope
-frequency_prominence: 0.3  # peak prominence threshold for baseline freq
+baseline_prominence: 0.00005  # peak prominence threshold for baseline envelope
+search_prominence: 0.000005  # peak prominence threshold for search envelope
+frequency_prominence: 1  # peak prominence threshold for baseline freq
 
 # Classify events as chirps if they are less than this time apart
 chirp_window_threshold: 0.02
