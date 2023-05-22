@@ -1,9 +1,9 @@
 import os
 
-import yaml
-import numpy as np
-from thunderfish.dataloader import DataLoader
 import matplotlib.pyplot as plt
+import numpy as np
+import yaml
+from thunderfish.dataloader import DataLoader
 
 
 class ConfLoader:
@@ -38,8 +38,12 @@ class LoadData:
         # load raw data
         self.datapath = datapath
         self.file = os.path.join(datapath, "traces-grid1.raw")
-        self.raw = DataLoader(self.file, 60.0, 0, channel=-1)
-        self.raw_rate = self.raw.samplerate
+        if os.path.isfile(self.file) == False:
+            self.raw = np.load(os.path.join(datapath, "raw.npy"))
+            self.raw_rate = 20000.0
+        else:
+            self.raw = DataLoader(self.file, 60.0, 0, channel=-1)
+            self.raw_rate = self.raw.samplerate
 
         # load wavetracker files
         self.time = np.load(datapath + "times.npy", allow_pickle=True)

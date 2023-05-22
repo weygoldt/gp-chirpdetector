@@ -1176,13 +1176,13 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
     purged_chirps = purged_chirps[np.argsort(purged_chirps)]
 
     # save them into the data directory
-    np.save(datapath + "chirps.npy", purged_chirps)
-    np.save(datapath + "chirp_ids.npy", purged_ids)
+    np.save(datapath + "chirp_times_gp.npy", purged_chirps)
+    np.save(datapath + "chirp_ids_gp.npy", purged_ids)
 
 
 if __name__ == "__main__":
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-05-13-10_00/"
     # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
-    datapath = "../data/2022-06-02-10_00/"
+    datapath = "../../chirpdetector-cnn/testing_data/"
     chirpdetection(datapath, plot="save", debug="false")
