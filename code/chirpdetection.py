@@ -749,8 +749,9 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
     multiwindow_chirps = []
     multiwindow_ids = []
 
-    for st, window_start_index in enumerate(window_start_indices):
-        logger.info(f"Processing window {st+1} of {len(window_start_indices)}")
+    for st, window_start_index in enumerate(window_start_indices[1853:]):
+
+        logger.info(f"Processing window {st} of {len(window_start_indices)}")
 
         window_start_seconds = window_start_index / data.raw_rate
         window_duration_seconds = window_duration / data.raw_rate
@@ -914,17 +915,19 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                     baseline_frequency - np.median(baseline_frequency)
                 )
 
-                # check if there is at least one superthreshold peak on the
-                # instantaneous and exit the loop if not. This is used to
-                # prevent windows that do definetely not include a chirp
-                # to enter normalization, where small changes due to noise
-                # would be amplified
+                # # check if there is at least one superthreshold peak on the
+                # # instantaneous and exit the loop if not. This is used to
+                # # prevent windows that do definetely not include a chirp
+                # # to enter normalization, where small changes due to noise
+                # # would be amplified
 
-                if not has_chirp(
-                    baseline_frequency_filtered[amplitude_mask],
-                    config.baseline_frequency_peakheight,
-                ):
-                    continue
+                # if not has_chirp(
+                #     baseline_frequency_filtered[amplitude_mask],
+                #     config.baseline_frequency_peakheight,
+                # ):                
+                #     logger.warning(
+                #     f"Amplitude to small for the chirp detection of track {track_id} window {st},")
+                #     continue
 
                 # CUT OFF OVERLAP ---------------------------------------------
 
@@ -974,11 +977,11 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 # normalize all three feature arrays to the same range to make
                 # peak detection simpler
 
-                baseline_envelope = minmaxnorm([baseline_envelope])[0]
-                search_envelope = minmaxnorm([search_envelope])[0]
-                baseline_frequency_filtered = minmaxnorm(
-                    [baseline_frequency_filtered]
-                )[0]
+                # baseline_envelope = minmaxnorm([baseline_envelope])[0]
+                # search_envelope = minmaxnorm([search_envelope])[0]
+                # baseline_frequency_filtered = minmaxnorm(
+                #     [baseline_frequency_filtered]
+                # )[0]
 
                 # PEAK DETECTION ----------------------------------------------
 
@@ -995,6 +998,7 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                     baseline_frequency_filtered,
                     prominence=config.frequency_prominence,
                 )
+            
 
                 # DETECT CHIRPS IN SEARCH WINDOW ------------------------------
 
@@ -1010,11 +1014,10 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
 
                 # check if one list is empty and if so, skip to the next
                 # electrode because a chirp cannot be detected if one is empty
-
                 one_feature_empty = (
                     len(baseline_peak_timestamps) == 0
                     or len(search_peak_timestamps) == 0
-                    or len(frequency_peak_timestamps) == 0
+                    #or len(frequency_peak_timestamps) == 0
                 )
 
                 if one_feature_empty and (debug == "false"):
@@ -1026,14 +1029,15 @@ def chirpdetection(datapath: str, plot: str, debug: str = "false") -> None:
                 sublists = [
                     list(baseline_peak_timestamps),
                     list(search_peak_timestamps),
-                    list(frequency_peak_timestamps),
+                    #list(frequency_peak_timestamps),
                 ]
 
                 singleelectrode_chirps = group_timestamps(
                     sublists=sublists,
-                    at_least_in=3,
+                    at_least_in=2,
                     difference_threshold=config.chirp_window_threshold,
                 )
+
 
                 # check it there are chirps detected after grouping, continue
                 # with the loop if not
@@ -1184,5 +1188,5 @@ if __name__ == "__main__":
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-05-13-10_00/"
     # datapath = "/home/weygoldt/Data/uni/efishdata/2016-colombia/fishgrid/2016-04-09-22_25/"
     # datapath = "/home/weygoldt/Data/uni/chirpdetection/GP2023_chirp_detection/data/mount_data/2020-03-13-10_00/"
-    datapath = "../../chirpdetector-cnn/testing_data/"
-    chirpdetection(datapath, plot="save", debug="false")
+    datapath = "../data/2022-06-02-10_00/"
+    chirpdetection(datapath, plot="show", debug="false")
